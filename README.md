@@ -23,11 +23,12 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 
 - **Product types**: Manage product types (DefectDojo 3.x *organizations*) and their authorized users, and look them up by ID or name
 - **Products**: Manage products (DefectDojo 3.x *assets*) with their attributes, contacts, SLA configuration, regulations, tags and authorized users, and look them up by ID or name
-- **Safe deletes**: DefectDojo deletes everything below a deleted product type or product, down to findings; the provider refuses unless `force_destroy` is set
+- **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
+- **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+)
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
-Engagements, SLA configurations, users, notifications, Jira, system settings and more are planned; see the [roadmap](#roadmap).
+SLA configurations, users, notifications, Jira, system settings and more are planned; see the [roadmap](#roadmap).
 
 ## DefectDojo version compatibility
 
