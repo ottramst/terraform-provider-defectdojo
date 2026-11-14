@@ -175,7 +175,7 @@ resource "defectdojo_jira_project" "second" {
   product_id = defectdojo_product.test.id
 `),
 				Destroy:     true,
-				ExpectError: regexp.MustCompile(`1 Jira projects use it`),
+				ExpectError: regexp.MustCompile(`1 Jira project uses it`),
 			},
 			// Without it, everything is created again.
 			{
