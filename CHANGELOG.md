@@ -1,4 +1,4 @@
-## Unreleased
+## v0.2.0
 
 FEATURES:
 
@@ -20,6 +20,7 @@ NOTES:
 * `defectdojo_notification_webhook`: DefectDojo deactivates a webhook whose deliveries fail (`status`); a webhook it deactivates permanently can't be reactivated through the API: edit it in DefectDojo's UI or replace it ([#13](https://github.com/ottramst/terraform-provider-defectdojo/issues/13))
 * `defectdojo_notifications`: DefectDojo creates the system-wide settings and each user's personal settings itself, so creating the resource adopts them; destroying them resets them to DefectDojo's defaults instead of deleting them, which would stop the user's notifications. Every event is managed: one that isn't configured gets DefectDojo's default, `alert`. `scan_added_empty` holds at most one channel, a limit of DefectDojo's API ([#12](https://github.com/ottramst/terraform-provider-defectdojo/issues/12))
 * New guide, *Connect Dependency-Track to DefectDojo*, with an example that sets up both sides with this provider and the Dependency-Track provider, for Dependency-Track v5 and v4 ([#14](https://github.com/ottramst/terraform-provider-defectdojo/issues/14))
+* Completes the v0.2.0 milestone (SLA configurations, users, notifications and notification webhooks), built on go-defectdojo v0.2.0. Tested against DefectDojo 3.4.304 and 3.5.103 with Terraform 1.16 and 1.17
 
 ## v0.1.0
 
