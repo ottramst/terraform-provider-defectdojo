@@ -56,7 +56,7 @@ func (d *UserDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Use this data source to look up a DefectDojo user by ID or username, for example to give it access to a product " +
 			"or name it as a product's contact. Reading users needs a superuser, or the configuration permissions for users; " +
-			"reading `configuration_permissions` needs a superuser.",
+			"reading `configuration_permissions` needs a superuser; without one, it is null when the user has permissions.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the user to look up. Exactly one of `id` and `username` must be set.",
@@ -140,6 +140,6 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.IsSuperuser = model.IsSuperuser
 	data.DateJoined = model.DateJoined
 	data.LastLogin = timeOrNull(u.LastLogin)
-	data.ConfigurationPermissions = permissionCodenames(ctx, d.client, u, &resp.Diagnostics)
+	data.ConfigurationPermissions = permissionCodenames(ctx, d.client, u, types.SetNull(types.StringType), &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

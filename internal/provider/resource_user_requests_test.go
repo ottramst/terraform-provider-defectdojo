@@ -16,7 +16,7 @@ import (
 // The password is only sent on create, configuration_permissions only when
 // they are configured, and a removed name as "" (DefectDojo refuses null).
 // Runs against a fake DefectDojo, to check the requests.
-func TestAccUser_passwordAndPermissionsNotSentUnlessCreatedOrConfigured(t *testing.T) {
+func TestAccUser_permissionsNotSentUnlessConfigured(t *testing.T) {
 	fake := &fakeDefectDojo{
 		collection: "users",
 		defaults: map[string]any{
@@ -106,6 +106,54 @@ resource "defectdojo_user" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("configuration_permissions"), knownvalue.SetSizeExact(0)),
 				},
+			},
+		},
+	})
+}
+
+// Reading the codenames of configuration permissions needs a superuser:
+// without one, the planned or prior value is kept, with a warning, instead of
+// failing every plan. Runs against a fake DefectDojo.
+func TestAccUser_permissionsUnreadable(t *testing.T) {
+	fake := &fakeDefectDojo{
+		collection: "users",
+		defaults: map[string]any{
+			"first_name": "", "last_name": "", "is_active": true, "is_staff": false, "is_superuser": false,
+			// Granted by a superuser.
+			"configuration_permissions": []any{9}, "date_joined": "2026-11-14T12:00:00Z",
+		},
+		forbidden: map[string]bool{"configuration_permissions": true},
+	}
+	server := httptest.NewServer(fake.handler(t))
+	t.Cleanup(server.Close)
+
+	config := func(email string) string {
+		return fmt.Sprintf(`
+provider "defectdojo" {
+  url       = %[1]q
+  api_token = "test"
+}
+
+resource "defectdojo_user" "test" {
+  username = "fake"
+  email    = %[2]q
+}
+`, server.URL, email)
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config("one@example.com"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("configuration_permissions"), knownvalue.Null()),
+				},
+			},
+			// Refresh and update keep working.
+			{
+				Config: config("two@example.com"),
+				Check:  fake.checkPatchSends(false, "configuration_permissions"),
 			},
 		},
 	})

@@ -68,6 +68,8 @@ func TestAccUser(t *testing.T) {
   first_name                = "Dependency"
   last_name                 = "Track"
   is_staff                  = true
+  is_superuser              = true
+  is_active                 = false
   configuration_permissions = ["add_user", "change_sla_configuration"]
 `),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -81,6 +83,8 @@ func TestAccUser(t *testing.T) {
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("first_name"), knownvalue.StringExact("Dependency")),
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("last_name"), knownvalue.StringExact("Track")),
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("is_staff"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("is_superuser"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("is_active"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("configuration_permissions"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("add_user"), knownvalue.StringExact("change_sla_configuration"),
 					})),
@@ -200,15 +204,18 @@ func TestAccUser_referenced(t *testing.T) {
 						p, _, err := testAccClient(t).Products.Create(context.Background(), &defectdojo.Product{
 							Name: randName(t), Description: "acceptance test", ProdType: productTypeID, ProductManager: id,
 						})
+						if err != nil {
+							return err
+						}
 						productID = p.ID
-						return err
+						return nil
 					},
 				),
 			},
 			{
 				Config:      testAccUserConfig(username, ""),
 				Destroy:     true,
-				ExpectError: regexp.MustCompile(`(?s)can't\s+be\s+deleted\s+while\s+products\s+or\s+engagements.*is_active\s+=\s+false`),
+				ExpectError: regexp.MustCompile(`(?s)can't\s+be\s+deleted\s+while\s+other\s+objects\s+refer\s+to\s+it.*is_active\s+=\s+false`),
 			},
 			// Without the reference, the destroy after the test succeeds.
 			{

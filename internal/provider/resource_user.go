@@ -95,8 +95,10 @@ func (r *UserResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"only superusers can manage staff users, superusers, configuration permissions, and the username or email of another user.\n\n" +
 			"DefectDojo creates the user's notification settings, which `defectdojo_notifications` can manage. " +
 			"Destroying the user deletes them, with the user's alerts and notification webhooks. " +
-			"DefectDojo refuses to delete a user that products or engagements name as a contact or lead, " +
-			"and the provider's own user; deactivate such users with `is_active = false` instead.",
+			"DefectDojo refuses to delete a user that other objects refer to, such as the findings it imported or reported, " +
+			"the tests it leads, or the products and engagements that name it as a contact or lead, " +
+			"and the provider's own user: deactivate such users with `is_active = false` instead, " +
+			"and remove them from the state with a `removed` block.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the user.",
@@ -144,7 +146,8 @@ func (r *UserResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Default:             booldefault.StaticBool(false),
 			},
 			"configuration_permissions": schema.SetAttribute{
-				MarkdownDescription: configurationPermissionsDescription + " Managing them needs a superuser. " +
+				MarkdownDescription: configurationPermissionsDescription + " Managing them needs a superuser; " +
+					"without one, the provider can't read them and keeps the value in the state, with a warning. " +
 					"When it is not set, the provider leaves the permissions as they are, so they can be managed elsewhere. " +
 					"An empty set removes all the user's permissions, including Django permissions granted outside DefectDojo's configuration permissions. " +
 					"If they change elsewhere between the plan and the apply of another change to the user, the apply fails with an inconsistent result; plan and apply again.",
@@ -326,8 +329,10 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	case errors.Is(err, defectdojo.ErrConflict):
 		resp.Diagnostics.AddError(
 			"DefectDojo user is in use",
-			fmt.Sprintf("User %d (%q) can't be deleted while products or engagements name it as a contact or lead: %s\n\n"+
-				"Remove those references first, or keep the user and deactivate it with is_active = false.", id, data.Username.ValueString(), err),
+			fmt.Sprintf("User %d (%q) can't be deleted while other objects refer to it, such as the findings it imported or reported, "+
+				"the tests it leads, or products and engagements that name it as a contact or lead: %s\n\n"+
+				"Keep the user and deactivate it with is_active = false (and remove it from the state with a removed block), "+
+				"or remove those references first.", id, data.Username.ValueString(), err),
 		)
 	case errors.Is(err, defectdojo.ErrBadRequest):
 		resp.Diagnostics.AddError(
@@ -372,10 +377,15 @@ func (r *UserResource) permissionIDs(ctx context.Context, set types.Set, diags *
 }
 
 // updateModel copies the user read from the server into data, mapping the
-// configuration permission IDs to codenames.
+// configuration permission IDs to codenames. When the provider may not read
+// the configuration permissions, the planned or prior ones are kept.
 func (r *UserResource) updateModel(ctx context.Context, data *UserResourceModel, u *defectdojo.User, diags *diag.Diagnostics) {
+	prior := data.ConfigurationPermissions
 	updateUserModel(data, u)
-	data.ConfigurationPermissions = permissionCodenames(ctx, r.client, u, diags)
+	if !known(prior) {
+		prior = types.SetNull(types.StringType)
+	}
+	data.ConfigurationPermissions = permissionCodenames(ctx, r.client, u, prior, diags)
 }
 
 // updateUserModel copies the fields of the user other than its configuration
@@ -394,14 +404,20 @@ func updateUserModel(data *UserResourceModel, u *defectdojo.User) {
 
 // permissionCodenames returns the codenames of the user's configuration
 // permissions. It reads the configuration permissions only when the user has
-// some. A permission that DefectDojo no longer lists, for example after a
-// system setting changed, is left out with a warning.
-func permissionCodenames(ctx context.Context, client *defectdojo.Client, u *defectdojo.User, diags *diag.Diagnostics) types.Set {
+// some. Reading them needs a superuser: without one, it returns fallback with
+// a warning. A permission that the list lacks is left out with a warning.
+func permissionCodenames(ctx context.Context, client *defectdojo.Client, u *defectdojo.User, fallback types.Set, diags *diag.Diagnostics) types.Set {
 	if len(u.ConfigurationPermissions) == 0 {
 		return types.SetValueMust(types.StringType, nil)
 	}
 	codenames := make(map[int]string)
 	for p, err := range client.ConfigurationPermissions.ListAll(ctx, nil) {
+		if errors.Is(err, defectdojo.ErrForbidden) {
+			diags.AddWarning("Can't read DefectDojo configuration permissions",
+				fmt.Sprintf("User %d has configuration permissions, but reading their codenames needs a superuser: %s. "+
+					"configuration_permissions keeps its previous value.", u.ID, err))
+			return fallback
+		}
 		if err != nil {
 			diags.AddError("Error reading DefectDojo configuration permissions",
 				fmt.Sprintf("Could not list the configuration permissions of user %d: %s", u.ID, err))
@@ -421,7 +437,7 @@ func permissionCodenames(ctx context.Context, client *defectdojo.Client, u *defe
 	if len(unknown) > 0 {
 		diags.AddWarning("Unknown DefectDojo configuration permissions",
 			fmt.Sprintf("User %d has permissions with IDs %s, which DefectDojo doesn't list as configuration permissions, "+
-				"for example because a system setting turned them off; they are left out of configuration_permissions.",
+				"so they are left out of configuration_permissions.",
 				u.ID, strings.Join(unknown, ", ")))
 	}
 	slices.Sort(names)

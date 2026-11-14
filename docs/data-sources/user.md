@@ -3,12 +3,12 @@
 page_title: "defectdojo_user Data Source - defectdojo"
 subcategory: ""
 description: |-
-  Use this data source to look up a DefectDojo user by ID or username, for example to give it access to a product or name it as a product's contact. Reading users needs a superuser, or the configuration permissions for users; reading configuration_permissions needs a superuser.
+  Use this data source to look up a DefectDojo user by ID or username, for example to give it access to a product or name it as a product's contact. Reading users needs a superuser, or the configuration permissions for users; reading configuration_permissions needs a superuser; without one, it is null when the user has permissions.
 ---
 
 # defectdojo_user (Data Source)
 
-Use this data source to look up a DefectDojo user by ID or username, for example to give it access to a product or name it as a product's contact. Reading users needs a superuser, or the configuration permissions for users; reading `configuration_permissions` needs a superuser.
+Use this data source to look up a DefectDojo user by ID or username, for example to give it access to a product or name it as a product's contact. Reading users needs a superuser, or the configuration permissions for users; reading `configuration_permissions` needs a superuser; without one, it is null when the user has permissions.
 
 ## Example Usage
 

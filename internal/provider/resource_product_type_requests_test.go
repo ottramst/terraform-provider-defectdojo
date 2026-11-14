@@ -31,6 +31,10 @@ type fakeDefectDojo struct {
 	// lists holds read-only objects of other collections, by collection.
 	lists map[string][]map[string]any
 
+	// forbidden lists collections whose lists answer 403, as superuser-only
+	// endpoints do for other users.
+	forbidden map[string]bool
+
 	mu      sync.Mutex
 	object  map[string]any // nil when deleted
 	posts   []map[string]any
@@ -116,7 +120,12 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 	mux.HandleFunc("GET /api/v2/", func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
-		objects := f.lists[strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/v2/"), "/")]
+		collection := strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/v2/"), "/")
+		if f.forbidden[collection] {
+			write(w, http.StatusForbidden, map[string]string{"detail": "You do not have permission to perform this action."})
+			return
+		}
+		objects := f.lists[collection]
 		if r.URL.Path == "/api/v2/"+f.collection+"/" && f.object != nil {
 			objects = []map[string]any{f.object}
 		}

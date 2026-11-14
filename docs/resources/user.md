@@ -4,14 +4,14 @@ page_title: "defectdojo_user Resource - defectdojo"
 subcategory: ""
 description: |-
   Manages a DefectDojo user, such as a service account for a CI/CD pipeline or Dependency-Track. Managing users needs a superuser, or the configuration permissions for users; only superusers can manage staff users, superusers, configuration permissions, and the username or email of another user.
-  DefectDojo creates the user's notification settings, which defectdojo_notifications can manage. Destroying the user deletes them, with the user's alerts and notification webhooks. DefectDojo refuses to delete a user that products or engagements name as a contact or lead, and the provider's own user; deactivate such users with is_active = false instead.
+  DefectDojo creates the user's notification settings, which defectdojo_notifications can manage. Destroying the user deletes them, with the user's alerts and notification webhooks. DefectDojo refuses to delete a user that other objects refer to, such as the findings it imported or reported, the tests it leads, or the products and engagements that name it as a contact or lead, and the provider's own user: deactivate such users with is_active = false instead, and remove them from the state with a removed block.
 ---
 
 # defectdojo_user (Resource)
 
 Manages a DefectDojo user, such as a service account for a CI/CD pipeline or Dependency-Track. Managing users needs a superuser, or the configuration permissions for users; only superusers can manage staff users, superusers, configuration permissions, and the username or email of another user.
 
-DefectDojo creates the user's notification settings, which `defectdojo_notifications` can manage. Destroying the user deletes them, with the user's alerts and notification webhooks. DefectDojo refuses to delete a user that products or engagements name as a contact or lead, and the provider's own user; deactivate such users with `is_active = false` instead.
+DefectDojo creates the user's notification settings, which `defectdojo_notifications` can manage. Destroying the user deletes them, with the user's alerts and notification webhooks. DefectDojo refuses to delete a user that other objects refer to, such as the findings it imported or reported, the tests it leads, or the products and engagements that name it as a contact or lead, and the provider's own user: deactivate such users with `is_active = false` instead, and remove them from the state with a `removed` block.
 
 ## Example Usage
 
@@ -32,12 +32,18 @@ resource "defectdojo_user" "dependency_track" {
   password_wo = var.dependency_track_password
 }
 
+variable "jdoe_initial_password" {
+  type      = string
+  sensitive = true
+}
+
 # A user who may manage product types and SLA configurations.
 resource "defectdojo_user" "security_lead" {
-  username   = "jdoe"
-  email      = "jane.doe@example.com"
-  first_name = "Jane"
-  last_name  = "Doe"
+  username    = "jdoe"
+  email       = "jane.doe@example.com"
+  first_name  = "Jane"
+  last_name   = "Doe"
+  password_wo = var.jdoe_initial_password
 
   configuration_permissions = [
     "add_product_type",
@@ -58,7 +64,7 @@ resource "defectdojo_user" "security_lead" {
 
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
-- `configuration_permissions` (Set of String) The codenames of the user's configuration permissions, which grant global rights, such as `add_product_type` or `change_sla_configuration`. Which codenames exist depends on DefectDojo's version and system settings: the `*_jira_instance` permissions exist only with Jira enabled, `*_github_conf` only with GitHub, and `*_engagement_survey` and `*_question` only with questionnaires; `*_tool_type` and `*_tool_configuration` go away with DefectDojo 3.6. Managing them needs a superuser. When it is not set, the provider leaves the permissions as they are, so they can be managed elsewhere. An empty set removes all the user's permissions, including Django permissions granted outside DefectDojo's configuration permissions. If they change elsewhere between the plan and the apply of another change to the user, the apply fails with an inconsistent result; plan and apply again.
+- `configuration_permissions` (Set of String) The codenames of the user's configuration permissions, which grant global rights, such as `add_product_type` or `change_sla_configuration`. Which codenames exist depends on DefectDojo's version and system settings: the `*_jira_instance` permissions exist only with Jira enabled, `*_github_conf` only with GitHub, and `*_engagement_survey` and `*_question` only with questionnaires; `*_tool_type` and `*_tool_configuration` go away with DefectDojo 3.6. Managing them needs a superuser; without one, the provider can't read them and keeps the value in the state, with a warning. When it is not set, the provider leaves the permissions as they are, so they can be managed elsewhere. An empty set removes all the user's permissions, including Django permissions granted outside DefectDojo's configuration permissions. If they change elsewhere between the plan and the apply of another change to the user, the apply fails with an inconsistent result; plan and apply again.
 - `first_name` (String) The first name of the user, at most 150 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `is_active` (Boolean) Whether the user can sign in. Defaults to `true`.
 - `is_staff` (Boolean) Whether the user is staff, with access to all product types and products and some configuration. Defaults to `false`.

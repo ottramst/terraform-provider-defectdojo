@@ -14,12 +14,18 @@ resource "defectdojo_user" "dependency_track" {
   password_wo = var.dependency_track_password
 }
 
+variable "jdoe_initial_password" {
+  type      = string
+  sensitive = true
+}
+
 # A user who may manage product types and SLA configurations.
 resource "defectdojo_user" "security_lead" {
-  username   = "jdoe"
-  email      = "jane.doe@example.com"
-  first_name = "Jane"
-  last_name  = "Doe"
+  username    = "jdoe"
+  email       = "jane.doe@example.com"
+  first_name  = "Jane"
+  last_name   = "Doe"
+  password_wo = var.jdoe_initial_password
 
   configuration_permissions = [
     "add_product_type",
