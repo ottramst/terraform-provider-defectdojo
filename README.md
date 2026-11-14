@@ -90,6 +90,7 @@ For details, see the:
 - [Resource documentation](docs/resources/) for available resources
 - [Data source documentation](docs/data-sources/) for available data sources
 - [Example configurations](examples/)
+- [Guides](docs/guides/), such as connecting [Dependency-Track](docs/guides/dependency-track.md)
 
 ### Migrating from doximity/defectdojo
 

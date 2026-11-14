@@ -19,6 +19,7 @@ NOTES:
 * `defectdojo_user`: DefectDojo's API can't change a password, so `password_wo` (Terraform 1.11+) is only sent when the user is created. `configuration_permissions` are codenames, such as `add_product_type`, which the provider maps to DefectDojo's IDs, and are only sent when they are configured; an empty set removes all the user's Django permissions ([#11](https://github.com/ottramst/terraform-provider-defectdojo/issues/11))
 * `defectdojo_notification_webhook`: DefectDojo deactivates a webhook whose deliveries fail (`status`); a webhook it deactivates permanently can't be reactivated through the API: edit it in DefectDojo's UI or replace it ([#13](https://github.com/ottramst/terraform-provider-defectdojo/issues/13))
 * `defectdojo_notifications`: DefectDojo creates the system-wide settings and each user's personal settings itself, so creating the resource adopts them; destroying them resets them to DefectDojo's defaults instead of deleting them, which would stop the user's notifications. Every event is managed: one that isn't configured gets DefectDojo's default, `alert`. `scan_added_empty` holds at most one channel, a limit of DefectDojo's API ([#12](https://github.com/ottramst/terraform-provider-defectdojo/issues/12))
+* New guide, *Connect Dependency-Track to DefectDojo*, with an example that sets up both sides with this provider and the Dependency-Track provider ([#14](https://github.com/ottramst/terraform-provider-defectdojo/issues/14))
 
 ## v0.1.0
 
