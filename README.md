@@ -64,7 +64,7 @@ terraform {
   required_providers {
     defectdojo = {
       source  = "ottramst/defectdojo"
-      version = "~> 0.1"
+      version = "~> 0.1.0"
     }
   }
 }
