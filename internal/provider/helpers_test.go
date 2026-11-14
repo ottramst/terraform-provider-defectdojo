@@ -101,6 +101,8 @@ func TestNoSurroundingWhitespace(t *testing.T) {
 		{"　ideographic space", false},
 		{"line separator ", false},
 		{"next line\u0085", false},
+		{"vertical tab\v", false},
+		{"\x1cfile separator", false},
 	}
 	v := noSurroundingWhitespace()
 	for _, tt := range tests {

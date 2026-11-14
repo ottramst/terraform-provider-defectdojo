@@ -39,7 +39,7 @@ resource "defectdojo_product_type" "internal" {
 
 ### Optional
 
-- `authorized_users` (Set of Number) The IDs of the users who may access the product type and its products, in addition to superusers and staff. When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere; an empty set removes them all.
+- `authorized_users` (Set of Number) The IDs of the users who may access the product type and its products, in addition to superusers and staff. When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere; an empty set removes them all. If they change elsewhere between the plan and the apply of another change to the product type, the apply fails with an inconsistent result; plan and apply again.
 - `critical_product` (Boolean) Whether the products of this type are critical. Defaults to `false`.
 - `description` (String) The description of the product type, at most 4000 characters, without leading or trailing whitespace, which DefectDojo removes. Trim heredocs with `chomp()` or `trimspace()`.
 - `force_destroy` (Boolean) Whether to destroy the product type even when it has products, which DefectDojo then deletes too, with their engagements, tests and findings. Defaults to `false`.

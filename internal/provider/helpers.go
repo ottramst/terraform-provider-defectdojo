@@ -90,10 +90,11 @@ func parseImportID(id, object string, diags *diag.Diagnostics) (int64, bool) {
 // noSurroundingWhitespace rejects strings with leading or trailing
 // whitespace: DefectDojo trims text fields with Python's str.strip, so such a
 // value would not match the planned value after apply. Whitespace is ASCII
-// and Unicode whitespace, and the separators \x1c-\x1f and \x85.
+// and Unicode whitespace, the vertical tab \x0b (which RE2's \s leaves out),
+// and the separators \x1c-\x1f and \x85.
 func noSurroundingWhitespace() validator.String {
 	return stringvalidator.RegexMatches(
-		regexp.MustCompile(`(?s)^$|^[^\s\p{Z}\x{1c}-\x{1f}\x{85}](.*[^\s\p{Z}\x{1c}-\x{1f}\x{85}])?$`),
+		regexp.MustCompile(`(?s)^$|^[^\s\p{Z}\x{0b}\x{1c}-\x{1f}\x{85}](.*[^\s\p{Z}\x{0b}\x{1c}-\x{1f}\x{85}])?$`),
 		"must not have leading or trailing whitespace, which DefectDojo removes",
 	)
 }

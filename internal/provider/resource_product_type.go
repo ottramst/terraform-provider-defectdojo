@@ -101,7 +101,8 @@ func (r *ProductTypeResource) Schema(_ context.Context, _ resource.SchemaRequest
 			},
 			"authorized_users": schema.SetAttribute{
 				MarkdownDescription: "The IDs of the users who may access the product type and its products, in addition to superusers and staff. " +
-					"When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere; an empty set removes them all.",
+					"When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere; an empty set removes them all. " +
+					"If they change elsewhere between the plan and the apply of another change to the product type, the apply fails with an inconsistent result; plan and apply again.",
 				ElementType: types.Int64Type,
 				Optional:    true,
 				Computed:    true,

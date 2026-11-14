@@ -26,12 +26,14 @@ jobs:
             echo "No versions in .github/defectdojo-versions.json"
             exit 1
           fi
-          # Every default image tag in docker-compose.yml must be the newest version.
+          # Every DefectDojo image in docker-compose.yml must take its tag from
+          # DD_VERSION, defaulting to the newest version.
           newest=$(jq -r '.[-1]' <<< "$versions")
-          defaults=$(grep -oE '\$\{DD_VERSION:-[^}]*\}' docker-compose.yml | sort -u)
-          if [ "$defaults" != "\${DD_VERSION:-$newest}" ]; then
-            echo "The DD_VERSION defaults in docker-compose.yml are not all $newest, the newest version in .github/defectdojo-versions.json:"
-            echo "$defaults"
+          images=$(grep -E 'image: .*defectdojo/defectdojo-' docker-compose.yml || true)
+          stale=$(grep -vF "\${DD_VERSION:-$newest}" <<< "$images" || true)
+          if [ -z "$images" ] || [ -n "$stale" ]; then
+            echo "Every DefectDojo image in docker-compose.yml must be tagged \${DD_VERSION:-$newest}, the newest version in .github/defectdojo-versions.json:"
+            echo "${stale:-no DefectDojo images found}"
             exit 1
           fi
           echo "versions=$versions" >> "$GITHUB_OUTPUT"
