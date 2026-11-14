@@ -24,7 +24,8 @@ You are an independent reviewer of a pull request in github.com/ottramst/terrafo
    - `go build ./...`, `go vet ./...`, `go test ./...` and `golangci-lint run`;
    - `go mod tidy -diff`, also in `tools/`;
    - `make generate` followed by `git diff --exit-code`, if schemas, descriptions or `examples/` changed;
-   - `make testacc` only if a stack is already running on `localhost:8080`. Otherwise rely on CI's acceptance test jobs, which cover every supported DefectDojo and Terraform version.
+   - `make testacc` only if a stack is already running on `localhost:8080`. Otherwise rely on CI's acceptance test jobs, which cover every supported DefectDojo and Terraform version, but still run the tests that use a fake DefectDojo and need only Terraform: `TF_ACC=1 go test -run 'NotSentUnlessConfigured' ./internal/provider/` (they check the request bodies);
+   - for releases and changes to `.goreleaser.yml`: `go run github.com/goreleaser/goreleaser/v2@latest check`, and a snapshot build with `release --snapshot --clean --skip=sign,publish`.
 4. Check:
    - **Terraform semantics:** plan/apply consistency (values DefectDojo normalizes, such as stripped whitespace or null vs `""`, cause "Provider produced inconsistent result"); Required/Optional/Computed, defaults and plan modifiers; attributes that force replacement; sets vs lists; sensitive and write-only attributes; attributes others may manage, which `Update` must only send when the **configuration** sets them.
    - **Lifecycle:** import by ID and by identity, identity set in Create, Read and Update, Read removing objects that are gone, deletes of objects already gone, and `force_destroy` plus the wait after delete for objects whose delete cascades.
@@ -34,7 +35,7 @@ You are an independent reviewer of a pull request in github.com/ottramst/terrafo
    - **The client dependency:** go-defectdojo required by a release or by a pseudo-version of a commit on its `main` branch, never a `replace` directive or a commit of a pull request branch.
    - **Workflows (`.github/`):** least-privilege permissions, actions pinned to SHAs that match their version comments, no template injection, `persist-credentials: false`, and jobs that would skip and break the `CI gate`.
    - **Dependency updates:** upstream release notes for behaviour changes and raised Go versions, `go.sum` consistency, and action SHAs that match their tags.
-   - **Releases:** the `CHANGELOG.md` section heading matches the tag exactly, go-defectdojo is a tagged release (the release workflow fails on a pseudo-version), and every resource and attribute the notes mention exists.
+   - **Releases:** go-defectdojo is a tagged release (the release workflow fails on a pseudo-version or a `replace`); the snapshot build produces what the Terraform Registry needs (zips named `terraform-provider-defectdojo_<version>_<os>_<arch>.zip`, `_SHA256SUMS`, and `_manifest.json` with protocol `6.0`); the signing key is one registered for the `ottramst` namespace (https://registry.terraform.io/v2/gpg-keys?filter%5Bnamespace%5D=ottramst); the `release` environment and the tag ruleset allow the tag; and the `CHANGELOG.md` section, whose heading matches the tag by convention (GoReleaser doesn't read it), names only resources and attributes that exist.
    - **Docs:** every claim in README, `CLAUDE.md`, schema descriptions and examples matches the code.
 
 ## Report
