@@ -171,7 +171,7 @@ func (r *NotificationsResource) Schema(_ context.Context, _ resource.SchemaReque
 		MarkdownDescription: "Manages DefectDojo notification settings: on which channels (`slack`, `msteams`, `mail`, `webhooks`, `alert`) " +
 			"DefectDojo notifies of each event. The settings are system-wide, the template for new users, a user's personal settings, " +
 			"or a user's settings for one product. Managing them needs a superuser. " +
-			"Slack, Microsoft Teams, mail and webhooks also need to be set up in DefectDojo's system settings, " +
+			"Slack, Microsoft Teams, mail and webhooks also need to be turned on in DefectDojo's system settings (`defectdojo_system_settings`), " +
 			"and webhooks need a `defectdojo_notification_webhook`.\n\n" +
 			"DefectDojo creates the system-wide settings and each user's personal settings itself, so creating this resource adopts " +
 			"existing settings of its scope. The resource manages every event: an event that isn't configured gets DefectDojo's default " +

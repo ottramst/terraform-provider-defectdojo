@@ -1,3 +1,14 @@
+## Unreleased
+
+FEATURES:
+
+* **New Resource:** `defectdojo_system_settings`, with resource identity: DefectDojo's system settings. Only the configured settings are changed, the others are read; the Slack token, the Microsoft Teams webhook URL and the Jira webhook secret are write-only attributes with a version; destroying the resource leaves the settings as they are ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
+* **New Data Source:** `defectdojo_system_settings`, with every setting but the secrets, the installation ID and the read-only mode ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
+
+NOTES:
+
+* `defectdojo_system_settings`: removing a setting from the configuration leaves its value in DefectDojo, and settings DefectDojo can hold as null (such as `max_dupes`) can't be set to null; the secrets can't be read back or cleared. DefectDojo's read-only mode is left out on purpose: while it is on, DefectDojo rejects every other change ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
+
 ## v0.2.0
 
 FEATURES:

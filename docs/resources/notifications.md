@@ -3,14 +3,14 @@
 page_title: "defectdojo_notifications Resource - defectdojo"
 subcategory: ""
 description: |-
-  Manages DefectDojo notification settings: on which channels (slack, msteams, mail, webhooks, alert) DefectDojo notifies of each event. The settings are system-wide, the template for new users, a user's personal settings, or a user's settings for one product. Managing them needs a superuser. Slack, Microsoft Teams, mail and webhooks also need to be set up in DefectDojo's system settings, and webhooks need a defectdojo_notification_webhook.
+  Manages DefectDojo notification settings: on which channels (slack, msteams, mail, webhooks, alert) DefectDojo notifies of each event. The settings are system-wide, the template for new users, a user's personal settings, or a user's settings for one product. Managing them needs a superuser. Slack, Microsoft Teams, mail and webhooks also need to be turned on in DefectDojo's system settings (defectdojo_system_settings), and webhooks need a defectdojo_notification_webhook.
   DefectDojo creates the system-wide settings and each user's personal settings itself, so creating this resource adopts existing settings of its scope. The resource manages every event: an event that isn't configured gets DefectDojo's default (alert, and none for scan_added_empty), so don't manage one scope with two resources.
   Destroying the system-wide or a user's personal settings resets them to those defaults, without the template; deleting a user's personal settings would stop the user's notifications. Destroying a user's settings for a product, or the template, deletes them.
 ---
 
 # defectdojo_notifications (Resource)
 
-Manages DefectDojo notification settings: on which channels (`slack`, `msteams`, `mail`, `webhooks`, `alert`) DefectDojo notifies of each event. The settings are system-wide, the template for new users, a user's personal settings, or a user's settings for one product. Managing them needs a superuser. Slack, Microsoft Teams, mail and webhooks also need to be set up in DefectDojo's system settings, and webhooks need a `defectdojo_notification_webhook`.
+Manages DefectDojo notification settings: on which channels (`slack`, `msteams`, `mail`, `webhooks`, `alert`) DefectDojo notifies of each event. The settings are system-wide, the template for new users, a user's personal settings, or a user's settings for one product. Managing them needs a superuser. Slack, Microsoft Teams, mail and webhooks also need to be turned on in DefectDojo's system settings (`defectdojo_system_settings`), and webhooks need a `defectdojo_notification_webhook`.
 
 DefectDojo creates the system-wide settings and each user's personal settings itself, so creating this resource adopts existing settings of its scope. The resource manages every event: an event that isn't configured gets DefectDojo's default (`alert`, and none for `scan_added_empty`), so don't manage one scope with two resources.
 
