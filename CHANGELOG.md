@@ -1,4 +1,4 @@
-## Unreleased
+## v0.0.1
 
 FEATURES:
 
@@ -8,4 +8,5 @@ FEATURES:
 
 NOTES:
 
+* First preview release, built on go-defectdojo v0.0.1. Products and engagements, the rest of the v0.1.0 milestone, follow
 * Tested against DefectDojo 3.4.304 and 3.5.103 with Terraform 1.16 and 1.17
