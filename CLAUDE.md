@@ -84,7 +84,7 @@ Acceptance tests require a real DefectDojo. Tests follow this structure:
 GitHub Actions workflows in `.github/workflows/` (`main.yml` orchestrates `generate`, `lint`, `build`, `test`, and a single `CI gate` job used as the required status check):
 - Acceptance tests run a matrix of DefectDojo (from `.github/defectdojo-versions.json`; a `versions` job also checks that every DefectDojo image in `docker-compose.yml` is tagged `${DD_VERSION:-<newest>}`) × Terraform {1.16.\*, 1.17.\*} (the two non-EOL minors)
 - `upstream.yml` (scheduled, not in the CI gate): a nightly canary on DefectDojo's `nightly-dev` image, and a weekly job that opens an issue when a new DefectDojo minor is released
-- All `setup-go` steps use `go-version-file: go.mod`, and all actions are pinned to commit SHAs
+- All `setup-go` steps use `go-version-file: go.mod`, so `go.mod`'s `toolchain` line is the Go that CI and the released binaries use (govulncheck checks it too, with `go-version-input: ''`): raise it with each Go security release. All actions are pinned to commit SHAs
 - `make generate` must produce no git diff, and `go.mod`/`go.sum` must be tidy
 - golangci-lint enforced with zero tolerance (`max-issues-per-linter: 0`)
 - Also: CodeQL, govulncheck and dependency review (`security.yml`), OpenSSF Scorecard, and actionlint plus zizmor for workflow changes. Reusable workflows are called with `./` paths plus `# zizmor: ignore[self-repository]`, because the `$/` syntax zizmor suggests fails actionlint
