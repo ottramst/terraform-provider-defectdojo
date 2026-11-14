@@ -4,9 +4,12 @@ FEATURES:
 
 * **New Resource:** `defectdojo_system_settings`, with resource identity: DefectDojo's system settings. Only the configured settings are changed, the others are read; the Slack token, the Microsoft Teams webhook URL and the Jira webhook secret are write-only attributes with a version; destroying the resource leaves the settings as they are ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
 * **New Data Source:** `defectdojo_system_settings`, with every setting but the secrets, the installation ID and the read-only mode ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
+* **New Resource:** `defectdojo_jira_instance`, with resource identity: the connection to a Jira server, with the write-only `password_wo` ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
+* **New Data Source:** `defectdojo_jira_instance`, looked up by ID or name ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
 
 NOTES:
 
+* `defectdojo_jira_instance`: the password or API token is sent when the instance is created, when `password_wo_version` changes, and when the URL changes, which DefectDojo allows only with it. A delete is refused while Jira projects use the instance, which DefectDojo would answer with a server error ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
 * `defectdojo_system_settings`: removing a setting from the configuration leaves its value in DefectDojo, and settings DefectDojo can hold as null (such as `max_dupes`) can't be set to null; the secrets can't be read back, and removing them leaves their values (the Slack token and the Teams URL are cleared with `""` and a new version; the Jira webhook secret can't be cleared). DefectDojo's read-only mode is left out on purpose: while it is on, DefectDojo rejects every other change ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
 
 ## v0.2.0
