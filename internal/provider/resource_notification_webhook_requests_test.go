@@ -12,7 +12,7 @@ import (
 
 // The header value is sent on create and when its version changes, and only
 // then. Runs against a fake DefectDojo, to check the requests.
-func TestAccNotificationWebhook_headerValueNotSentUnlessVersionChanges(t *testing.T) {
+func TestAccNotificationWebhook_headerValueNotSentUnlessConfiguredVersionChanges(t *testing.T) {
 	fake := &fakeDefectDojo{
 		collection: "notification_webhooks",
 		defaults:   map[string]any{"status": "active", "note": "", "first_error": nil, "last_error": nil, "owner": nil},
