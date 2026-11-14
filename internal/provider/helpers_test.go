@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -112,6 +113,70 @@ func TestNoSurroundingWhitespace(t *testing.T) {
 			v.ValidateString(context.Background(), req, &resp)
 			if got := !resp.Diagnostics.HasError(); got != tt.valid {
 				t.Errorf("valid = %v, want %v (%v)", got, tt.valid, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+func TestTagSet(t *testing.T) {
+	strs := func(s ...string) types.Set {
+		elems := make([]attr.Value, len(s))
+		for i, v := range s {
+			elems[i] = types.StringValue(v)
+		}
+		return types.SetValueMust(types.StringType, elems)
+	}
+	tests := []struct {
+		name      string
+		tags      []string
+		reference types.Set
+		want      types.Set
+	}{
+		{name: "none", tags: nil, reference: types.SetNull(types.StringType), want: strs()},
+		{name: "no reference", tags: []string{"a", "B"}, reference: types.SetUnknown(types.StringType), want: strs("a", "B")},
+		// Write responses can list a tag twice.
+		{name: "duplicates", tags: []string{"own", "x", "own", "X"}, reference: types.SetNull(types.StringType), want: strs("own", "x")},
+		// DefectDojo reused the spelling of an existing tag.
+		{name: "reference spelling", tags: []string{"pci", "shop"}, reference: strs("PCI", "other"), want: strs("PCI", "shop")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tagSet(tt.tags, tt.reference); !got.Equal(tt.want) {
+				t.Errorf("tagSet() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTagValidators(t *testing.T) {
+	tests := []struct {
+		tags    []string
+		wantErr bool
+	}{
+		{tags: []string{"pci", "Shop", "a-b_c.d"}},
+		{tags: []string{"foo bar"}, wantErr: true},
+		{tags: []string{"a,b"}, wantErr: true},
+		{tags: []string{`it's`}, wantErr: true},
+		{tags: []string{""}, wantErr: true},
+		{tags: []string{" x"}, wantErr: true},
+		{tags: []string{string(make([]byte, 256))}, wantErr: true},
+		{tags: []string{"X", "x"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprint(tt.tags), func(t *testing.T) {
+			elems := make([]attr.Value, len(tt.tags))
+			for i, v := range tt.tags {
+				elems[i] = types.StringValue(v)
+			}
+			req := validator.SetRequest{ConfigValue: types.SetValueMust(types.StringType, elems)}
+			var diags diag.Diagnostics
+			for _, v := range tagValidators() {
+				resp := &validator.SetResponse{}
+				v.ValidateSet(context.Background(), req, resp)
+				diags.Append(resp.Diagnostics...)
+			}
+			if diags.HasError() != tt.wantErr {
+				t.Errorf("errors = %v, want error: %v", diags, tt.wantErr)
 			}
 		})
 	}

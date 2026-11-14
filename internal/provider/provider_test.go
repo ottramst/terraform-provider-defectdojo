@@ -33,6 +33,16 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// testAccSkipUnlessAcc skips a test unless TF_ACC is set, like
+// resource.Test does. Tests that create objects before resource.Test call it
+// first.
+func testAccSkipUnlessAcc(t *testing.T) {
+	t.Helper()
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("acceptance tests are skipped unless TF_ACC is set")
+	}
+}
+
 // testAccClient returns a client configured like the provider, to change or
 // check objects outside Terraform.
 func testAccClient(t *testing.T) *defectdojo.Client {
@@ -93,7 +103,7 @@ func TestProvider_schemas(t *testing.T) {
 			t.Errorf("GetProviderSchema: %s: %s", d.Summary, d.Detail)
 		}
 	}
-	for _, name := range []string{"defectdojo_product_type"} {
+	for _, name := range []string{"defectdojo_product", "defectdojo_product_type"} {
 		if _, ok := resp.ResourceSchemas[name]; !ok {
 			t.Errorf("resource %s is not registered", name)
 		}

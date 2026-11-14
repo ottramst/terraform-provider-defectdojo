@@ -15,15 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-// fakeProductTypes is a minimal DefectDojo that serves one product type and
-// records the bodies of the PATCH requests, to check what the provider sends.
-type fakeProductTypes struct {
+// fakeDefectDojo is a minimal DefectDojo that serves one object of a
+// collection, such as "product_types", and records the bodies of the PATCH
+// requests, to check what the provider sends. Other GET requests to
+// /api/v2/ (the child counts of force_destroy) return an empty list.
+type fakeDefectDojo struct {
+	collection string
+	defaults   map[string]any // the fields of a new object
+
 	mu      sync.Mutex
 	object  map[string]any // nil when deleted
 	patches []map[string]any
 }
 
-func (f *fakeProductTypes) handler(t *testing.T) http.Handler {
+func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 	mux := http.NewServeMux()
 	write := func(w http.ResponseWriter, status int, v any) {
 		w.Header().Set("Content-Type", "application/json")
@@ -39,12 +44,17 @@ func (f *fakeProductTypes) handler(t *testing.T) http.Handler {
 		}
 		return body
 	}
-	mux.HandleFunc("POST /api/v2/product_types/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /api/v2/"+f.collection+"/", func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
-		f.object = map[string]any{"id": 7, "description": nil, "critical_product": false, "key_product": false, "authorized_users": []any{}}
-		for k, v := range decode(r) {
+		f.object = map[string]any{"id": 7}
+		for k, v := range f.defaults {
 			f.object[k] = v
+		}
+		for k, v := range decode(r) {
+			if v != nil || f.object[k] == nil {
+				f.object[k] = v
+			}
 		}
 		write(w, http.StatusCreated, f.object)
 	})
@@ -52,7 +62,7 @@ func (f *fakeProductTypes) handler(t *testing.T) http.Handler {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		if f.object == nil {
-			write(w, http.StatusNotFound, map[string]string{"detail": "No Product_Type matches the given query."})
+			write(w, http.StatusNotFound, map[string]string{"detail": "No object matches the given query."})
 			return
 		}
 		switch r.Method {
@@ -71,9 +81,9 @@ func (f *fakeProductTypes) handler(t *testing.T) http.Handler {
 		write(w, http.StatusOK, f.object)
 	}
 	for _, method := range []string{"GET", "PATCH", "DELETE"} {
-		mux.HandleFunc(method+" /api/v2/product_types/7/", object)
+		mux.HandleFunc(method+" /api/v2/"+f.collection+"/7/", object)
 	}
-	mux.HandleFunc("GET /api/v2/products/", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("GET /api/v2/", func(w http.ResponseWriter, _ *http.Request) {
 		write(w, http.StatusOK, map[string]any{"count": 0, "results": []any{}})
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -83,19 +93,15 @@ func (f *fakeProductTypes) handler(t *testing.T) http.Handler {
 	return mux
 }
 
-// setAuthorizedUsers changes the authorized users outside Terraform.
-func (f *fakeProductTypes) setAuthorizedUsers(ids ...int) {
+// set changes a field of the object outside Terraform.
+func (f *fakeDefectDojo) set(field string, value any) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	users := make([]any, len(ids))
-	for i, id := range ids {
-		users[i] = id
-	}
-	f.object["authorized_users"] = users
+	f.object[field] = value
 }
 
 // lastPatch returns the body of the last PATCH request.
-func (f *fakeProductTypes) lastPatch() map[string]any {
+func (f *fakeDefectDojo) lastPatch() map[string]any {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if len(f.patches) == 0 {
@@ -104,11 +110,30 @@ func (f *fakeProductTypes) lastPatch() map[string]any {
 	return f.patches[len(f.patches)-1]
 }
 
+// checkPatchSends checks which of fields the last PATCH request sent.
+func (f *fakeDefectDojo) checkPatchSends(want bool, fields ...string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		patch := f.lastPatch()
+		if patch == nil {
+			return fmt.Errorf("no PATCH request was sent")
+		}
+		for _, field := range fields {
+			if _, sent := patch[field]; sent != want {
+				return fmt.Errorf("PATCH body %v: %s sent = %v, want %v", patch, field, sent, want)
+			}
+		}
+		return nil
+	}
+}
+
 // Updates send authorized_users only when it is configured, so that users
 // managed elsewhere are kept. Runs against a fake DefectDojo, to check the
 // requests.
 func TestAccProductType_authorizedUsersNotSentUnlessConfigured(t *testing.T) {
-	fake := &fakeProductTypes{}
+	fake := &fakeDefectDojo{
+		collection: "product_types",
+		defaults:   map[string]any{"description": nil, "critical_product": false, "key_product": false, "authorized_users": []any{}},
+	}
 	server := httptest.NewServer(fake.handler(t))
 	t.Cleanup(server.Close)
 
@@ -126,16 +151,7 @@ resource "defectdojo_product_type" "test" {
 `, server.URL, description, extra)
 	}
 	checkPatch := func(wantUsers bool) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			patch := fake.lastPatch()
-			if patch == nil {
-				return fmt.Errorf("no PATCH request was sent")
-			}
-			if _, sent := patch["authorized_users"]; sent != wantUsers {
-				return fmt.Errorf("PATCH body %v: authorized_users sent = %v, want %v", patch, sent, wantUsers)
-			}
-			return nil
-		}
+		return fake.checkPatchSends(wantUsers, "authorized_users")
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -151,7 +167,7 @@ resource "defectdojo_product_type" "test" {
 			},
 			// Not configured: not sent, and a change made elsewhere is kept.
 			{
-				PreConfig: func() { fake.setAuthorizedUsers(1, 2, 3) },
+				PreConfig: func() { fake.set("authorized_users", []any{1, 2, 3}) },
 				Config:    config("three", ""),
 				Check:     checkPatch(false),
 				ConfigStateChecks: []statecheck.StateCheck{
