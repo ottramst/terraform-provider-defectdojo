@@ -2,10 +2,17 @@ resource "defectdojo_product_type" "web" {
   name = "Web Applications"
 }
 
+resource "defectdojo_sla_configuration" "strict" {
+  name     = "Internet-facing"
+  critical = 3
+  high     = 14
+}
+
 resource "defectdojo_product" "storefront" {
-  name            = "Storefront"
-  description     = "The online shop"
-  product_type_id = defectdojo_product_type.web.id
+  name                 = "Storefront"
+  description          = "The online shop"
+  product_type_id      = defectdojo_product_type.web.id
+  sla_configuration_id = defectdojo_sla_configuration.strict.id
 
   business_criticality = "high"
   platform             = "web"

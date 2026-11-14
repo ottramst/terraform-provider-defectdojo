@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -367,27 +365,19 @@ func testAccCreateProductType(t *testing.T) int {
 	return pt.ID
 }
 
-// testAccCreateSLAConfiguration creates an SLA configuration through the raw
-// API, until the client has an SLA configurations service. It is deleted
-// when the test ends, after the test's destroy, which deletes the products
-// that refer to it.
+// testAccCreateSLAConfiguration creates an SLA configuration with
+// DefectDojo's default days. It is deleted when the test ends, after the
+// test's destroy, which deletes the products that refer to it.
 func testAccCreateSLAConfiguration(t *testing.T) int {
 	t.Helper()
 	client := testAccClient(t)
-	body := map[string]any{"name": randName(t), "critical": 7, "high": 30, "medium": 90, "low": 120}
-	var sla struct {
-		ID int `json:"id"`
-	}
-	req, err := client.NewRequest(context.Background(), http.MethodPost, "/api/v2/sla_configurations/", body)
-	testAccNoError(t, err)
-	_, err = client.Do(req, &sla)
+	sla, _, err := client.SLAConfigurations.Create(context.Background(), &defectdojo.SLAConfiguration{
+		Name: randName(t), Critical: 7, High: 30, Medium: 90, Low: 120,
+		EnforceCritical: true, EnforceHigh: true, EnforceMedium: true, EnforceLow: true,
+	})
 	testAccNoError(t, err)
 	t.Cleanup(func() {
-		req, err := client.NewRequest(context.Background(), http.MethodDelete, "/api/v2/sla_configurations/"+strconv.Itoa(sla.ID)+"/", nil)
-		if err == nil {
-			_, err = client.Do(req, nil)
-		}
-		if err != nil {
+		if _, err := client.SLAConfigurations.Delete(context.Background(), sla.ID); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 			t.Logf("cleanup: %v", err)
 		}
 	})
