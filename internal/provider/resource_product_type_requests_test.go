@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"sync"
 	"testing"
 
@@ -16,16 +18,42 @@ import (
 )
 
 // fakeDefectDojo is a minimal DefectDojo that serves one object of a
-// collection, such as "product_types", and records the bodies of the PATCH
-// requests, to check what the provider sends. Other GET requests to
-// /api/v2/ (the child counts of force_destroy) return an empty list.
+// collection, such as "product_types", and records the bodies of the POST and
+// PATCH requests, to check what the provider sends. A list of the collection
+// returns the object when it matches the query's filters. Lists of the
+// collections in lists return their objects, filtered the same way; other GET
+// requests to /api/v2/ (the child counts of force_destroy) return an empty
+// list.
 type fakeDefectDojo struct {
 	collection string
 	defaults   map[string]any // the fields of a new object
 
+	// lists holds read-only objects of other collections, by collection.
+	lists map[string][]map[string]any
+
 	mu      sync.Mutex
 	object  map[string]any // nil when deleted
+	posts   []map[string]any
 	patches []map[string]any
+}
+
+// matches reports whether object matches the filters of a list query: each
+// parameter other than limit and offset equals the field, formatted with
+// fmt.Sprint ("" for null).
+func matches(object map[string]any, query url.Values) bool {
+	for k, values := range query {
+		if k == "limit" || k == "offset" {
+			continue
+		}
+		v := object[k]
+		if v == nil {
+			v = ""
+		}
+		if fmt.Sprint(v) != values[0] {
+			return false
+		}
+	}
+	return true
 }
 
 func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
@@ -51,7 +79,9 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 		for k, v := range f.defaults {
 			f.object[k] = v
 		}
-		for k, v := range decode(r) {
+		body := decode(r)
+		f.posts = append(f.posts, body)
+		for k, v := range body {
 			if v != nil || f.object[k] == nil {
 				f.object[k] = v
 			}
@@ -83,8 +113,20 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 	for _, method := range []string{"GET", "PATCH", "DELETE"} {
 		mux.HandleFunc(method+" /api/v2/"+f.collection+"/7/", object)
 	}
-	mux.HandleFunc("GET /api/v2/", func(w http.ResponseWriter, _ *http.Request) {
-		write(w, http.StatusOK, map[string]any{"count": 0, "results": []any{}})
+	mux.HandleFunc("GET /api/v2/", func(w http.ResponseWriter, r *http.Request) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		objects := f.lists[strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/v2/"), "/")]
+		if r.URL.Path == "/api/v2/"+f.collection+"/" && f.object != nil {
+			objects = []map[string]any{f.object}
+		}
+		results := []map[string]any{}
+		for _, o := range objects {
+			if matches(o, r.URL.Query()) {
+				results = append(results, o)
+			}
+		}
+		write(w, http.StatusOK, map[string]any{"count": len(results), "results": results})
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("unexpected %s %s", r.Method, r.URL)
@@ -100,6 +142,16 @@ func (f *fakeDefectDojo) set(field string, value any) {
 	f.object[field] = value
 }
 
+// lastPost returns the body of the last POST request.
+func (f *fakeDefectDojo) lastPost() map[string]any {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if len(f.posts) == 0 {
+		return nil
+	}
+	return f.posts[len(f.posts)-1]
+}
+
 // lastPatch returns the body of the last PATCH request.
 func (f *fakeDefectDojo) lastPatch() map[string]any {
 	f.mu.Lock()
@@ -112,14 +164,23 @@ func (f *fakeDefectDojo) lastPatch() map[string]any {
 
 // checkPatchSends checks which of fields the last PATCH request sent.
 func (f *fakeDefectDojo) checkPatchSends(want bool, fields ...string) resource.TestCheckFunc {
+	return checkSends("PATCH", f.lastPatch, want, fields)
+}
+
+// checkPostSends checks which of fields the last POST request sent.
+func (f *fakeDefectDojo) checkPostSends(want bool, fields ...string) resource.TestCheckFunc {
+	return checkSends("POST", f.lastPost, want, fields)
+}
+
+func checkSends(method string, last func() map[string]any, want bool, fields []string) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		patch := f.lastPatch()
-		if patch == nil {
-			return fmt.Errorf("no PATCH request was sent")
+		body := last()
+		if body == nil {
+			return fmt.Errorf("no %s request was sent", method)
 		}
 		for _, field := range fields {
-			if _, sent := patch[field]; sent != want {
-				return fmt.Errorf("PATCH body %v: %s sent = %v, want %v", patch, field, sent, want)
+			if _, sent := body[field]; sent != want {
+				return fmt.Errorf("%s body %v: %s sent = %v, want %v", method, body, field, sent, want)
 			}
 		}
 		return nil
