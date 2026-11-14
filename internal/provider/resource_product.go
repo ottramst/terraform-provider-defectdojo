@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -168,8 +167,9 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"enable_full_risk_acceptance":      flag("Whether findings can be risk-accepted with a risk acceptance form.", true),
 			"disable_sla_breach_notifications": flag("Whether to disable the notifications of SLA breaches of the product's findings.", false),
 			"sla_configuration_id": schema.Int64Attribute{
-				MarkdownDescription: "The ID of the SLA configuration of the product. DefectDojo uses the default SLA configuration (1) when it is not set. " +
-					"Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, it can't be changed again. " +
+				MarkdownDescription: "The ID of the SLA configuration of the product, such as a `defectdojo_sla_configuration`. DefectDojo uses the Default SLA configuration (1) when it is not set. " +
+					"Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, " +
+					"neither it nor the days of the new SLA configuration can be changed again. " +
 					"When it is not set, the provider leaves it as it is, so it can be managed elsewhere. " + changedBetweenPlanAndApply,
 				Optional:   true,
 				Computed:   true,
@@ -386,15 +386,17 @@ func (r *ProductResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, data.ID)...)
 }
 
-// slaRecalculationHint explains the error DefectDojo returns when the SLA
-// configuration of a product changes again before the recalculation of the
-// previous change has finished.
+// slaRecalculationHint explains the error DefectDojo returns for an SLA
+// change made while it still recalculates the SLA dates of an earlier one:
+// a change of a product's SLA configuration, or of an SLA configuration's
+// days.
 func slaRecalculationHint(err error) string {
-	if !errors.Is(err, defectdojo.ErrBadRequest) || !strings.Contains(err.Error(), "recalculated") {
+	if !defectdojo.IsSLARecalculating(err) {
 		return ""
 	}
-	return "\n\nDefectDojo is still recalculating the SLA dates of the product's findings after an earlier change of its SLA configuration, " +
-		"which its Celery workers do in the background. Apply again once they have finished."
+	return "\n\nDefectDojo is still recalculating the SLA expiration dates of findings after an earlier SLA change, " +
+		"which its Celery workers do in the background. Apply again once they have finished. " +
+		"If the system setting enable_finding_sla is off, DefectDojo never finishes."
 }
 
 func (r *ProductResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

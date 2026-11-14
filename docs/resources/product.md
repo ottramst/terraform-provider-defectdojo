@@ -20,10 +20,17 @@ resource "defectdojo_product_type" "web" {
   name = "Web Applications"
 }
 
+resource "defectdojo_sla_configuration" "strict" {
+  name     = "Internet-facing"
+  critical = 3
+  high     = 14
+}
+
 resource "defectdojo_product" "storefront" {
-  name            = "Storefront"
-  description     = "The online shop"
-  product_type_id = defectdojo_product_type.web.id
+  name                 = "Storefront"
+  description          = "The online shop"
+  product_type_id      = defectdojo_product_type.web.id
+  sla_configuration_id = defectdojo_sla_configuration.strict.id
 
   business_criticality = "high"
   platform             = "web"
@@ -71,7 +78,7 @@ resource "defectdojo_product" "inventory" {
 - `platform` (String) The platform of the product: the value of an entry of DefectDojo's product platforms, such as `web`, `web service`, `desktop`, `mobile` or `iot`.
 - `product_manager_id` (Number) The ID of the product's product manager, an active user.
 - `regulation_ids` (Set of Number) The IDs of the regulations that apply to the product. When it is not set, the provider leaves the regulations as they are, so they can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
-- `sla_configuration_id` (Number) The ID of the SLA configuration of the product. DefectDojo uses the default SLA configuration (1) when it is not set. Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, it can't be changed again. When it is not set, the provider leaves it as it is, so it can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again.
+- `sla_configuration_id` (Number) The ID of the SLA configuration of the product, such as a `defectdojo_sla_configuration`. DefectDojo uses the Default SLA configuration (1) when it is not set. Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, neither it nor the days of the new SLA configuration can be changed again. When it is not set, the provider leaves it as it is, so it can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again.
 - `tags` (Set of String) The tags of the product, each at most 255 characters, without spaces, commas or quotes. Tags are compared ignoring case: DefectDojo gives a tag the spelling of an existing product tag that matches it ignoring case, and the provider keeps the configured spelling (after an import, the first apply sets the configured spelling once). When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
 - `team_manager_id` (Number) The ID of the product's team manager, an active user.
 - `technical_contact_id` (Number) The ID of the product's technical contact, an active user.
