@@ -224,7 +224,8 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"When the product passes its tags on (`enable_product_tag_inheritance`, or DefectDojo's system setting), DefectDojo adds them to its engagements. " +
 					"The provider can't tell inherited tags apart, so it always hides the tags of the engagement's product unless they are configured. " +
 					"A change of the product's tags reaches its engagements later, through DefectDojo's background workers, and a refresh then shows the result. " +
-					"Moving an engagement without tags of its own to another product replaces the old product's tags with the new product's. " +
+					"Moving an engagement without tags of its own to another product replaces the old product's tags with the new product's when the new product has `enable_product_tag_inheritance`; " +
+					"with only DefectDojo's system setting, the engagement has no tags until tags are written again. " +
 					"When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. " +
 					"An empty set removes them all, including the tags the product passes on.",
 				ElementType: types.StringType,
@@ -477,14 +478,18 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 		return true
 	}
 	hidden := map[string]bool{}
+	// A product that is gone (deleted in the background, with
+	// DD_ASYNC_OBJECT_DELETE) passes no tags on.
 	p, _, err := r.client.Products.Get(ctx, e.Product)
-	if err != nil {
+	if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		diags.AddError("Error reading DefectDojo engagement",
 			fmt.Sprintf("Could not read product %d, for the tags it passes on to engagement %d, unexpected error: %s", e.Product, id, err))
 		return true
 	}
-	for _, tag := range p.Tags {
-		hidden[strings.ToLower(tag)] = true
+	if p != nil {
+		for _, tag := range p.Tags {
+			hidden[strings.ToLower(tag)] = true
+		}
 	}
 	if known(visible) {
 		for _, v := range visible.Elements() {
