@@ -45,7 +45,7 @@ resource "defectdojo_notification_webhook" "chat" {
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
 - `header_name` (String) The name of a header that DefectDojo sends with each notification, such as `Authorization`, at most 100 characters. Its value is `header_value_wo`.
-- `header_value_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) The value of the header named by `header_name`, such as a token, at most 100 characters, which is never stored in the plan or state. Requires Terraform 1.11 or later, and `header_value_wo_version`. Terraform can't detect a change of a write-only value: change `header_value_wo_version` to send it. DefectDojo returns the value in plain text to every superuser.
+- `header_value_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) The value of the header named by `header_name`, such as a token, at most 100 characters, which is never stored in the plan or state. Requires Terraform 1.11 or later, `header_name` and `header_value_wo_version`. Terraform can't detect a change of a write-only value: change `header_value_wo_version` to send it. DefectDojo returns the value in plain text to every superuser.
 - `header_value_wo_version` (Number) The version of `header_value_wo`. The provider sends the header value when the webhook is created, and when the version changes, including when it is set for the first time, for example after an import. Removing it, with `header_value_wo`, clears the header value.
 
 ### Read-Only
