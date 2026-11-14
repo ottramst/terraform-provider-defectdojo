@@ -1,0 +1,71 @@
+# Terraform Provider release workflow.
+name: Release
+
+# This GitHub action creates a release when a tag that matches the pattern
+# "v*" (e.g. v0.1.0) is created.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions: {}
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Deployment protection rules on the environment restrict releases to v* tags.
+    environment: release
+    permissions:
+      # Creating releases and uploading assets
+      contents: write
+      # Build provenance attestations
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Allow goreleaser to access older tag information.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: false # don't let a cache poisoned elsewhere into a release build
+      # A release must not depend on an untagged or replaced client.
+      - name: Check that go-defectdojo is a tagged release
+        run: |
+          set -euo pipefail
+          version=$(go list -m -f '{{.Version}}' github.com/ottramst/go-defectdojo)
+          replace=$(go list -m -f '{{if .Replace}}{{.Replace}}{{end}}' github.com/ottramst/go-defectdojo)
+          echo "go-defectdojo $version"
+          if [ -n "$replace" ]; then
+            echo "::error::go.mod replaces github.com/ottramst/go-defectdojo with $replace. Remove the replace directive."
+            exit 1
+          fi
+          # Every pseudo-version ends in a 14-digit timestamp and a 12-digit commit hash.
+          if [[ "$version" =~ [.-][0-9]{14}-[0-9a-f]{12}(\+incompatible)?$ ]]; then
+            echo "::error::go.mod requires the pseudo-version $version of github.com/ottramst/go-defectdojo. Tag a client release and require it first."
+            exit 1
+          fi
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
+        id: import_gpg
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          # GitHub sets the GITHUB_TOKEN secret automatically.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.zip
+            dist/*_SHA256SUMS

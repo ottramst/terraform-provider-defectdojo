@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/ottramst/terraform-provider-defectdojo/discussions
+    about: Ask questions and discuss ideas in GitHub Discussions.
+  - name: Security vulnerability
+    url: https://github.com/ottramst/terraform-provider-defectdojo/security/advisories/new
+    about: Report security vulnerabilities privately.
+  - name: DefectDojo issues
+    url: https://github.com/DefectDojo/django-DefectDojo/issues
+    about: Problems with DefectDojo itself, rather than this provider.

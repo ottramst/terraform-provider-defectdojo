@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in the provider is not working as expected.
+labels: ["type/bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please check the
+        [support policy](https://github.com/ottramst/terraform-provider-defectdojo#support-policy) first:
+        older DefectDojo versions are supported on a best-effort basis only, and DefectDojo 2.x is not supported.
+  - type: input
+    id: provider-version
+    attributes:
+      label: Provider version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: terraform-version
+    attributes:
+      label: Terraform version
+      description: Output of `terraform version`.
+      placeholder: "1.17.0"
+    validations:
+      required: true
+  - type: input
+    id: defectdojo-version
+    attributes:
+      label: DefectDojo version
+      description: The DefectDojo version, as shown in the footer of the web UI, and whether it is the open-source edition or DefectDojo Pro.
+      placeholder: "3.5.103 (open source)"
+    validations:
+      required: true
+  - type: input
+    id: resources
+    attributes:
+      label: Affected resources or data sources
+      placeholder: defectdojo_product_type
+  - type: textarea
+    id: config
+    attributes:
+      label: Terraform configuration
+      description: A minimal configuration that reproduces the problem. Remove any secrets.
+      render: hcl
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error output.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. terraform apply
+        2. ...
+  - type: textarea
+    id: debug
+    attributes:
+      label: Debug output
+      description: Optional. Run with `TF_LOG=DEBUG` and paste the relevant part, or link a gist. Remove any secrets.
+      render: shell
