@@ -145,8 +145,11 @@ resource "defectdojo_system_settings" "test" {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// PlanOnly: the create plan must refuse it, before anything is
+			// written.
 			{
 				Config:      config(40),
+				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`minimum_password_length \(40\) exceeds\s+maximum_password_length \(30\)`),
 			},
 			{

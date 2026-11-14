@@ -55,7 +55,7 @@ func (r *SystemSettingsResource) Schema(_ context.Context, _ resource.SchemaRequ
 		attributes[s.name] = s.resourceAttribute()
 	}
 	for _, s := range systemSettingsSecrets {
-		lengths := fmt.Sprintf("at most %d characters", s.maxLength)
+		lengths := fmt.Sprintf("At most %d characters", s.maxLength)
 		validators := []validator.String{stringvalidator.UTF8LengthAtMost(s.maxLength), noSurroundingWhitespace()}
 		if s.minLength > 0 {
 			lengths = fmt.Sprintf("%d to %d characters", s.minLength, s.maxLength)
@@ -120,17 +120,28 @@ func (r *SystemSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 	if resp.Diagnostics.HasError() || (!known(minimum) && !known(maximum)) {
 		return
 	}
-	if (!known(minimum) || !known(maximum)) && req.State.Raw.IsNull() && r.client != nil {
+	// On create, a length the configuration leaves out is unknown in the
+	// plan: compare with DefectDojo's. A configured length that is unknown
+	// (from another resource) isn't checked.
+	var configMinimum, configMaximum types.Int64
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("minimum_password_length"), &configMinimum)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("maximum_password_length"), &configMaximum)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	fillMinimum := minimum.IsUnknown() && configMinimum.IsNull()
+	fillMaximum := maximum.IsUnknown() && configMaximum.IsNull()
+	if (fillMinimum || fillMaximum) && req.State.Raw.IsNull() && r.client != nil {
 		settings, _, err := r.client.SystemSettings.Get(ctx)
 		if err != nil {
 			resp.Diagnostics.AddWarning("Could not read the DefectDojo system settings",
 				"The password lengths couldn't be compared with DefectDojo's: "+err.Error())
 			return
 		}
-		if minimum.IsUnknown() {
+		if fillMinimum {
 			minimum = types.Int64Value(int64(settings.MinimumPasswordLength))
 		}
-		if maximum.IsUnknown() {
+		if fillMaximum {
 			maximum = types.Int64Value(int64(settings.MaximumPasswordLength))
 		}
 	}
