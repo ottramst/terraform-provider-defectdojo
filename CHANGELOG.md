@@ -7,7 +7,7 @@ FEATURES:
 
 NOTES:
 
-* `defectdojo_system_settings`: removing a setting from the configuration leaves its value in DefectDojo, and settings DefectDojo can hold as null (such as `max_dupes`) can't be set to null; the secrets can't be read back or cleared. DefectDojo's read-only mode is left out on purpose: while it is on, DefectDojo rejects every other change ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
+* `defectdojo_system_settings`: removing a setting from the configuration leaves its value in DefectDojo, and settings DefectDojo can hold as null (such as `max_dupes`) can't be set to null; the secrets can't be read back, and removing them leaves their values (the Slack token and the Teams URL are cleared with `""` and a new version; the Jira webhook secret can't be cleared). DefectDojo's read-only mode is left out on purpose: while it is on, DefectDojo rejects every other change ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
 
 ## v0.2.0
 

@@ -154,13 +154,17 @@ type systemSettingsSecret struct {
 	maxLength   int
 	minLength   int
 	description string
+	clearing    string // how to clear it, if it can be
 }
 
 var systemSettingsSecrets = []systemSettingsSecret{
-	{name: "slack_token", minLength: 0, maxLength: 100, description: "The token of DefectDojo's Slack app."},
-	{name: "msteams_url", minLength: 0, maxLength: 400, description: "The URL of the Microsoft Teams incoming webhook, which carries its token."},
+	{name: "slack_token", minLength: 0, maxLength: 100, description: "The token of DefectDojo's Slack app.",
+		clearing: "To clear it, set it to `\"\"` with a new version."},
+	{name: "msteams_url", minLength: 0, maxLength: 400, description: "The URL of the Microsoft Teams incoming webhook, which carries its token.",
+		clearing: "To clear it, set it to `\"\"` with a new version."},
 	{name: "jira_webhook_secret", minLength: 1, maxLength: 64,
-		description: "The secret that Jira's webhook calls carry in their URL. DefectDojo generates one when it is installed; setting this replaces it, so Jira's webhook URL has to change with it."},
+		description: "The secret that Jira's webhook calls carry in their URL. DefectDojo generates one when it is installed; setting this replaces it, so Jira's webhook URL has to change with it.",
+		clearing:    "It can't be cleared from Terraform."},
 }
 
 // resourceAttribute returns the resource attribute of the setting:

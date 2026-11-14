@@ -24,6 +24,7 @@ const systemSettingsAddress = "defectdojo_system_settings.test"
 // that would affect other tests.
 func testAccRestoreSystemSettings(t *testing.T) *defectdojo.SystemSettings {
 	t.Helper()
+	testAccSkipUnlessAcc(t)
 	client := testAccClient(t)
 	before, _, err := client.SystemSettings.Get(context.Background())
 	testAccNoError(t, err)

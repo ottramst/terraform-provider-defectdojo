@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"net/http/httptest"
+	"regexp"
 	"slices"
 	"testing"
 
@@ -114,4 +115,43 @@ func checkPatchExactly(fake *fakeDefectDojo, fields ...string) resource.TestChec
 		}
 		return nil
 	}
+}
+
+// On create, a configured minimum password length is compared with
+// DefectDojo's maximum, which the configuration leaves out.
+func TestAccSystemSettings_passwordLengthsOnCreate(t *testing.T) {
+	fake := &fakeDefectDojo{
+		collection: "system_settings",
+		id:         1,
+		singleton:  true,
+		object:     map[string]any{"id": 1, "minimum_password_length": 9, "maximum_password_length": 30},
+	}
+	server := httptest.NewServer(fake.handler(t))
+	t.Cleanup(server.Close)
+
+	config := func(minimum int) string {
+		return fmt.Sprintf(`
+provider "defectdojo" {
+  url       = %q
+  api_token = "test"
+}
+
+resource "defectdojo_system_settings" "test" {
+  minimum_password_length = %d
+}
+`, server.URL, minimum)
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config(40),
+				ExpectError: regexp.MustCompile(`minimum_password_length \(40\) exceeds\s+maximum_password_length \(30\)`),
+			},
+			{
+				Config: config(20),
+			},
+		},
+	})
 }
