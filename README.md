@@ -28,13 +28,14 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Notifications**: Manage on which channels DefectDojo notifies of each event, system-wide, for new users, per user and per product; DefectDojo's own settings are adopted
 - **Notification webhooks**: Manage system notification webhooks, with a write-only header value for their authentication
 - **Jira instances**: Manage the connections to Jira servers, with a write-only password or API token, and look them up by ID or name
+- **Jira projects**: Connect products and engagements to Jira projects, with custom and transition fields as JSON
 - **System settings**: Manage the settings of the whole instance, such as deduplication, SLA notifications and the notification channels; only the settings in the configuration are changed, and the secrets are write-only
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
 - **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+)
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
-Jira projects and more are planned; see the [roadmap](#roadmap).
+Lookup objects and more are planned; see the [roadmap](#roadmap).
 
 ## DefectDojo version compatibility
 
@@ -96,7 +97,7 @@ For details, see the:
 
 ### Migrating from doximity/defectdojo
 
-The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Moving its `defectdojo_product_type`, `defectdojo_product` and `defectdojo_jira_product_configuration` resources to this provider is planned, with `moved` blocks where possible. Until then, remove product types and products from state and import them here by their numeric IDs; the Jira product configuration follows with the Jira milestone (v0.3.0).
+The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Moving its `defectdojo_product_type`, `defectdojo_product` and `defectdojo_jira_product_configuration` resources to this provider is planned, with `moved` blocks where possible. Until then, remove product types and products from state and import them here by their numeric IDs; import Jira product configurations as `defectdojo_jira_project` the same way.
 
 ## Roadmap
 

@@ -175,6 +175,7 @@ func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Reso
 		NewSLAConfigurationResource,
 		NewSystemSettingsResource,
 		NewJiraInstanceResource,
+		NewJiraProjectResource,
 		NewUserResource,
 	}
 }
