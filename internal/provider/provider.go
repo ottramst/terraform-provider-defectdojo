@@ -169,6 +169,7 @@ func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Reso
 	return []func() resource.Resource{
 		NewEngagementResource,
 		NewNotificationWebhookResource,
+		NewNotificationsResource,
 		NewProductResource,
 		NewProductTypeResource,
 		NewSLAConfigurationResource,
