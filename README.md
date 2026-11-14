@@ -8,8 +8,8 @@
 This [Terraform](https://www.terraform.io) provider is built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and allows you to manage the configuration of [OWASP DefectDojo](https://github.com/DefectDojo/django-DefectDojo), the open-source vulnerability management and DevSecOps platform, as code.
 
 > [!NOTE]
-> The provider is in early development: it is not on the Terraform Registry yet, and v0.1.0 is planned.
-> See the [roadmap](#roadmap).
+> The provider is in early development (v0.1.0: product types, products and engagements), and its
+> schema may still change before v1.0. See the [roadmap](#roadmap).
 
 This provider includes:
 
@@ -63,7 +63,8 @@ Terraform follows the same policy. HashiCorp supports the two newest Terraform m
 terraform {
   required_providers {
     defectdojo = {
-      source = "ottramst/defectdojo"
+      source  = "ottramst/defectdojo"
+      version = "~> 0.1.0"
     }
   }
 }
@@ -88,7 +89,7 @@ For details, see the:
 
 ### Migrating from doximity/defectdojo
 
-The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Moving its `defectdojo_product_type`, `defectdojo_product` and `defectdojo_jira_product_configuration` resources to this provider is planned, with `moved` blocks where possible; until then, remove them from state and import them here by their numeric IDs.
+The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Moving its `defectdojo_product_type`, `defectdojo_product` and `defectdojo_jira_product_configuration` resources to this provider is planned, with `moved` blocks where possible. Until then, remove product types and products from state and import them here by their numeric IDs; the Jira product configuration follows with the Jira milestone (v0.3.0).
 
 ## Roadmap
 
