@@ -75,10 +75,11 @@ func (r *JiraProjectResource) Metadata(_ context.Context, req resource.MetadataR
 // jsonObjectAttribute returns an attribute of a JSON object.
 func jsonObjectAttribute(description string) schema.StringAttribute {
 	return schema.StringAttribute{
-		MarkdownDescription: description + " A JSON object, for example from `jsonencode()`; formatting and key order don't matter.",
-		CustomType:          jsontypes.NormalizedType{},
-		Optional:            true,
-		Validators:          []validator.String{jsonObjectValidator{}},
+		MarkdownDescription: description + " A JSON object, for example from `jsonencode()`; formatting and key order don't matter, " +
+			"although changing only the formatting plans an update that changes nothing, as does the first plan after an import.",
+		CustomType: jsontypes.NormalizedType{},
+		Optional:   true,
+		Validators: []validator.String{jsonObjectValidator{}},
 	}
 }
 
@@ -101,7 +102,8 @@ func (r *JiraProjectResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"DefectDojo lets a product have several Jira projects, but uses only one: the provider refuses to create one " +
 			"for a product or engagement that already has one it can see (import that one instead). The check isn't atomic. " +
 			"Destroying the resource also deletes the links between findings and Jira issues made through it; " +
-			"the issues in Jira are kept.",
+			"the issues in Jira are kept. A replacement is destroyed before it is created again: with `create_before_destroy`, " +
+			"the new Jira project would be refused while the old one exists.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the Jira project configuration.",
@@ -158,7 +160,8 @@ func (r *JiraProjectResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"product_jira_sla_notification": optionalBool("Whether DefectDojo posts SLA notifications as comments on issues, "+
 				"even when the Jira instance's `global_jira_sla_notification` is off. Can't be set with `suppress_sla_notification_comments`.", false),
 			"suppress_sla_notification_comments": optionalBool("Whether DefectDojo never posts SLA notifications as comments on issues, "+
-				"even when the Jira instance's `global_jira_sla_notification` is on. Needs DefectDojo 3.5.103 or later; older versions ignore it.", false),
+				"even when the Jira instance's `global_jira_sla_notification` is on. Needs DefectDojo 3.5.103 or later: the provider refuses it on older versions, which would ignore it, "+
+				"and reads the version from DefectDojo's OpenAPI schema, which needs no permission.", false),
 			"risk_acceptance_expiration_notification": optionalBool("Whether DefectDojo posts notifications of expiring risk acceptances as comments on issues.", false),
 		},
 	}
@@ -269,8 +272,13 @@ func (r *JiraProjectResource) Create(ctx context.Context, req resource.CreateReq
 	}
 	existing, _, err := r.client.JiraProjects.List(ctx, opt)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating DefectDojo Jira project",
-			fmt.Sprintf("Could not check the Jira projects of %s: %s", what, err))
+		detail := fmt.Sprintf("Could not check the Jira projects of %s: %s", what, err)
+		// DefectDojo's filter answers an ID that doesn't exist with a 400 on it.
+		var errResp *defectdojo.ErrorResponse
+		if errors.As(err, &errResp) && (len(errResp.Fields["product"]) > 0 || len(errResp.Fields["engagement"]) > 0) {
+			detail = fmt.Sprintf("Could not create the Jira project: %s doesn't exist.", what)
+		}
+		resp.Diagnostics.AddError("Error creating DefectDojo Jira project", detail)
 		return
 	}
 	if existing.Count > 0 {
@@ -282,11 +290,8 @@ func (r *JiraProjectResource) Create(ctx context.Context, req resource.CreateReq
 
 	created, _, err := r.client.JiraProjects.Create(ctx, jiraProjectFromModel(&data))
 	if err != nil {
-		detail := fmt.Sprintf("Could not create the Jira project of %s, unexpected error: %s", what, err)
-		if errors.Is(err, defectdojo.ErrNotFound) {
-			detail = fmt.Sprintf("Could not create the Jira project: %s doesn't exist.", what)
-		}
-		resp.Diagnostics.AddError("Error creating DefectDojo Jira project", detail)
+		resp.Diagnostics.AddError("Error creating DefectDojo Jira project",
+			fmt.Sprintf("Could not create the Jira project of %s, unexpected error: %s", what, err))
 		return
 	}
 	updateJiraProjectModel(&data, created)

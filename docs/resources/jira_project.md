@@ -4,14 +4,14 @@ page_title: "defectdojo_jira_project Resource - defectdojo"
 subcategory: ""
 description: |-
   Manages the Jira project of a DefectDojo product or engagement: the project of a Jira instance (defectdojo_jira_instance) that its findings are pushed to. An engagement's Jira project overrides its product's. It needs edit permission on the product or engagement, not a superuser. DefectDojo pushes findings only while the system setting enable_jira is on (defectdojo_system_settings), but the Jira project can be managed without it.
-  DefectDojo lets a product have several Jira projects, but uses only one: the provider refuses to create one for a product or engagement that already has one it can see (import that one instead). The check isn't atomic. Destroying the resource also deletes the links between findings and Jira issues made through it; the issues in Jira are kept.
+  DefectDojo lets a product have several Jira projects, but uses only one: the provider refuses to create one for a product or engagement that already has one it can see (import that one instead). The check isn't atomic. Destroying the resource also deletes the links between findings and Jira issues made through it; the issues in Jira are kept. A replacement is destroyed before it is created again: with create_before_destroy, the new Jira project would be refused while the old one exists.
 ---
 
 # defectdojo_jira_project (Resource)
 
 Manages the Jira project of a DefectDojo product or engagement: the project of a Jira instance (`defectdojo_jira_instance`) that its findings are pushed to. An engagement's Jira project overrides its product's. It needs edit permission on the product or engagement, not a superuser. DefectDojo pushes findings only while the system setting `enable_jira` is on (`defectdojo_system_settings`), but the Jira project can be managed without it.
 
-DefectDojo lets a product have several Jira projects, but uses only one: the provider refuses to create one for a product or engagement that already has one it can see (import that one instead). The check isn't atomic. Destroying the resource also deletes the links between findings and Jira issues made through it; the issues in Jira are kept.
+DefectDojo lets a product have several Jira projects, but uses only one: the provider refuses to create one for a product or engagement that already has one it can see (import that one instead). The check isn't atomic. Destroying the resource also deletes the links between findings and Jira issues made through it; the issues in Jira are kept. A replacement is destroyed before it is created again: with `create_before_destroy`, the new Jira project would be refused while the old one exists.
 
 ## Example Usage
 
@@ -46,9 +46,9 @@ resource "defectdojo_jira_project" "example" {
 ### Optional
 
 - `add_vulnerability_id_to_jira_label` (Boolean) Whether a finding's vulnerability IDs are added to the labels of its issue. Defaults to `false`.
-- `close_transition_fields` (String) The fields sent with the transition that closes an issue, such as `{ resolution = { name = "Won't Fix" } }`. A JSON object, for example from `jsonencode()`; formatting and key order don't matter.
+- `close_transition_fields` (String) The fields sent with the transition that closes an issue, such as `{ resolution = { name = "Won't Fix" } }`. A JSON object, for example from `jsonencode()`; formatting and key order don't matter, although changing only the formatting plans an update that changes nothing, as does the first plan after an import.
 - `component` (String) The Jira component of new issues, or several separated by commas. At most 200 characters.
-- `custom_fields` (String) The values of Jira fields of new issues, by field ID, such as `{"customfield_10122" = [{ name = "8.0.1" }]}`. A JSON object, for example from `jsonencode()`; formatting and key order don't matter.
+- `custom_fields` (String) The values of Jira fields of new issues, by field ID, such as `{"customfield_10122" = [{ name = "8.0.1" }]}`. A JSON object, for example from `jsonencode()`; formatting and key order don't matter, although changing only the formatting plans an update that changes nothing, as does the first plan after an import.
 - `default_assignee` (String) The Jira user that new issues are assigned to; by default Jira's. At most 200 characters.
 - `enable_engagement_epic_mapping` (Boolean) Whether DefectDojo creates a Jira epic for each engagement. Defaults to `false`.
 - `enabled` (Boolean) Whether findings are pushed to Jira; disabling stops it, also for findings pushed before. Defaults to `true`.
@@ -61,9 +61,9 @@ resource "defectdojo_jira_project" "example" {
 - `project_key` (String) The key of the Jira project, such as `SEC`. Without one, an engagement's findings go to its product's Jira project. At most 200 characters.
 - `push_all_issues` (Boolean) Whether DefectDojo pushes every finding to Jira automatically (only verified ones while the system setting `enforce_verified_status` is on), rather than when asked. Defaults to `false`.
 - `push_notes` (Boolean) Whether DefectDojo pushes the notes of findings as comments. Defaults to `false`.
-- `reopen_transition_fields` (String) The fields sent with the transition that reopens an issue. A JSON object, for example from `jsonencode()`; formatting and key order don't matter.
+- `reopen_transition_fields` (String) The fields sent with the transition that reopens an issue. A JSON object, for example from `jsonencode()`; formatting and key order don't matter, although changing only the formatting plans an update that changes nothing, as does the first plan after an import.
 - `risk_acceptance_expiration_notification` (Boolean) Whether DefectDojo posts notifications of expiring risk acceptances as comments on issues. Defaults to `false`.
-- `suppress_sla_notification_comments` (Boolean) Whether DefectDojo never posts SLA notifications as comments on issues, even when the Jira instance's `global_jira_sla_notification` is on. Needs DefectDojo 3.5.103 or later; older versions ignore it. Defaults to `false`.
+- `suppress_sla_notification_comments` (Boolean) Whether DefectDojo never posts SLA notifications as comments on issues, even when the Jira instance's `global_jira_sla_notification` is on. Needs DefectDojo 3.5.103 or later: the provider refuses it on older versions, which would ignore it, and reads the version from DefectDojo's OpenAPI schema, which needs no permission. Defaults to `false`.
 
 ### Read-Only
 

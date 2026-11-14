@@ -67,7 +67,20 @@ func TestAccJiraProject(t *testing.T) {
   project_key   = "SEC"
   custom_fields = "{\"customfield_1\": [{\"name\": \"8.0.1\"}], \"customfield_2\": 1}"
 `),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(jiraProjectAddress, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: testAccCheckJiraProjectID(&id),
+			},
+			// Import with JSON fields: DefectDojo's text of them differs from
+			// the configuration's, but not its JSON.
+			{
+				ResourceName:            jiraProjectAddress,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"custom_fields"},
 			},
 			// Update every attribute in place.
 			{
@@ -282,6 +295,13 @@ resource "defectdojo_engagement" "test" {
   suppress_sla_notification_comments = true
 `),
 				ExpectError: regexp.MustCompile(`Conflicting SLA notification settings`),
+			},
+			// An engagement that doesn't exist.
+			{
+				Config: testAccJiraProjectConfig(name, `
+  engagement_id = 999999999
+`) + fmt.Sprintf(engagement, name),
+				ExpectError: regexp.MustCompile(`engagement 999999999 doesn't exist`),
 			},
 			suppress,
 			{
