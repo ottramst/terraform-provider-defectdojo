@@ -55,7 +55,7 @@ func (r *SystemSettingsResource) Schema(_ context.Context, _ resource.SchemaRequ
 		attributes[s.name] = s.resourceAttribute()
 	}
 	for _, s := range systemSettingsSecrets {
-		lengths := fmt.Sprintf("at most %d characters", s.maxLength)
+		lengths := fmt.Sprintf("At most %d characters", s.maxLength)
 		validators := []validator.String{stringvalidator.UTF8LengthAtMost(s.maxLength), noSurroundingWhitespace()}
 		if s.minLength > 0 {
 			lengths = fmt.Sprintf("%d to %d characters", s.minLength, s.maxLength)
@@ -64,7 +64,7 @@ func (r *SystemSettingsResource) Schema(_ context.Context, _ resource.SchemaRequ
 		attributes[s.name+"_wo"] = schema.StringAttribute{
 			MarkdownDescription: s.description + " " + lengths + ", without leading or trailing whitespace, which DefectDojo removes. " +
 				"It is write-only: never stored in the plan or state, and Terraform can't detect a change of it, or one made in DefectDojo; " +
-				"it is sent when `" + s.name + "_wo_version` changes. Removing both leaves DefectDojo's value: it can't be cleared from Terraform. " +
+				"it is sent when `" + s.name + "_wo_version` changes. Removing both leaves DefectDojo's value. " + s.clearing + " " +
 				"Requires Terraform 1.11 or later.",
 			Optional:   true,
 			Sensitive:  true,
@@ -107,7 +107,9 @@ func (r *SystemSettingsResource) Configure(_ context.Context, req resource.Confi
 
 // ModifyPlan checks that the minimum password length doesn't exceed the
 // maximum, which DefectDojo doesn't check. It checks the planned values, so
-// that a setting the configuration leaves out is compared with DefectDojo's.
+// that a setting the configuration leaves out is compared with DefectDojo's:
+// the prior state's on update, and, on create, where an unconfigured setting
+// is still unknown, the one it reads from DefectDojo.
 func (r *SystemSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return
@@ -115,7 +117,35 @@ func (r *SystemSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 	var minimum, maximum types.Int64
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("minimum_password_length"), &minimum)...)
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("maximum_password_length"), &maximum)...)
-	if resp.Diagnostics.HasError() || !known(minimum) || !known(maximum) {
+	if resp.Diagnostics.HasError() || (!known(minimum) && !known(maximum)) {
+		return
+	}
+	// On create, a length the configuration leaves out is unknown in the
+	// plan: compare with DefectDojo's. A configured length that is unknown
+	// (from another resource) isn't checked.
+	var configMinimum, configMaximum types.Int64
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("minimum_password_length"), &configMinimum)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("maximum_password_length"), &configMaximum)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	fillMinimum := minimum.IsUnknown() && configMinimum.IsNull()
+	fillMaximum := maximum.IsUnknown() && configMaximum.IsNull()
+	if (fillMinimum || fillMaximum) && req.State.Raw.IsNull() && r.client != nil {
+		settings, _, err := r.client.SystemSettings.Get(ctx)
+		if err != nil {
+			resp.Diagnostics.AddWarning("Could not read the DefectDojo system settings",
+				"The password lengths couldn't be compared with DefectDojo's: "+err.Error())
+			return
+		}
+		if fillMinimum {
+			minimum = types.Int64Value(int64(settings.MinimumPasswordLength))
+		}
+		if fillMaximum {
+			maximum = types.Int64Value(int64(settings.MaximumPasswordLength))
+		}
+	}
+	if !known(minimum) || !known(maximum) {
 		return
 	}
 	if minimum.ValueInt64() > maximum.ValueInt64() {
