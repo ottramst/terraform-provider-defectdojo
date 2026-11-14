@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/ottramst/go-defectdojo"
 )
 
@@ -79,5 +81,36 @@ func TestInt64Set(t *testing.T) {
 	}
 	if got := fmt.Sprint(int64Set([]int{3, 1}).Elements()); got != "[1 3]" && got != "[3 1]" {
 		t.Errorf("int64Set([3 1]) = %s", got)
+	}
+}
+
+func TestNoSurroundingWhitespace(t *testing.T) {
+	tests := []struct {
+		value string
+		valid bool
+	}{
+		{"Web Applications", true},
+		{"a", true},
+		{"first line\nsecond line", true},
+		{"Tab\tinside", true},
+		{" leading", false},
+		{"trailing ", false},
+		{"heredoc\n", false},
+		{"\tTab", false},
+		{"no-break space ", false},
+		{"　ideographic space", false},
+		{"line separator ", false},
+		{"next line\u0085", false},
+	}
+	v := noSurroundingWhitespace()
+	for _, tt := range tests {
+		t.Run(tt.value, func(t *testing.T) {
+			req := validator.StringRequest{ConfigValue: types.StringValue(tt.value)}
+			var resp validator.StringResponse
+			v.ValidateString(context.Background(), req, &resp)
+			if got := !resp.Diagnostics.HasError(); got != tt.valid {
+				t.Errorf("valid = %v, want %v (%v)", got, tt.valid, resp.Diagnostics)
+			}
+		})
 	}
 }

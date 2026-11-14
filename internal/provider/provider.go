@@ -129,6 +129,13 @@ func (p *DefectDojoProvider) Configure(ctx context.Context, req provider.Configu
 	case values["api_token"] != "":
 		auth = defectdojo.WithAPIToken(values["api_token"])
 	case values["username"] != "":
+		if values["password"] == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("password"),
+				"Missing DefectDojo password",
+				"The provider needs a password with the username. Set the password value in the configuration or use the DEFECTDOJO_PASSWORD environment variable.",
+			)
+		}
 		auth = defectdojo.WithBasicAuth(values["username"], values["password"])
 	default:
 		resp.Diagnostics.AddError(

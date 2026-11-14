@@ -32,13 +32,19 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: false # don't let a cache poisoned elsewhere into a release build
-      # A release must not depend on an untagged client commit.
+      # A release must not depend on an untagged or replaced client.
       - name: Check that go-defectdojo is a tagged release
         run: |
           set -euo pipefail
           version=$(go list -m -f '{{.Version}}' github.com/ottramst/go-defectdojo)
+          replace=$(go list -m -f '{{if .Replace}}{{.Replace}}{{end}}' github.com/ottramst/go-defectdojo)
           echo "go-defectdojo $version"
-          if [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(0\.)?[0-9]{14}-[0-9a-f]{12}$ ]]; then
+          if [ -n "$replace" ]; then
+            echo "::error::go.mod replaces github.com/ottramst/go-defectdojo with $replace. Remove the replace directive."
+            exit 1
+          fi
+          # Every pseudo-version ends in a 14-digit timestamp and a 12-digit commit hash.
+          if [[ "$version" =~ [.-][0-9]{14}-[0-9a-f]{12}(\+incompatible)?$ ]]; then
             echo "::error::go.mod requires the pseudo-version $version of github.com/ottramst/go-defectdojo. Tag a client release and require it first."
             exit 1
           fi

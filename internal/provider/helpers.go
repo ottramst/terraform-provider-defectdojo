@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/ottramst/go-defectdojo"
 )
@@ -82,6 +85,17 @@ func parseImportID(id, object string, diags *diag.Diagnostics) (int64, bool) {
 		return 0, false
 	}
 	return n, true
+}
+
+// noSurroundingWhitespace rejects strings with leading or trailing
+// whitespace: DefectDojo trims text fields with Python's str.strip, so such a
+// value would not match the planned value after apply. Whitespace is ASCII
+// and Unicode whitespace, and the separators \x1c-\x1f and \x85.
+func noSurroundingWhitespace() validator.String {
+	return stringvalidator.RegexMatches(
+		regexp.MustCompile(`(?s)^$|^[^\s\p{Z}\x{1c}-\x{1f}\x{85}](.*[^\s\p{Z}\x{1c}-\x{1f}\x{85}])?$`),
+		"must not have leading or trailing whitespace, which DefectDojo removes",
+	)
 }
 
 // deletePollInterval is how often waitForDeletion checks whether an object is

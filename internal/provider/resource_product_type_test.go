@@ -71,10 +71,9 @@ func TestAccProductType(t *testing.T) {
 			},
 			// Import by ID
 			{
-				ResourceName:            productTypeAddress,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ResourceName:      productTypeAddress,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Import by identity
 			{

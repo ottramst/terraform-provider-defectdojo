@@ -35,13 +35,13 @@ resource "defectdojo_product_type" "internal" {
 
 ### Required
 
-- `name` (String) The name of the product type. Names are unique, compared case-sensitively.
+- `name` (String) The name of the product type, without leading or trailing whitespace, which DefectDojo removes. Names are unique, compared case-sensitively.
 
 ### Optional
 
 - `authorized_users` (Set of Number) The IDs of the users who may access the product type and its products, in addition to superusers and staff. When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere; an empty set removes them all.
 - `critical_product` (Boolean) Whether the products of this type are critical. Defaults to `false`.
-- `description` (String) The description of the product type, at most 4000 characters.
+- `description` (String) The description of the product type, at most 4000 characters, without leading or trailing whitespace, which DefectDojo removes. Trim heredocs with `chomp()` or `trimspace()`.
 - `force_destroy` (Boolean) Whether to destroy the product type even when it has products, which DefectDojo then deletes too, with their engagements, tests and findings. Defaults to `false`.
 - `key_product` (Boolean) Whether the products of this type are key products. Defaults to `false`.
 

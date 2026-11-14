@@ -72,17 +72,19 @@ func (r *ProductTypeResource) Schema(_ context.Context, _ resource.SchemaRequest
 				},
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "The name of the product type. Names are unique, compared case-sensitively.",
+				MarkdownDescription: "The name of the product type, without leading or trailing whitespace, which DefectDojo removes. Names are unique, compared case-sensitively.",
 				Required:            true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 255),
+					stringvalidator.UTF8LengthBetween(1, 255),
+					noSurroundingWhitespace(),
 				},
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "The description of the product type, at most 4000 characters.",
+				MarkdownDescription: "The description of the product type, at most 4000 characters, without leading or trailing whitespace, which DefectDojo removes. Trim heredocs with `chomp()` or `trimspace()`.",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 4000),
+					stringvalidator.UTF8LengthBetween(1, 4000),
+					noSurroundingWhitespace(),
 				},
 			},
 			"critical_product": schema.BoolAttribute{
@@ -196,6 +198,13 @@ func (r *ProductTypeResource) Update(ctx context.Context, req resource.UpdateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// The plan holds the prior authorized users when they are not configured
+	// (UseStateForUnknown), so check the configuration.
+	var configuredUsers types.Set
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("authorized_users"), &configuredUsers)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// A partial update, so that unmanaged authorized users are kept.
 	patch := &defectdojo.ProductTypePatch{
@@ -207,8 +216,8 @@ func (r *ProductTypeResource) Update(ctx context.Context, req resource.UpdateReq
 	if data.Description.IsNull() {
 		patch.Description = defectdojo.Null[string]()
 	}
-	if !data.AuthorizedUsers.IsNull() && !data.AuthorizedUsers.IsUnknown() {
-		patch.AuthorizedUsers = new(intsFromSet(ctx, data.AuthorizedUsers, &resp.Diagnostics))
+	if !configuredUsers.IsNull() && !configuredUsers.IsUnknown() {
+		patch.AuthorizedUsers = new(intsFromSet(ctx, configuredUsers, &resp.Diagnostics))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -341,6 +350,13 @@ func importByID(ctx context.Context, req resource.ImportStateRequest, resp *reso
 			return
 		}
 		id = identity.ID.ValueInt64()
+		if id <= 0 {
+			resp.Diagnostics.AddError(
+				"Invalid import identity",
+				fmt.Sprintf("Expected the positive numeric ID of the %s, got: %d", object, id),
+			)
+			return
+		}
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, types.Int64Value(id))...)
