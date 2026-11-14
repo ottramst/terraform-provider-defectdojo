@@ -78,6 +78,30 @@ func TestAccJiraInstance(t *testing.T) {
 					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("password_wo_version"), knownvalue.Int64Exact(1)),
 				},
 			},
+			// The keys and severity mappings change in place.
+			{
+				Config: testAccJiraInstanceConfig(name+"-renamed", "https://"+name+".example.invalid", `
+  password_wo_version = 1
+`, "10012", "12", "32", "Low"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("epic_name_id"), knownvalue.Int64Exact(10012)),
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("open_status_key"), knownvalue.Int64Exact(12)),
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("close_status_key"), knownvalue.Int64Exact(32)),
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("info_mapping_severity"), knownvalue.StringExact("Low")),
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("critical_mapping_severity"), knownvalue.StringExact("Critical")),
+				},
+				Check: testAccCheckJiraInstanceID(&id),
+			},
+			// A trailing slash, which DefectDojo doesn't count as a URL
+			// change, needs no password.
+			{
+				Config: testAccJiraInstanceConfig(name+"-renamed", "https://"+name+".example.invalid/", `
+  password_wo_version = 1
+`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(jiraInstanceAddress, tfjsonpath.New("url"), knownvalue.StringExact("https://"+name+".example.invalid/")),
+				},
+			},
 			// A URL change sends the password, without a version change,
 			// which DefectDojo requires.
 			{
@@ -178,23 +202,45 @@ data "defectdojo_jira_instance" "by_name" {
 	})
 }
 
-func testAccJiraInstanceConfig(name, url, extra string) string {
+// testAccJiraInstanceConfig returns a Jira instance's configuration. The
+// optional keys are the epic name ID, the open and close status keys, and the
+// info severity mapping, which also changes the critical one to "Critical".
+func testAccJiraInstanceConfig(name, url, extra string, keys ...string) string {
+	epic, open, closing, info, critical := "10011", "11", "31", "Lowest", "Highest"
+	if len(keys) == 4 {
+		epic, open, closing, info, critical = keys[0], keys[1], keys[2], keys[3], "Critical"
+	}
 	return fmt.Sprintf(`
 resource "defectdojo_jira_instance" "test" {
   configuration_name        = %q
   url                       = %q
   username                  = "bot"
   password_wo               = "fake-token"
-  epic_name_id              = 10011
-  open_status_key           = 11
-  close_status_key          = 31
-  info_mapping_severity     = "Lowest"
+  epic_name_id              = %s
+  open_status_key           = %s
+  close_status_key          = %s
+  info_mapping_severity     = %q
   low_mapping_severity      = "Low"
   medium_mapping_severity   = "Medium"
   high_mapping_severity     = "High"
-  critical_mapping_severity = "Highest"
+  critical_mapping_severity = %q
 %s}
-`, name, url, extra)
+`, name, url, epic, open, closing, info, critical, extra)
+}
+
+// testAccCheckJiraInstanceID checks that the Jira instance still has the ID
+// id: it was updated in place.
+func testAccCheckJiraInstanceID(id *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var got int
+		if err := testAccCaptureJiraInstanceID(&got)(s); err != nil {
+			return err
+		}
+		if got != *id {
+			return fmt.Errorf("Jira instance ID = %d, want %d", got, *id)
+		}
+		return nil
+	}
 }
 
 // testAccCaptureJiraInstanceID stores the ID of the Jira instance in id.
