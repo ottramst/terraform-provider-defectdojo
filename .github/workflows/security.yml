@@ -26,6 +26,10 @@ jobs:
     steps:
       - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
         with:
+          # Check the Go that go.mod's toolchain line pins, which releases are
+          # built with; the action's default, the latest stable Go, would hide
+          # vulnerabilities of an older toolchain.
+          go-version-input: ''
           go-version-file: go.mod
           go-package: ./...
 
