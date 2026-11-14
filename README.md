@@ -25,6 +25,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Products**: Manage products (DefectDojo 3.x *assets*) with their attributes, contacts, SLA configuration, regulations, tags and authorized users, and look them up by ID or name
 - **SLA configurations**: Manage SLA configurations, the days in which findings of each severity must be remediated, including DefectDojo's Default one, and look them up by ID or name
 - **Users**: Manage users, such as service accounts for pipelines and Dependency-Track, with their global configuration permissions by codename and a write-only initial password, and look them up by ID or username
+- **Notification webhooks**: Manage system notification webhooks, with a write-only header value for their authentication
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
 - **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+)
@@ -55,7 +56,7 @@ Terraform follows the same policy. HashiCorp supports the two newest Terraform m
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0 (protocol 6); write-only attributes (`password_wo`) need 1.11+, and resource identity 1.12+. CI tests the non-EOL releases, currently 1.16 and 1.17 (see [support policy](#support-policy))
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0 (protocol 6); write-only attributes (`password_wo`, `header_value_wo`) need 1.11+, and resource identity 1.12+. CI tests the non-EOL releases, currently 1.16 and 1.17 (see [support policy](#support-policy))
 - [Go](https://golang.org/doc/install) >= 1.27 (only required to build the provider from source)
 - [DefectDojo](https://github.com/DefectDojo/django-DefectDojo) 3.4.x or 3.5.x. Most configuration objects can only be managed by a superuser
 
