@@ -18,8 +18,8 @@ resource "defectdojo_product" "storefront" {
   tags               = ["pci", "shop"]
 }
 
-# Without authorized_users, regulation_ids and tags, the provider leaves
-# them as they are, so they can be managed elsewhere.
+# Without regulation_ids and tags, the provider leaves them as they are, so
+# they can be managed elsewhere; authorized_users are managed here.
 resource "defectdojo_product" "inventory" {
   name             = "Inventory"
   description      = "Stock management"

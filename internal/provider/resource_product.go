@@ -86,9 +86,13 @@ func (r *ProductResource) Metadata(_ context.Context, req resource.MetadataReque
 // managedElsewhere is the part of the description of Optional+Computed
 // attributes that are only sent when they are configured.
 func managedElsewhere(what string) string {
-	return "When it is not set, the provider leaves the " + what + " as they are, so they can be managed elsewhere. " +
-		"If they change elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again."
+	return "When it is not set, the provider leaves the " + what + " as they are, so they can be managed elsewhere. " + changedBetweenPlanAndApply
 }
+
+// changedBetweenPlanAndApply explains why an apply fails when an attribute
+// that is only sent when configured changes elsewhere in the meantime.
+const changedBetweenPlanAndApply = "If it changes elsewhere between the plan and the apply of another change to the product, " +
+	"the apply fails with an inconsistent result; plan and apply again."
 
 func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	userID := func(role string) schema.Int64Attribute {
@@ -166,7 +170,7 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"sla_configuration_id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the SLA configuration of the product. DefectDojo uses the default SLA configuration (1) when it is not set. " +
 					"Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, it can't be changed again. " +
-					"When it is not set, the provider leaves it as it is.",
+					"When it is not set, the provider leaves it as it is, so it can be managed elsewhere. " + changedBetweenPlanAndApply,
 				Optional:   true,
 				Computed:   true,
 				Validators: []validator.Int64{int64validator.AtLeast(1)},
@@ -200,7 +204,8 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 			"tags": schema.SetAttribute{
 				MarkdownDescription: "The tags of the product, each at most 255 characters, without spaces, commas or quotes. " +
-					"Tags are compared ignoring case: DefectDojo gives a tag the spelling of an existing product tag that matches it ignoring case, and the provider keeps the configured spelling. " +
+					"Tags are compared ignoring case: DefectDojo gives a tag the spelling of an existing product tag that matches it ignoring case, and the provider keeps the configured spelling " +
+					"(after an import, the first apply sets the configured spelling once). " +
 					managedElsewhere("tags") + " An empty set removes them all.",
 				ElementType: types.StringType,
 				Optional:    true,

@@ -36,8 +36,8 @@ resource "defectdojo_product" "storefront" {
   tags               = ["pci", "shop"]
 }
 
-# Without authorized_users, regulation_ids and tags, the provider leaves
-# them as they are, so they can be managed elsewhere.
+# Without regulation_ids and tags, the provider leaves them as they are, so
+# they can be managed elsewhere; authorized_users are managed here.
 resource "defectdojo_product" "inventory" {
   name             = "Inventory"
   description      = "Stock management"
@@ -57,7 +57,7 @@ resource "defectdojo_product" "inventory" {
 
 ### Optional
 
-- `authorized_users` (Set of Number) The IDs of the users who may access the product, in addition to superusers, staff and the authorized users of its product type. When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere. If they change elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
+- `authorized_users` (Set of Number) The IDs of the users who may access the product, in addition to superusers, staff and the authorized users of its product type. When it is not set, the provider leaves the authorized users as they are, so they can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
 - `business_criticality` (String) The business criticality of the product: one of `very high`, `high`, `medium`, `low`, `very low` and `none`.
 - `disable_sla_breach_notifications` (Boolean) Whether to disable the notifications of SLA breaches of the product's findings. Defaults to `false`.
 - `enable_full_risk_acceptance` (Boolean) Whether findings can be risk-accepted with a risk acceptance form. Defaults to `true`.
@@ -70,9 +70,9 @@ resource "defectdojo_product" "inventory" {
 - `origin` (String) The origin of the product: the value of an entry of DefectDojo's product origins, such as `internal`, `third party library`, `purchased`, `contractor`, `open source` or `outsourced`.
 - `platform` (String) The platform of the product: the value of an entry of DefectDojo's product platforms, such as `web`, `web service`, `desktop`, `mobile` or `iot`.
 - `product_manager_id` (Number) The ID of the product's product manager, an active user.
-- `regulation_ids` (Set of Number) The IDs of the regulations that apply to the product. When it is not set, the provider leaves the regulations as they are, so they can be managed elsewhere. If they change elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
-- `sla_configuration_id` (Number) The ID of the SLA configuration of the product. DefectDojo uses the default SLA configuration (1) when it is not set. Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, it can't be changed again. When it is not set, the provider leaves it as it is.
-- `tags` (Set of String) The tags of the product, each at most 255 characters, without spaces, commas or quotes. Tags are compared ignoring case: DefectDojo gives a tag the spelling of an existing product tag that matches it ignoring case, and the provider keeps the configured spelling. When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. If they change elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
+- `regulation_ids` (Set of Number) The IDs of the regulations that apply to the product. When it is not set, the provider leaves the regulations as they are, so they can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
+- `sla_configuration_id` (Number) The ID of the SLA configuration of the product. DefectDojo uses the default SLA configuration (1) when it is not set. Changing it makes DefectDojo recalculate the SLA dates of the product's findings in the background; until that finishes, it can't be changed again. When it is not set, the provider leaves it as it is, so it can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again.
+- `tags` (Set of String) The tags of the product, each at most 255 characters, without spaces, commas or quotes. Tags are compared ignoring case: DefectDojo gives a tag the spelling of an existing product tag that matches it ignoring case, and the provider keeps the configured spelling (after an import, the first apply sets the configured spelling once). When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. If it changes elsewhere between the plan and the apply of another change to the product, the apply fails with an inconsistent result; plan and apply again. An empty set removes them all.
 - `team_manager_id` (Number) The ID of the product's team manager, an active user.
 - `technical_contact_id` (Number) The ID of the product's technical contact, an active user.
 
