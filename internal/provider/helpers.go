@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -239,4 +240,26 @@ func (v uniqueIgnoringCase) ValidateSet(_ context.Context, req validator.SetRequ
 		}
 		seen[key] = s.ValueString()
 	}
+}
+
+// compareVersions compares two dotted versions such as "3.5.103", as
+// cmp.Compare does. Missing parts count as 0, and a suffix such as "-dev" is
+// ignored, so that DefectDojo's "3.6.1-dev" compares as "3.6.1".
+func compareVersions(a, b string) int {
+	a, _, _ = strings.Cut(a, "-")
+	b, _, _ = strings.Cut(b, "-")
+	pa, pb := strings.Split(a, "."), strings.Split(b, ".")
+	for i := range max(len(pa), len(pb)) {
+		var x, y int
+		if i < len(pa) {
+			x, _ = strconv.Atoi(pa[i])
+		}
+		if i < len(pb) {
+			y, _ = strconv.Atoi(pb[i])
+		}
+		if c := cmp.Compare(x, y); c != 0 {
+			return c
+		}
+	}
+	return 0
 }

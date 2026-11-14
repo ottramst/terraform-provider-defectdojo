@@ -6,9 +6,11 @@ FEATURES:
 * **New Data Source:** `defectdojo_system_settings`, with every setting but the secrets, the installation ID and the read-only mode ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
 * **New Resource:** `defectdojo_jira_instance`, with resource identity: the connection to a Jira server, with the write-only `password_wo` ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
 * **New Data Source:** `defectdojo_jira_instance`, looked up by ID or name ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
+* **New Resource:** `defectdojo_jira_project`, with resource identity: the Jira project of a product or an engagement, with its custom and transition fields as JSON ([#18](https://github.com/ottramst/terraform-provider-defectdojo/issues/18))
 
 NOTES:
 
+* `defectdojo_jira_project`: it needs edit permission on the product or engagement, not a superuser, and doesn't need the system setting `enable_jira`. The provider refuses to create a second Jira project for a product, which DefectDojo would allow but ignore. `suppress_sla_notification_comments` needs DefectDojo 3.5.103 or later. Destroying it deletes the links between findings and Jira issues made through it ([#18](https://github.com/ottramst/terraform-provider-defectdojo/issues/18))
 * `defectdojo_jira_instance`: the password or API token is sent when the instance is created, when `password_wo_version` changes, and when the URL changes, which DefectDojo allows only with it. A delete is refused while Jira projects use the instance, which DefectDojo would answer with a server error ([#17](https://github.com/ottramst/terraform-provider-defectdojo/issues/17))
 * `defectdojo_system_settings`: removing a setting from the configuration leaves its value in DefectDojo, and settings DefectDojo can hold as null (such as `max_dupes`) can't be set to null; the secrets can't be read back, and removing them leaves their values (the Slack token and the Teams URL are cleared with `""` and a new version; the Jira webhook secret can't be cleared). DefectDojo's read-only mode is left out on purpose: while it is on, DefectDojo rejects every other change ([#16](https://github.com/ottramst/terraform-provider-defectdojo/issues/16))
 
