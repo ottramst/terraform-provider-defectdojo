@@ -177,8 +177,12 @@ func TestAccSLAConfiguration_daysLocked(t *testing.T) {
 // An SLA configuration that a product uses can't be deleted; the error says
 // what to do.
 func TestAccSLAConfiguration_inUse(t *testing.T) {
+	testAccSkipUnlessAcc(t)
 	name := randName(t)
 	var id, productID int
+	// Created before the product type, so that it is deleted after the
+	// product type and its product, which refers to it.
+	otherID := testAccCreateSLAConfiguration(t)
 	productTypeID := testAccCreateProductType(t)
 
 	resource.Test(t, resource.TestCase{
@@ -210,7 +214,7 @@ func TestAccSLAConfiguration_inUse(t *testing.T) {
 			{
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Products.Patch(context.Background(), productID, &defectdojo.ProductPatch{
-						SLAConfiguration: new(testAccCreateSLAConfiguration(t)),
+						SLAConfiguration: &otherID,
 					})
 					testAccNoError(t, err)
 				},

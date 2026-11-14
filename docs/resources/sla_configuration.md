@@ -34,15 +34,17 @@ resource "defectdojo_product" "storefront" {
 }
 
 # DefectDojo's Default SLA configuration, which products get unless they
-# name another, can be imported and managed, but not deleted.
+# name another, can be imported and managed, but not deleted. Changing its
+# days makes DefectDojo recalculate the SLA dates of every product that uses
+# it, and locks them until that has finished.
 import {
   to = defectdojo_sla_configuration.default
   id = "1"
 }
 
 resource "defectdojo_sla_configuration" "default" {
-  name     = "Default"
-  critical = 5
+  name        = "Default"
+  description = "The Default SLA Configuration. Products not using an explicit SLA Configuration will use this one."
 }
 ```
 
