@@ -1,0 +1,102 @@
+# Local DefectDojo for acceptance tests. DD_VERSION selects the image tag. Its
+# default is the newest version in .github/defectdojo-versions.json, which CI
+# checks.
+#
+# Credentials: admin / DefectDojoAcc1! (superuser). The secrets below are
+# DefectDojo's public development defaults: not for production use.
+#
+# Celery (background tasks) is left out: the API does not need it. nginx stays
+# in front of uwsgi: uwsgi's own HTTP router on port 8081 is only meant for
+# liveness checks, and writes through it failed with EOF in CI.
+name: terraform-provider-defectdojo
+
+x-defectdojo-env: &defectdojo-env
+  DD_DATABASE_URL: postgresql://defectdojo:defectdojo@postgres:5432/defectdojo
+  DD_CELERY_BROKER_URL: redis://valkey:6379/0
+  DD_CACHE_URL: redis://valkey:6379/1
+  DD_SECRET_KEY: "hhZCp@D28z!n@NED*yB!ROMt+WzsY*iq"
+  DD_CREDENTIAL_AES_256_KEY: "&91a*agLqesc*0DJ+2*bAbsUZfR*4nLw"
+  DD_DATABASE_READINESS_TIMEOUT: "60"
+
+services:
+  postgres:
+    # 16 or later: the initializer of DefectDojo 3.4.200+ loads a schema snapshot.
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: defectdojo
+      POSTGRES_USER: defectdojo
+      POSTGRES_PASSWORD: defectdojo
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U defectdojo -d defectdojo"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # Migrates the database, creates the admin user and loads the fixtures, then exits.
+  initializer:
+    image: docker.io/defectdojo/defectdojo-django:${DD_VERSION:-3.5.103}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/wait-for-it.sh", "postgres:5432", "--", "/entrypoint-initializer.sh"]
+    environment:
+      <<: *defectdojo-env
+      DD_INITIALIZE: "true"
+      DD_ADMIN_USER: admin
+      DD_ADMIN_PASSWORD: "DefectDojoAcc1!"
+      DD_ADMIN_MAIL: admin@example.com
+      DD_ADMIN_FIRST_NAME: Admin
+      DD_ADMIN_LAST_NAME: User
+
+  uwsgi:
+    image: docker.io/defectdojo/defectdojo-django:${DD_VERSION:-3.5.103}
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+    entrypoint: ["/wait-for-it.sh", "postgres:5432", "-t", "30", "--", "/entrypoint-uwsgi.sh"]
+    environment:
+      <<: *defectdojo-env
+      DD_DEBUG: "False"
+      DD_ALLOWED_HOSTS: "*"
+      DD_UWSGI_MODE: socket
+      DD_UWSGI_ENDPOINT: 0.0.0.0:3031
+      DD_UWSGI_NUM_OF_PROCESSES: "2"
+      DD_UWSGI_NUM_OF_THREADS: "4"
+      # Deletes stay synchronous, so a 204 means the object is gone.
+      DD_ASYNC_OBJECT_DELETE: "False"
+    healthcheck:
+      # The image has no curl; the login page needs Django and the database.
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/login', timeout=5)"]
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 20s
+
+  nginx:
+    image: docker.io/defectdojo/defectdojo-nginx:${DD_VERSION:-3.5.103}
+    depends_on:
+      uwsgi:
+        condition: service_healthy
+    environment:
+      DD_UWSGI_HOST: uwsgi
+      DD_UWSGI_PORT: "3031"
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      # /uwsgi_health goes through nginx to uwsgi. The image has wget, not curl.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/uwsgi_health"]
+      interval: 3s
+      timeout: 10s
+      retries: 40

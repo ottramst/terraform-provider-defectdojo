@@ -1,0 +1,76 @@
+name: Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    name: Supported DefectDojo versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      versions: ${{ steps.read.outputs.versions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read .github/defectdojo-versions.json
+        id: read
+        run: |
+          set -euo pipefail
+          versions=$(jq -c '.versions' .github/defectdojo-versions.json)
+          if [ "$(jq 'length' <<< "$versions")" -eq 0 ]; then
+            echo "No versions in .github/defectdojo-versions.json"
+            exit 1
+          fi
+          # The default image tag in docker-compose.yml must be the newest version.
+          newest=$(jq -r '.[-1]' <<< "$versions")
+          if ! grep -qF "\${DD_VERSION:-$newest}" docker-compose.yml; then
+            echo "The DD_VERSION default in docker-compose.yml is not $newest, the newest version in .github/defectdojo-versions.json."
+            exit 1
+          fi
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Acceptance tests (DefectDojo ${{ matrix.defectdojo-version }}, Terraform ${{ matrix.terraform-version }})
+    needs: versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # DD_VERSION selects the docker-compose.yml image tags.
+      DD_VERSION: ${{ matrix.defectdojo-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The latest patch of the two newest DefectDojo minors (see the support
+        # policy in README.md), from .github/defectdojo-versions.json.
+        defectdojo-version: ${{ fromJSON(needs.versions.outputs.versions) }}
+        # Only non-EOL Terraform releases: HashiCorp supports the two newest
+        # minor versions, so drop the oldest entry when a new minor ships.
+        terraform-version:
+          - '1.16.*'
+          - '1.17.*'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ matrix.terraform-version }}
+          terraform_wrapper: false
+      - name: Start DefectDojo
+        run: docker compose up -d --wait
+      - run: go mod download
+      # The GNUmakefile points the tests at the local stack's superuser.
+      - run: make testacc
+      - name: Stack logs
+        # Also when the job times out or is cancelled while the stack starts.
+        if: ${{ !success() }}
+        run: docker compose logs --tail 200
