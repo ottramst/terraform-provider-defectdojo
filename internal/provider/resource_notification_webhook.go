@@ -99,7 +99,7 @@ func (r *NotificationWebhookResource) Schema(_ context.Context, _ resource.Schem
 			},
 			"header_value_wo": schema.StringAttribute{
 				MarkdownDescription: "The value of the header named by `header_name`, such as a token, at most 100 characters, " +
-					"which is never stored in the plan or state. Requires Terraform 1.11 or later, and `header_value_wo_version`. " +
+					"which is never stored in the plan or state. Requires Terraform 1.11 or later, `header_name` and `header_value_wo_version`. " +
 					"Terraform can't detect a change of a write-only value: change `header_value_wo_version` to send it. " +
 					"DefectDojo returns the value in plain text to every superuser.",
 				Optional:  true,
@@ -108,7 +108,7 @@ func (r *NotificationWebhookResource) Schema(_ context.Context, _ resource.Schem
 				Validators: []validator.String{
 					stringvalidator.UTF8LengthBetween(1, 100),
 					noSurroundingWhitespace(),
-					stringvalidator.AlsoRequires(path.MatchRoot("header_value_wo_version")),
+					stringvalidator.AlsoRequires(path.MatchRoot("header_value_wo_version"), path.MatchRoot("header_name")),
 				},
 			},
 			"header_value_wo_version": schema.Int64Attribute{

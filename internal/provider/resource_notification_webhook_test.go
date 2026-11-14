@@ -172,6 +172,11 @@ func TestAccNotificationWebhook_importThenSetValue(t *testing.T) {
 	})
 	testAccNoError(t, err)
 	id := wh.ID
+	t.Cleanup(func() {
+		if _, err := testAccClient(t).NotificationWebhooks.Delete(context.Background(), id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+			t.Logf("cleanup: %v", err)
+		}
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -218,6 +223,14 @@ func TestAccNotificationWebhook_validation(t *testing.T) {
 			{
 				Config:      testAccNotificationWebhookConfig("invalid", "https://hooks.invalid/x", "  header_value_wo_version = 1\n"),
 				ExpectError: regexp.MustCompile(`header_value_wo`),
+			},
+			// A header value without a header name would never be sent.
+			{
+				Config: testAccNotificationWebhookConfig("invalid", "https://hooks.invalid/x", `
+  header_value_wo         = "x"
+  header_value_wo_version = 1
+`),
+				ExpectError: regexp.MustCompile(`header_name`),
 			},
 		},
 	})
