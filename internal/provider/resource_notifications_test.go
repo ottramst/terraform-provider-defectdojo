@@ -284,11 +284,11 @@ resource "defectdojo_notifications" "test" {
   template      = true
   product_added = ["slack"]
 }
-` + testAccUserConfig(randName(t), ""),
+` + testAccUserConfig(randName(t), "  depends_on = [defectdojo_notifications.test]\n"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(notificationsAddress, tfjsonpath.New("product_added"), knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("slack")})),
 				},
-				// A user created with the template in place gets its events.
+				// A user created after the template's update gets its events.
 				Check: func(s *terraform.State) error {
 					n, _, err := client.Notifications.GetByScope(context.Background(), testAccStateInt(s, userAddress, "id"), 0, false)
 					if err != nil {
