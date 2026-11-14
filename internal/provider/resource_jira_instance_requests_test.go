@@ -103,7 +103,7 @@ resource "defectdojo_jira_instance" "test" {
   password_wo_version = 1
 `),
 				Destroy:     true,
-				ExpectError: regexp.MustCompile(`1 Jira projects use it`),
+				ExpectError: regexp.MustCompile(`1 Jira project uses it`),
 			},
 			{
 				PreConfig: func() { fake.setList("jira_projects", nil) },

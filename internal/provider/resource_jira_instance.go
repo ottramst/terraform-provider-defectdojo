@@ -150,7 +150,7 @@ func (r *JiraInstanceResource) Schema(_ context.Context, _ resource.SchemaReques
 				Computed: true,
 				Default:  stringdefault.StaticString("Bug"),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
+					stringvalidator.UTF8LengthBetween(1, 255),
 					noSurroundingWhitespace(),
 				},
 			},
@@ -310,6 +310,14 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, data.ID)...)
 }
 
+// jiraProjectsUsing describes how many Jira projects use an instance.
+func jiraProjectsUsing(n int) string {
+	if n == 1 {
+		return "1 Jira project uses it"
+	}
+	return fmt.Sprintf("%d Jira projects use it", n)
+}
+
 // jiraURLChanged reports whether DefectDojo considers the URL changed, which
 // needs the password: a trailing slash doesn't count.
 func jiraURLChanged(old, updated string) bool {
@@ -338,7 +346,7 @@ func (r *JiraInstanceResource) Delete(ctx context.Context, req resource.DeleteRe
 	if n > 0 {
 		resp.Diagnostics.AddError(
 			"Jira instance in use",
-			fmt.Sprintf("DefectDojo can't delete Jira instance %d: %d Jira projects use it. Delete them, or move them to another Jira instance, first.", id, n),
+			fmt.Sprintf("DefectDojo can't delete Jira instance %d: %s. Delete them, or move them to another Jira instance, first.", id, jiraProjectsUsing(n)),
 		)
 		return
 	}
