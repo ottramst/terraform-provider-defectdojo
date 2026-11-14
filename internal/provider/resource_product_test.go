@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -393,14 +394,13 @@ func testAccCreateSLAConfiguration(t *testing.T) int {
 	return sla.ID
 }
 
-// testAccCreateEngagement creates an engagement in the product through the
-// raw API, until the client has an Engagements service.
+// testAccCreateEngagement creates an engagement in the product. It is
+// deleted with the product.
 func testAccCreateEngagement(t *testing.T, productID int) {
 	t.Helper()
-	client := testAccClient(t)
-	body := map[string]any{"name": randName(t), "product": productID, "target_start": "2026-01-01", "target_end": "2026-12-31"}
-	req, err := client.NewRequest(context.Background(), http.MethodPost, "/api/v2/engagements/", body)
-	testAccNoError(t, err)
-	_, err = client.Do(req, nil)
+	day := defectdojo.Date{Year: 2026, Month: time.January, Day: 1}
+	_, _, err := testAccClient(t).Engagements.Create(context.Background(), &defectdojo.Engagement{
+		Name: randName(t), Product: productID, TargetStart: day, TargetEnd: day,
+	})
 	testAccNoError(t, err)
 }

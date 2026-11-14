@@ -103,7 +103,7 @@ func TestProvider_schemas(t *testing.T) {
 			t.Errorf("GetProviderSchema: %s: %s", d.Summary, d.Detail)
 		}
 	}
-	for _, name := range []string{"defectdojo_product", "defectdojo_product_type"} {
+	for _, name := range []string{"defectdojo_engagement", "defectdojo_product", "defectdojo_product_type"} {
 		if _, ok := resp.ResourceSchemas[name]; !ok {
 			t.Errorf("resource %s is not registered", name)
 		}
