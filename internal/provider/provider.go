@@ -167,12 +167,14 @@ func (p *DefectDojoProvider) Configure(ctx context.Context, req provider.Configu
 
 func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewProductResource,
 		NewProductTypeResource,
 	}
 }
 
 func (p *DefectDojoProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewProductDataSource,
 		NewProductTypeDataSource,
 	}
 }
