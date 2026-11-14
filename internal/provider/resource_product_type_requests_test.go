@@ -180,6 +180,16 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 	return mux
 }
 
+// setList replaces the read-only objects of another collection.
+func (f *fakeDefectDojo) setList(collection string, objects []map[string]any) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.lists == nil {
+		f.lists = make(map[string][]map[string]any)
+	}
+	f.lists[collection] = objects
+}
+
 // set changes a field of the object outside Terraform.
 func (f *fakeDefectDojo) set(field string, value any) {
 	f.mu.Lock()
