@@ -19,10 +19,9 @@ resource "defectdojo_engagement" "ci" {
   deduplication_on_engagement = true
   tags                        = ["ci"]
 
-  lifecycle {
-    # Pipelines and DefectDojo close and reopen engagements.
-    ignore_changes = [status]
-  }
+  # status is not set: pipelines and DefectDojo close and reopen the
+  # engagement, and the provider leaves the status as it is. When setting it,
+  # add lifecycle { ignore_changes = [status] }.
 }
 
 # An interactive engagement, such as a penetration test.

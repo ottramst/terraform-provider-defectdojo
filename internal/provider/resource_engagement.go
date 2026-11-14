@@ -178,7 +178,7 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"status": schema.StringAttribute{
 				MarkdownDescription: "The status of the engagement: one of `Not Started`, `Blocked`, `Cancelled`, `Completed`, `In Progress`, `On Hold`, `Scheduled` and `Waiting for Resource`. " +
 					"DefectDojo uses `Not Started` when it is not set. The provider sends it only when the configuration changes it. " +
-					"Pipelines and DefectDojo's automatic closing of engagements change it too: use `lifecycle { ignore_changes = [status] }` for such engagements. " +
+					"Pipelines and DefectDojo's automatic closing of engagements change it too: when it is configured for such an engagement, use `lifecycle { ignore_changes = [status] }`; when it is not configured, the provider leaves it as it is. " +
 					"Setting it doesn't change `active`: an engagement closed elsewhere stays inactive.",
 				Optional:   true,
 				Computed:   true,
@@ -221,8 +221,10 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"tags": schema.SetAttribute{
 				MarkdownDescription: "The tags of the engagement, each at most 255 characters, without spaces, commas or quotes. " +
 					"Tags are compared ignoring case, and the provider keeps the configured spelling. " +
-					"When the product passes its tags on (`enable_product_tag_inheritance`, or DefectDojo's system setting), DefectDojo adds them to its engagements; " +
-					"the provider hides the product's tags unless they are configured, and a change of the product's tags reaches its engagements later, through DefectDojo's background workers. " +
+					"When the product passes its tags on (`enable_product_tag_inheritance`, or DefectDojo's system setting), DefectDojo adds them to its engagements. " +
+					"The provider can't tell inherited tags apart, so it always hides the tags of the engagement's product unless they are configured. " +
+					"A change of the product's tags reaches its engagements later, through DefectDojo's background workers, and a refresh then shows the result. " +
+					"Moving an engagement without tags of its own to another product replaces the old product's tags with the new product's. " +
 					"When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. " +
 					"An empty set removes them all, including the tags the product passes on.",
 				ElementType: types.StringType,
@@ -310,8 +312,9 @@ func (r *EngagementResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Read it back for the tags the product passed on, which the create
 	// response may lack.
+	planned := data.Tags
 	data.ID = types.Int64Value(int64(created.ID))
-	if !r.read(ctx, &data, data.Tags, nil, &resp.Diagnostics) {
+	if !r.read(ctx, &data, planned, &resp.Diagnostics) {
 		resp.Diagnostics.AddError(
 			"Error reading DefectDojo engagement",
 			fmt.Sprintf("Engagement %d was created, but it was gone when the provider read it back.", created.ID),
@@ -320,6 +323,7 @@ func (r *EngagementResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	keepPlannedTags(&data, planned)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, data.ID)...)
 }
@@ -332,7 +336,7 @@ func (r *EngagementResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Product tags in the prior state stay visible.
-	if !r.read(ctx, &data, data.Tags, nil, &resp.Diagnostics) {
+	if !r.read(ctx, &data, data.Tags, &resp.Diagnostics) {
 		// Deleted outside Terraform
 		resp.State.RemoveResource(ctx)
 		return
@@ -389,13 +393,18 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 	if known(data.EngagementType) && !data.EngagementType.Equal(state.EngagementType) {
 		patch.EngagementType = new(data.EngagementType.ValueString())
 	}
-	// Tags are sent when they are configured. On a move, the planned tags are
-	// sent too, which makes DefectDojo replace the old product's tags with
-	// the new product's; an empty list would remove those too, so it is only
-	// sent when configured.
+	// Tags are sent when they are configured, and on a move: any tags make
+	// DefectDojo replace the old product's tags with the new product's.
 	planned := stringsFromSet(ctx, data.Tags, &resp.Diagnostics)
-	if known(tags) || moved && len(planned) > 0 {
+	switch {
+	case known(tags):
 		patch.Tags = &planned
+	case moved && len(planned) > 0:
+		patch.Tags = &planned
+	case moved:
+		// No tags of its own: an empty list would only remove the old
+		// product's tags, so send the new product's when it passes them on.
+		patch.Tags = r.inheritedTags(ctx, int(data.ProductID.ValueInt64()), &resp.Diagnostics)
 	}
 	if resp.Diagnostics.HasError() {
 		return
@@ -409,13 +418,8 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	// Product tags in the plan stay visible. After a move without tags, the
-	// old product's tags are still there: hide them too.
-	var also []int
-	if moved {
-		also = append(also, int(state.ProductID.ValueInt64()))
-	}
-	if !r.read(ctx, &data, data.Tags, also, &resp.Diagnostics) {
+	plannedTags := data.Tags
+	if !r.read(ctx, &data, plannedTags, &resp.Diagnostics) {
 		resp.Diagnostics.AddError(
 			"Error reading DefectDojo engagement",
 			fmt.Sprintf("Engagement %d was updated, but it was gone when the provider read it back.", id),
@@ -424,16 +428,45 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	keepPlannedTags(&data, plannedTags)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, data.ID)...)
 }
 
+// keepPlannedTags sets the tags of data to the planned tags, when they are
+// known. After a write, DefectDojo's tags can still differ from the plan for
+// a while: a change of the product's tags reaches its engagements later,
+// through Celery, and DefectDojo puts back inherited tags a write removes.
+// The next refresh reconciles them.
+func keepPlannedTags(data *EngagementResourceModel, planned types.Set) {
+	if known(planned) {
+		data.Tags = planned
+	}
+}
+
+// inheritedTags returns the tags the product passes on to its engagements:
+// its tags, if it has enable_product_tag_inheritance, else none.
+func (r *EngagementResource) inheritedTags(ctx context.Context, productID int, diags *diag.Diagnostics) *[]string {
+	p, _, err := r.client.Products.Get(ctx, productID)
+	if err != nil {
+		diags.AddError("Error updating DefectDojo engagement",
+			fmt.Sprintf("Could not read product %d, for the tags it passes on, unexpected error: %s", productID, err))
+		return nil
+	}
+	tags := []string{}
+	if p.EnableProductTagInheritance {
+		tags = append(tags, p.Tags...)
+	}
+	return &tags
+}
+
 // read reads the engagement data.ID into data. It reports false when the
-// engagement doesn't exist. The tags of the engagement's product, and of the
-// products otherProducts, are hidden unless they are in visible, ignoring
-// case: DefectDojo adds the product's tags to engagements of products that
-// pass their tags on, and doesn't say which tags are inherited.
-func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceModel, visible types.Set, otherProducts []int, diags *diag.Diagnostics) bool {
+// engagement doesn't exist. The tags of the engagement's product are hidden
+// unless they are in visible, ignoring case: DefectDojo adds the product's
+// tags to engagements of products that pass their tags on (for the product,
+// or system-wide, which only superusers can read), and doesn't say which
+// tags are inherited.
+func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceModel, visible types.Set, diags *diag.Diagnostics) bool {
 	id := int(data.ID.ValueInt64())
 	e, _, err := r.client.Engagements.Get(ctx, id)
 	if errors.Is(err, defectdojo.ErrNotFound) {
@@ -444,19 +477,14 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 		return true
 	}
 	hidden := map[string]bool{}
-	for _, productID := range append([]int{e.Product}, otherProducts...) {
-		p, _, err := r.client.Products.Get(ctx, productID)
-		if errors.Is(err, defectdojo.ErrNotFound) {
-			continue
-		}
-		if err != nil {
-			diags.AddError("Error reading DefectDojo engagement",
-				fmt.Sprintf("Could not read product %d, for the tags it passes on to engagement %d, unexpected error: %s", productID, id, err))
-			return true
-		}
-		for _, tag := range p.Tags {
-			hidden[strings.ToLower(tag)] = true
-		}
+	p, _, err := r.client.Products.Get(ctx, e.Product)
+	if err != nil {
+		diags.AddError("Error reading DefectDojo engagement",
+			fmt.Sprintf("Could not read product %d, for the tags it passes on to engagement %d, unexpected error: %s", e.Product, id, err))
+		return true
+	}
+	for _, tag := range p.Tags {
+		hidden[strings.ToLower(tag)] = true
 	}
 	if known(visible) {
 		for _, v := range visible.Elements() {

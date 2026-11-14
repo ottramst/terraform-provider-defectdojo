@@ -79,6 +79,16 @@ data "defectdojo_engagement" "missing" {
 `,
 				ExpectError: regexp.MustCompile(`DefectDojo engagement not found`),
 			},
+			// A product that doesn't exist: not found, not DefectDojo's 400.
+			{
+				Config: testAccEngagementConfig(name, "first", "") + `
+data "defectdojo_engagement" "missing_product" {
+  product_id = 999999999
+  name       = "x"
+}
+`,
+				ExpectError: regexp.MustCompile(`DefectDojo engagement not found`),
+			},
 			{
 				Config: testAccEngagementConfig(name, "first", "") + `
 data "defectdojo_engagement" "no_product" {

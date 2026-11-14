@@ -159,14 +159,15 @@ func TestAccEngagement(t *testing.T) {
 					statecheck.ExpectKnownValue(engagementAddress, tfjsonpath.New("version"), knownvalue.Null()),
 				},
 			},
-			// Closed outside Terraform: with ignore_changes on the status, a
-			// change of another attribute doesn't reopen it
+			// Closed outside Terraform: with ignore_changes on the configured
+			// status, a change of another attribute doesn't reopen it
 			{
 				PreConfig: func() {
 					_, err := testAccClient(t).Engagements.Close(context.Background(), id)
 					testAccNoError(t, err)
 				},
 				Config: testAccEngagementConfig(renamed, "second", `
+  status      = "In Progress"
   description = "closed elsewhere"
   lifecycle {
     ignore_changes = [status]
@@ -485,4 +486,94 @@ func testAccCreateTest(t *testing.T, engagementID int) {
 	testAccNoError(t, err)
 	_, err = client.Do(req, nil)
 	testAccNoError(t, err)
+}
+
+// Regressions with products that pass their tags on, for an engagement
+// without tags of its own:
+//   - a move to another product replaces the old product's tags with the
+//     new product's, and a refresh after it shows no tags;
+//   - a change of the product's tags and of the engagement in one apply: the
+//     product's change reaches the engagement later (never in the test
+//     stack, which has no Celery), so the engagement still has the old
+//     product tag after its update, which must not fail the apply.
+func TestAccEngagement_inheritedTagsWithoutOwnTags(t *testing.T) {
+	name := randName(t)
+	suffix := name[len("acc-"):]
+	tagA, tagB, tagB2 := "inh-a-"+suffix, "inh-b-"+suffix, "inh-b2-"+suffix
+	var id int
+	config := func(secondTag, product, description string) string {
+		return fmt.Sprintf(`
+resource "defectdojo_product_type" "test" {
+  name = %[1]q
+}
+
+resource "defectdojo_product" "first" {
+  name                           = "%[1]s-first"
+  description                    = "acceptance test"
+  product_type_id                = defectdojo_product_type.test.id
+  enable_product_tag_inheritance = true
+  tags                           = [%[2]q]
+}
+
+resource "defectdojo_product" "second" {
+  name                           = "%[1]s-second"
+  description                    = "acceptance test"
+  product_type_id                = defectdojo_product_type.test.id
+  enable_product_tag_inheritance = true
+  tags                           = [%[3]q]
+}
+
+resource "defectdojo_engagement" "test" {
+  product_id   = defectdojo_product.%[4]s.id
+  name         = %[1]q
+  description  = %[5]q
+  target_start = "2026-01-01"
+  target_end   = "2099-12-31"
+}
+`, name, tagA, secondTag, product, description)
+	}
+	noTags := statecheck.ExpectKnownValue(engagementAddress, tfjsonpath.New("tags"), knownvalue.SetSizeExact(0))
+	inDefectDojo := func(want string) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			e, _, err := testAccClient(t).Engagements.Get(context.Background(), id)
+			if err != nil {
+				return err
+			}
+			if len(e.Tags) != 1 || !strings.EqualFold(e.Tags[0], want) {
+				return fmt.Errorf("DefectDojo tags = %v, want [%s]", e.Tags, want)
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:            config(tagB, "first", "one"),
+				ConfigStateChecks: []statecheck.StateCheck{noTags},
+				Check:             resource.ComposeAggregateTestCheckFunc(testAccCaptureEngagementAddressID(&id), inDefectDojo(tagA)),
+			},
+			// Moved without tags of its own: the new product's tag replaces
+			// the old one, and stays hidden, also after a refresh.
+			{
+				Config:            config(tagB, "second", "one"),
+				ConfigStateChecks: []statecheck.StateCheck{noTags},
+				Check:             inDefectDojo(tagB),
+			},
+			{
+				Config:            config(tagB, "second", "two"),
+				ConfigStateChecks: []statecheck.StateCheck{noTags},
+			},
+			// The product's tag and the engagement change in one apply. The
+			// engagement keeps the old tag in DefectDojo until Celery passes
+			// the change on; a refresh then shows it (Optional+Computed, so no
+			// diff).
+			{
+				Config: config(tagB2, "second", "three"),
+				Check:  inDefectDojo(tagB),
+			},
+		},
+	})
 }

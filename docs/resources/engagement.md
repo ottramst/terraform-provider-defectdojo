@@ -40,10 +40,9 @@ resource "defectdojo_engagement" "ci" {
   deduplication_on_engagement = true
   tags                        = ["ci"]
 
-  lifecycle {
-    # Pipelines and DefectDojo close and reopen engagements.
-    ignore_changes = [status]
-  }
+  # status is not set: pipelines and DefectDojo close and reopen the
+  # engagement, and the provider leaves the status as it is. When setting it,
+  # add lifecycle { ignore_changes = [status] }.
 }
 
 # An interactive engagement, such as a penetration test.
@@ -84,8 +83,8 @@ resource "defectdojo_engagement" "pentest" {
 - `pen_test` (Boolean) Whether the engagement includes penetration tests. Defaults to `true`.
 - `reason` (String) The reason for the engagement, at most 2000 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `source_code_management_uri` (String) The link to the source code the engagement tests, a URL of at most 600 characters.
-- `status` (String) The status of the engagement: one of `Not Started`, `Blocked`, `Cancelled`, `Completed`, `In Progress`, `On Hold`, `Scheduled` and `Waiting for Resource`. DefectDojo uses `Not Started` when it is not set. The provider sends it only when the configuration changes it. Pipelines and DefectDojo's automatic closing of engagements change it too: use `lifecycle { ignore_changes = [status] }` for such engagements. Setting it doesn't change `active`: an engagement closed elsewhere stays inactive.
-- `tags` (Set of String) The tags of the engagement, each at most 255 characters, without spaces, commas or quotes. Tags are compared ignoring case, and the provider keeps the configured spelling. When the product passes its tags on (`enable_product_tag_inheritance`, or DefectDojo's system setting), DefectDojo adds them to its engagements; the provider hides the product's tags unless they are configured, and a change of the product's tags reaches its engagements later, through DefectDojo's background workers. When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. An empty set removes them all, including the tags the product passes on.
+- `status` (String) The status of the engagement: one of `Not Started`, `Blocked`, `Cancelled`, `Completed`, `In Progress`, `On Hold`, `Scheduled` and `Waiting for Resource`. DefectDojo uses `Not Started` when it is not set. The provider sends it only when the configuration changes it. Pipelines and DefectDojo's automatic closing of engagements change it too: when it is configured for such an engagement, use `lifecycle { ignore_changes = [status] }`; when it is not configured, the provider leaves it as it is. Setting it doesn't change `active`: an engagement closed elsewhere stays inactive.
+- `tags` (Set of String) The tags of the engagement, each at most 255 characters, without spaces, commas or quotes. Tags are compared ignoring case, and the provider keeps the configured spelling. When the product passes its tags on (`enable_product_tag_inheritance`, or DefectDojo's system setting), DefectDojo adds them to its engagements. The provider can't tell inherited tags apart, so it always hides the tags of the engagement's product unless they are configured. A change of the product's tags reaches its engagements later, through DefectDojo's background workers, and a refresh then shows the result. Moving an engagement without tags of its own to another product replaces the old product's tags with the new product's. When it is not set, the provider leaves the tags as they are, so they can be managed elsewhere. An empty set removes them all, including the tags the product passes on.
 - `test_strategy` (String) The link to the test strategy of the engagement, a URL of at most 200 characters.
 - `threat_model` (Boolean) Whether the engagement includes threat modelling. Defaults to `true`.
 - `tracker` (String) The link to the epic or ticket of the engagement, a URL of at most 200 characters.

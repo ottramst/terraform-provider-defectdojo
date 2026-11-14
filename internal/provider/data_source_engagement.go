@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -163,8 +164,11 @@ func (d *EngagementDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		list, _, err := d.client.Engagements.List(ctx, &defectdojo.ListEngagementsOptions{
 			ListOptions: defectdojo.ListOptions{Limit: 2}, Product: productID, Name: name,
 		})
+		// The product filter rejects products that don't exist with a 400.
+		var errResp *defectdojo.ErrorResponse
+		missingProduct := errors.As(err, &errResp) && errResp.StatusCode == http.StatusBadRequest && len(errResp.Fields["product"]) > 0
 		switch {
-		case errors.Is(err, defectdojo.ErrNotFound) || err == nil && list.Count == 0:
+		case missingProduct || err == nil && list.Count == 0:
 			resp.Diagnostics.AddError("DefectDojo engagement not found",
 				"There is no engagement with "+what+", or the provider user may not see it.")
 			return
