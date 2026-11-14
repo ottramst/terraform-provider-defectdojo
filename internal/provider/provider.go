@@ -171,6 +171,7 @@ func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Reso
 		NewProductResource,
 		NewProductTypeResource,
 		NewSLAConfigurationResource,
+		NewUserResource,
 	}
 }
 
@@ -180,6 +181,7 @@ func (p *DefectDojoProvider) DataSources(_ context.Context) []func() datasource.
 		NewProductDataSource,
 		NewProductTypeDataSource,
 		NewSLAConfigurationDataSource,
+		NewUserDataSource,
 	}
 }
 

@@ -20,6 +20,10 @@ resource "defectdojo_product_type" "web" {
   name = "Web Applications"
 }
 
+data "defectdojo_user" "manager" {
+  username = "jdoe"
+}
+
 resource "defectdojo_sla_configuration" "strict" {
   name     = "Internet-facing"
   critical = 3
@@ -38,7 +42,7 @@ resource "defectdojo_product" "storefront" {
   origin               = "internal"
   internet_accessible  = true
 
-  product_manager_id = 12
+  product_manager_id = data.defectdojo_user.manager.id
   regulation_ids     = [1] # PCI DSS
   tags               = ["pci", "shop"]
 }
