@@ -26,17 +26,39 @@ func TestAccNotifications_adoptedNotSentUnlessConfigured(t *testing.T) {
 			fake := &fakeDefectDojo{collection: "notifications", object: tt.object}
 			server := httptest.NewServer(fake.handler(t))
 			t.Cleanup(server.Close)
-			config := fmt.Sprintf(`
+			config := func(other string) string {
+				return fmt.Sprintf(`
 provider "defectdojo" {
   url       = %[1]q
   api_token = "test"
 }
 
 resource "defectdojo_notifications" "test" {
-%[2]s  other            = ["mail"]
+%[2]s  other            = [%[3]q]
   scan_added_empty = ["alert"]
 }
-`, server.URL, tt.scope)
+`, server.URL, tt.scope, other)
+			}
+			checkPatch := func(other string) resource.TestCheckFunc {
+				return func(*terraform.State) error {
+					if post := fake.lastPost(); post != nil {
+						return fmt.Errorf("POST %v, want the existing settings adopted", post)
+					}
+					patch := fake.lastPatch()
+					if patch == nil {
+						return fmt.Errorf("no PATCH was sent")
+					}
+					for _, field := range []string{"template", "user", "product"} {
+						if _, sent := patch[field]; sent {
+							return fmt.Errorf("PATCH %v sends %s", patch, field)
+						}
+					}
+					if patch["scan_added_empty"] != "alert" || fmt.Sprint(patch["other"]) != "["+other+"]" || fmt.Sprint(patch["product_added"]) != "[alert]" {
+						return fmt.Errorf("PATCH %v, want every event, scan_added_empty as a string", patch)
+					}
+					return nil
+				}
+			}
 
 			resource.Test(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -55,27 +77,10 @@ resource "defectdojo_notifications" "test" {
 					return nil
 				},
 				Steps: []resource.TestStep{
-					{
-						Config: config,
-						Check: func(*terraform.State) error {
-							if post := fake.lastPost(); post != nil {
-								return fmt.Errorf("POST %v, want the existing settings adopted", post)
-							}
-							patch := fake.lastPatch()
-							if patch == nil {
-								return fmt.Errorf("no PATCH was sent")
-							}
-							for _, field := range []string{"template", "user", "product"} {
-								if _, sent := patch[field]; sent {
-									return fmt.Errorf("PATCH %v sends %s", patch, field)
-								}
-							}
-							if patch["scan_added_empty"] != "alert" || fmt.Sprint(patch["other"]) != "[mail]" || fmt.Sprint(patch["product_added"]) != "[alert]" {
-								return fmt.Errorf("PATCH %v, want every event, scan_added_empty as a string", patch)
-							}
-							return nil
-						},
-					},
+					// Create adopts the settings with a PATCH.
+					{Config: config("mail"), Check: checkPatch("mail")},
+					// Update PATCHes every event, never the scope.
+					{Config: config("slack"), Check: checkPatch("slack")},
 				},
 			})
 		})
