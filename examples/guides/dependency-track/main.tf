@@ -31,7 +31,8 @@ variable "dependency_track_api_key" {
 }
 
 # DefectDojo: the product and the engagement that Dependency-Track imports
-# its findings into, and the account it uses.
+# its findings into, and the account it uses. The example is for
+# Dependency-Track v5; see the comment on the API key for v4.
 
 resource "defectdojo_user" "dependency_track" {
   username    = "dependency-track"
@@ -79,11 +80,20 @@ resource "dependencytrack_config_property" "defectdojo_url" {
   value      = var.defectdojo_url
 }
 
-# The API key ends up in the Terraform state: protect the state.
+# Dependency-Track v5 keeps the API key in a secret, and defectdojo.apiKey
+# names the secret. (On Dependency-Track v4, defectdojo.apiKey holds the key
+# itself: set its value to var.dependency_track_api_key and leave the secret
+# out.) The key ends up in the Terraform state: protect the state.
+resource "dependencytrack_secret" "defectdojo_api_key" {
+  name        = "defectdojo-api-key"
+  value       = var.dependency_track_api_key
+  description = "API key of the dependency-track account in DefectDojo"
+}
+
 resource "dependencytrack_config_property" "defectdojo_api_key" {
   group_name = "integrations"
   name       = "defectdojo.apiKey"
-  value      = var.dependency_track_api_key
+  value      = dependencytrack_secret.defectdojo_api_key.name
 }
 
 resource "dependencytrack_project" "storefront" {

@@ -16,7 +16,7 @@ and the [Dependency-Track provider](https://registry.terraform.io/providers/ottr
   - a product that the account may import into (its `authorized_users`);
   - a CI/CD engagement that receives the findings.
 - **Dependency-Track:**
-  - the DefectDojo integration (`dependencytrack_config_property`: enabled, URL and API key);
+  - the DefectDojo integration (`dependencytrack_config_property`: enabled, URL and API key, the latter through a `dependencytrack_secret` on v5);
   - a project whose properties name the engagement and turn on reimports (`dependencytrack_project_property`).
 
 ## The account's API key
@@ -36,9 +36,14 @@ account's key once it exists, in one of two ways:
 Pass the key to Terraform as `dependency_track_api_key`, for example through `TF_VAR_dependency_track_api_key`. A typical
 workflow applies twice: first without the Dependency-Track resources, or with a placeholder key, then again with the key.
 
+-> **Dependency-Track v4 and v5 differ.** On v5, the example's version, `defectdojo.apiKey` holds the *name* of a secret
+(`dependencytrack_secret`) that holds the key. On v4, it holds the key itself: set its value to the key and leave the secret
+out.
+
 ~> The Dependency-Track provider stores the API key in the Terraform state. Protect the state, and rotate the key in DefectDojo
-(*API v2 Key*, or `POST /api/v2/users/{id}/reset_api_token/` as a superuser) if the state leaks. API tokens don't expire
-unless DefectDojo's `DD_API_TOKEN_DEFAULT_EXPIRY_DAYS` is set; if it is, renew the key before it expires.
+(*API v2 Key*, or `POST /api/v2/users/{id}/reset_api_token/` as a superuser or global owner) if the state leaks.
+API tokens don't expire unless DefectDojo's `DD_API_TOKEN_DEFAULT_EXPIRY_DAYS` is set, or a superuser gives the account's
+token its own expiry; if one applies, renew the key before it expires.
 
 ## Example
 
@@ -76,7 +81,8 @@ variable "dependency_track_api_key" {
 }
 
 # DefectDojo: the product and the engagement that Dependency-Track imports
-# its findings into, and the account it uses.
+# its findings into, and the account it uses. The example is for
+# Dependency-Track v5; see the comment on the API key for v4.
 
 resource "defectdojo_user" "dependency_track" {
   username    = "dependency-track"
@@ -124,11 +130,20 @@ resource "dependencytrack_config_property" "defectdojo_url" {
   value      = var.defectdojo_url
 }
 
-# The API key ends up in the Terraform state: protect the state.
+# Dependency-Track v5 keeps the API key in a secret, and defectdojo.apiKey
+# names the secret. (On Dependency-Track v4, defectdojo.apiKey holds the key
+# itself: set its value to var.dependency_track_api_key and leave the secret
+# out.) The key ends up in the Terraform state: protect the state.
+resource "dependencytrack_secret" "defectdojo_api_key" {
+  name        = "defectdojo-api-key"
+  value       = var.dependency_track_api_key
+  description = "API key of the dependency-track account in DefectDojo"
+}
+
 resource "dependencytrack_config_property" "defectdojo_api_key" {
   group_name = "integrations"
   name       = "defectdojo.apiKey"
-  value      = var.dependency_track_api_key
+  value      = dependencytrack_secret.defectdojo_api_key.name
 }
 
 resource "dependencytrack_project" "storefront" {
@@ -157,8 +172,9 @@ resource "dependencytrack_project_property" "reimport" {
 
 ## How it works
 
-- **Uploads:** Dependency-Track uploads on its own schedule (its `defectdojo.sync.cadence` property, 60 minutes by default),
-  for every project with a `defectdojo.engagementId`.
+- **Uploads:** Dependency-Track uploads the findings of every project with a `defectdojo.engagementId` on a schedule:
+  - on v5, the server setting `dt.task.defect-dojo-upload.cron`, by default daily at 02:00;
+  - on v4, the `defectdojo.sync.cadence` property, by default every 60 minutes.
 - **Reimports:**
   - With `defectdojo.reimport`, an upload reimports into the engagement's test, which updates and closes findings.
   - Without it, each upload adds a test.
@@ -167,6 +183,15 @@ resource "dependencytrack_project_property" "reimport" {
   - DefectDojo moves the end of a CI/CD engagement to the scan date of each import, if that is later.
   - The far-future `target_end` keeps the engagement stable in Terraform. Otherwise, use `lifecycle { ignore_changes = [target_end] }`.
 - **The account's rights:**
-  - `authorized_users` lets it import into the product, nothing more.
+  - `authorized_users` lets it view, edit, add and import within the product, its engagements, tests and findings, but not
+    delete them. That is the narrowest grant DefectDojo's open-source edition offers, and anyone with the key has it.
   - It needs no configuration permissions, staff or superuser rights.
-  - Its findings name it as their reporter, so DefectDojo refuses to delete it later: deactivate it with `is_active = false` instead.
+
+## Removing the integration
+
+- **Dependency-Track:** destroying `dependencytrack_config_property` only removes it from the Terraform state, so the
+  integration stays on. Set `defectdojo.enabled` to `"false"` and apply before removing the resources.
+- **The engagement:** once Dependency-Track has uploaded, the engagement has tests, and `defectdojo_engagement` refuses to
+  destroy it unless `force_destroy = true`, which deletes the tests and findings with it.
+- **The account:** its findings name it as their reporter, so DefectDojo refuses to delete it while they exist. Deactivate it
+  with `is_active = false` and remove it from the state with a `removed` block instead.
