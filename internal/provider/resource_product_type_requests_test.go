@@ -19,7 +19,10 @@ import (
 
 // fakeDefectDojo is a minimal DefectDojo that serves one object of a
 // collection, such as "product_types", and records the bodies of the POST and
-// PATCH requests, to check what the provider sends. A list of the collection
+// PATCH requests, to check what the provider sends. With singleton, it serves
+// an object that always exists, like the system settings: object is set
+// before the test, and a GET by ID, a POST and a DELETE are 405, as in
+// DefectDojo. A list of the collection
 // returns the object when it matches the query's filters. Lists of the
 // collections in lists return their objects, filtered the same way; other GET
 // requests to /api/v2/ (the child counts of force_destroy) return an empty
@@ -27,6 +30,8 @@ import (
 type fakeDefectDojo struct {
 	collection string
 	defaults   map[string]any // the fields of a new object
+	id         int            // the object's ID; 7 when zero
+	singleton  bool
 
 	// lists holds read-only objects of other collections, by collection.
 	lists map[string][]map[string]any
@@ -39,6 +44,14 @@ type fakeDefectDojo struct {
 	object  map[string]any // nil when deleted
 	posts   []map[string]any
 	patches []map[string]any
+	writes  int // the number of POST, PATCH and DELETE requests
+}
+
+func (f *fakeDefectDojo) objectID() int {
+	if f.id == 0 {
+		return 7
+	}
+	return f.id
 }
 
 // matches reports whether object matches the filters of a list query: each
@@ -76,10 +89,25 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 		}
 		return body
 	}
-	mux.HandleFunc("POST /api/v2/"+f.collection+"/", func(w http.ResponseWriter, r *http.Request) {
+	notAllowed := func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
-		f.object = map[string]any{"id": 7}
+		if r.Method != http.MethodGet {
+			f.writes++
+		}
+		write(w, http.StatusMethodNotAllowed, map[string]string{"detail": fmt.Sprintf("Method %q not allowed.", r.Method)})
+	}
+	objectPath := fmt.Sprintf("/api/v2/%s/%d/", f.collection, f.objectID())
+	if f.singleton {
+		mux.HandleFunc("POST /api/v2/"+f.collection+"/", notAllowed)
+		mux.HandleFunc("GET "+objectPath, notAllowed)
+		mux.HandleFunc("DELETE "+objectPath, notAllowed)
+	}
+	post := func(w http.ResponseWriter, r *http.Request) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.writes++
+		f.object = map[string]any{"id": f.objectID()}
 		for k, v := range f.defaults {
 			f.object[k] = v
 		}
@@ -91,13 +119,19 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 			}
 		}
 		write(w, http.StatusCreated, f.object)
-	})
+	}
+	if !f.singleton {
+		mux.HandleFunc("POST /api/v2/"+f.collection+"/", post)
+	}
 	object := func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		if f.object == nil {
 			write(w, http.StatusNotFound, map[string]string{"detail": "No object matches the given query."})
 			return
+		}
+		if r.Method != http.MethodGet {
+			f.writes++
 		}
 		switch r.Method {
 		case http.MethodGet:
@@ -115,7 +149,9 @@ func (f *fakeDefectDojo) handler(t *testing.T) http.Handler {
 		write(w, http.StatusOK, f.object)
 	}
 	for _, method := range []string{"GET", "PATCH", "DELETE"} {
-		mux.HandleFunc(method+" /api/v2/"+f.collection+"/7/", object)
+		if !f.singleton || method == "PATCH" {
+			mux.HandleFunc(method+" "+objectPath, object)
+		}
 	}
 	mux.HandleFunc("GET /api/v2/", func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
@@ -255,4 +291,11 @@ resource "defectdojo_product_type" "test" {
 			},
 		},
 	})
+}
+
+// writeCount returns the number of POST, PATCH and DELETE requests.
+func (f *fakeDefectDojo) writeCount() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.writes
 }
