@@ -4,14 +4,14 @@ page_title: "defectdojo_development_environment Resource - defectdojo"
 subcategory: ""
 description: |-
   Manages a DefectDojo development environment, the environment a test ran in, such as Production. DefectDojo comes with seven: Development, Staging, Production, Test, Pre-prod, Lab and Default. Managing environments needs a superuser or the development environment configuration permissions.
-  -> DefectDojo's imports find the environment of a scan by name (Development when the import names none), so keep names unique, and keep an environment named Development for imports that name none. Creating one with a name that an environment already has fails; import that environment instead. An environment that tests use can't be destroyed.
+  -> DefectDojo's imports find the environment of a scan by name (Development when the import names none), so keep names unique, and keep an environment named Development for imports that name none. Creating or renaming one to a name that an environment already has fails; import that environment instead. An environment that tests use can't be destroyed.
 ---
 
 # defectdojo_development_environment (Resource)
 
 Manages a DefectDojo development environment, the environment a test ran in, such as `Production`. DefectDojo comes with seven: Development, Staging, Production, Test, Pre-prod, Lab and Default. Managing environments needs a superuser or the development environment configuration permissions.
 
--> DefectDojo's imports find the environment of a scan by name (`Development` when the import names none), so keep names unique, and keep an environment named `Development` for imports that name none. Creating one with a name that an environment already has fails; import that environment instead. An environment that tests use can't be destroyed.
+-> DefectDojo's imports find the environment of a scan by name (`Development` when the import names none), so keep names unique, and keep an environment named `Development` for imports that name none. Creating or renaming one to a name that an environment already has fails; import that environment instead. An environment that tests use can't be destroyed.
 
 ## Example Usage
 

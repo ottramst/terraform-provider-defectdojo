@@ -103,15 +103,32 @@ func TestAccDevelopmentEnvironment(t *testing.T) {
 	})
 }
 
-// A name that an environment already has is refused, with the import hint.
+// A name that an environment already has is refused, on create and on a
+// rename, with the import hint.
 func TestAccDevelopmentEnvironment_nameTaken(t *testing.T) {
+	name := randName(t)
+	var id int
+	taken := regexp.MustCompile(`(?s)already\s+has\s+a\s+development\s+environment\s+named\s+"Development".*import\s+the\s+existing`)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDevelopmentEnvironmentDestroyed(t, &id),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDevelopmentEnvironmentConfig("Development"),
-				ExpectError: regexp.MustCompile(`(?s)already\s+has\s+a\s+development\s+environment\s+named\s+"Development".*import\s+the\s+existing`),
+				ExpectError: taken,
+			},
+			{
+				Config: testAccDevelopmentEnvironmentConfig(name),
+				Check:  testAccCaptureDevelopmentEnvironmentID(&id),
+			},
+			{
+				Config:      testAccDevelopmentEnvironmentConfig("Development"),
+				ExpectError: taken,
+			},
+			// A valid config last, for the destroy after the test.
+			{
+				Config: testAccDevelopmentEnvironmentConfig(name),
 			},
 		},
 	})

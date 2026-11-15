@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -48,7 +49,7 @@ func (r *DevelopmentEnvironmentResource) Schema(_ context.Context, _ resource.Sc
 			"Managing environments needs a superuser or the development environment configuration permissions.\n\n" +
 			"-> DefectDojo's imports find the environment of a scan by name (`Development` when the import names none), " +
 			"so keep names unique, and keep an environment named `Development` for imports that name none. " +
-			"Creating one with a name that an environment already has fails; import that environment instead. " +
+			"Creating or renaming one to a name that an environment already has fails; import that environment instead. " +
 			"An environment that tests use can't be destroyed.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
@@ -81,22 +82,7 @@ func (r *DevelopmentEnvironmentResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	// A second environment with the name would break the imports that name
-	// it, so refuse one, and suggest importing the existing environment.
-	existing, _, err := r.client.DevelopmentEnvironments.GetByName(ctx, data.Name.ValueString())
-	switch {
-	case err == nil:
-		resp.Diagnostics.AddError(
-			"DefectDojo development environment exists",
-			fmt.Sprintf("DefectDojo already has a development environment named %q (ID %d). "+
-				"A second one would break the imports that name it; import the existing one instead.", existing.Name, existing.ID),
-		)
-		return
-	case !errors.Is(err, defectdojo.ErrNotFound):
-		resp.Diagnostics.AddError(
-			"Error creating DefectDojo development environment",
-			"Could not check for a development environment named "+strconv.Quote(data.Name.ValueString())+": "+err.Error(),
-		)
+	if !r.checkNameFree(ctx, data.Name.ValueString(), &resp.Diagnostics) {
 		return
 	}
 
@@ -149,6 +135,15 @@ func (r *DevelopmentEnvironmentResource) Update(ctx context.Context, req resourc
 		return
 	}
 
+	var state DevelopmentEnvironmentModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !data.Name.Equal(state.Name) && !r.checkNameFree(ctx, data.Name.ValueString(), &resp.Diagnostics) {
+		return
+	}
+
 	updated, _, err := r.client.DevelopmentEnvironments.Patch(ctx, int(data.ID.ValueInt64()), &defectdojo.DevelopmentEnvironmentPatch{
 		Name: new(data.Name.ValueString()),
 	})
@@ -188,6 +183,30 @@ func (r *DevelopmentEnvironmentResource) Delete(ctx context.Context, req resourc
 			"Error deleting DefectDojo development environment",
 			fmt.Sprintf("Could not delete development environment %d, unexpected error: %s", id, err),
 		)
+	}
+}
+
+// checkNameFree reports whether no development environment has the name,
+// adding an error when one has: a second environment with the name would
+// break the imports that name it.
+func (r *DevelopmentEnvironmentResource) checkNameFree(ctx context.Context, name string, diags *diag.Diagnostics) bool {
+	existing, _, err := r.client.DevelopmentEnvironments.GetByName(ctx, name)
+	switch {
+	case err == nil:
+		diags.AddError(
+			"DefectDojo development environment exists",
+			fmt.Sprintf("DefectDojo already has a development environment named %q (ID %d). "+
+				"A second one would break the imports that name it; import the existing one instead, or choose another name.", existing.Name, existing.ID),
+		)
+		return false
+	case errors.Is(err, defectdojo.ErrNotFound):
+		return true
+	default:
+		diags.AddError(
+			"Error checking DefectDojo development environment name",
+			"Could not check for a development environment named "+strconv.Quote(name)+": "+err.Error(),
+		)
+		return false
 	}
 }
 
