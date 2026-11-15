@@ -3,15 +3,15 @@
 page_title: "defectdojo_product_lifecycle Resource - defectdojo"
 subcategory: ""
 description: |-
-  Manages an entry of DefectDojo's product lifecycles, the values of a product's life_cycle. DefectDojo comes with construction, production and retirement. Managing them needs a superuser or the product lifecycle configuration permissions.
-  -> DefectDojo can't change value, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set lifecycle { create_before_destroy = true } so that the new entry is created, and the products move to it, before the old one is deleted.
+  Manages an entry of DefectDojo's product lifecycles, the values of a product's life_cycle. DefectDojo comes with construction, production and retirement. Managing them needs a superuser: DefectDojo has no configuration permissions for them.
+  -> DefectDojo can't change value, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set lifecycle { create_before_destroy = true } so that the new entry is created, and the products move to it, before the old one is deleted. With create_before_destroy, terraform apply -replace fails, since the new entry would have the same value as the old one.
 ---
 
 # defectdojo_product_lifecycle (Resource)
 
-Manages an entry of DefectDojo's product lifecycles, the values of a product's `life_cycle`. DefectDojo comes with `construction`, `production` and `retirement`. Managing them needs a superuser or the product lifecycle configuration permissions.
+Manages an entry of DefectDojo's product lifecycles, the values of a product's `life_cycle`. DefectDojo comes with `construction`, `production` and `retirement`. Managing them needs a superuser: DefectDojo has no configuration permissions for them.
 
--> DefectDojo can't change `value`, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted.
+-> DefectDojo can't change `value`, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted. With `create_before_destroy`, `terraform apply -replace` fails, since the new entry would have the same value as the old one.
 
 ## Example Usage
 
@@ -47,8 +47,8 @@ resource "defectdojo_product" "example" {
 
 ### Optional
 
-- `display_order` (Number) The position in the UI's lists, lower first. Defaults to `0`.
-- `icon` (String) A Font Awesome icon class for the classic UI, such as `desktop`, at most 100 characters.
+- `display_order` (Number) The position in the UI's lists, lower first, a 32-bit integer. Defaults to `0`.
+- `icon` (String) A Font Awesome icon class for the classic UI, such as `desktop`, at most 100 characters, without leading or trailing whitespace, which DefectDojo removes.
 
 ### Read-Only
 

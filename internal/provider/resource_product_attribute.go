@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -99,10 +101,11 @@ func (r *ProductAttributeResource) Schema(_ context.Context, _ resource.SchemaRe
 	k := r.kind
 	resp.Schema = schema.Schema{
 		MarkdownDescription: fmt.Sprintf("Manages an entry of DefectDojo's %ss, the values of a product's `%s`. "+
-			"DefectDojo comes with %s. Managing them needs a superuser or the %s configuration permissions.\n\n"+
+			"DefectDojo comes with %s. Managing them needs a superuser: DefectDojo has no configuration permissions for them.\n\n"+
 			"-> DefectDojo can't change `value`, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. "+
-			"Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted.",
-			k.object, k.productAttribute, k.seeded, k.object),
+			"Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted. "+
+			"With `create_before_destroy`, `terraform apply -replace` fails, since the new entry would have the same value as the old one.",
+			k.object, k.productAttribute, k.seeded),
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the " + k.object + ".",
@@ -126,7 +129,7 @@ func (r *ProductAttributeResource) Schema(_ context.Context, _ resource.SchemaRe
 			},
 			"name": requiredText("The label DefectDojo's UI shows.", 200),
 			"icon": schema.StringAttribute{
-				MarkdownDescription: "A Font Awesome icon class for the classic UI, such as `desktop`, at most 100 characters.",
+				MarkdownDescription: "A Font Awesome icon class for the classic UI, such as `desktop`, at most 100 characters, without leading or trailing whitespace, which DefectDojo removes.",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.UTF8LengthBetween(1, 100),
@@ -134,10 +137,11 @@ func (r *ProductAttributeResource) Schema(_ context.Context, _ resource.SchemaRe
 				},
 			},
 			"display_order": schema.Int64Attribute{
-				MarkdownDescription: "The position in the UI's lists, lower first. Defaults to `0`.",
+				MarkdownDescription: "The position in the UI's lists, lower first, a 32-bit integer. Defaults to `0`.",
 				Optional:            true,
 				Computed:            true,
 				Default:             int64default.StaticInt64(0),
+				Validators:          []validator.Int64{int64validator.Between(math.MinInt32, math.MaxInt32)},
 			},
 		},
 	}
