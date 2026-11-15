@@ -2,6 +2,9 @@
 
 FEATURES:
 
+* **New Resource:** `defectdojo_announcement`, with resource identity: DefectDojo's banner for every user. A change of `message` or `style` replaces it, as DefectDojo's UI does, so that users who dismissed the old one see the new one ([#23](https://github.com/ottramst/terraform-provider-defectdojo/issues/23))
+* **New Resource:** `defectdojo_development_environment`, with resource identity. A name that another environment has is refused, since it would break the imports that name it, and an environment that tests use can't be destroyed ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
+* **New Data Source:** `defectdojo_development_environment`, looked up by ID or name; a name that several environments have is an error ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
 * **New Resource:** `defectdojo_note_type`, with resource identity. DefectDojo deletes the notes of a note type with it, so the provider refuses to destroy a note type that has notes unless `force_destroy` is set ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Data Source:** `defectdojo_note_type`, looked up by ID or name ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Resources:** `defectdojo_product_platform`, `defectdojo_product_lifecycle` and `defectdojo_product_origin`, with resource identity: the values products use in `platform`, `life_cycle` and `origin`. Changing `value` replaces the entry; set `create_before_destroy` when products use it ([#25](https://github.com/ottramst/terraform-provider-defectdojo/issues/25))
