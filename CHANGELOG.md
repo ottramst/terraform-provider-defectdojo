@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `defectdojo_announcement`, with resource identity: DefectDojo's banner for every user. A change of `message` or `style` replaces it, as DefectDojo's UI does, so that users who dismissed the old one see the new one ([#23](https://github.com/ottramst/terraform-provider-defectdojo/issues/23))
 * **New Resource:** `defectdojo_note_type`, with resource identity. DefectDojo deletes the notes of a note type with it, so the provider refuses to destroy a note type that has notes unless `force_destroy` is set ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Data Source:** `defectdojo_note_type`, looked up by ID or name ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Resource:** `defectdojo_regulation`, with resource identity. Destroying a regulation removes it from the products that list it ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
