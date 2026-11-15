@@ -31,6 +31,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Jira instances**: Manage the connections to Jira servers, with a write-only password or API token, and look them up by ID or name
 - **Jira projects**: Connect products and engagements to Jira projects, with custom and transition fields as JSON
 - **Note types**: Manage the types of notes on findings, tests and engagements; a note type with notes is only destroyed with `force_destroy`, since DefectDojo deletes its notes with it
+- **Product platforms, lifecycles and origins**: Manage the values products use in `platform`, `life_cycle` and `origin`
 - **Regulations**: Manage regulations, such as NIS2, and look up the ones DefectDojo comes with by ID, name or acronym for a product's `regulation_ids`
 - **System settings**: Manage the settings of the whole instance, such as deduplication, SLA notifications and the notification channels; only the settings in the configuration are changed, and the secrets are write-only
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift

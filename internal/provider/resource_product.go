@@ -103,9 +103,10 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	}
 	lookup := func(what, values string) schema.StringAttribute {
 		return schema.StringAttribute{
-			MarkdownDescription: "The " + what + " of the product: the value of an entry of DefectDojo's product " + what + "s, such as " + values + ".",
-			Optional:            true,
-			Validators:          []validator.String{stringvalidator.LengthAtLeast(1)},
+			MarkdownDescription: "The " + what + " of the product: the value of an entry of DefectDojo's product " + what + "s, such as " + values + ", " +
+				"or of a `defectdojo_product_" + what + "`.",
+			Optional:   true,
+			Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 		}
 	}
 	flag := func(description string, value bool) schema.BoolAttribute {

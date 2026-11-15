@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Resource:** `defectdojo_note_type`, with resource identity. DefectDojo deletes the notes of a note type with it, so the provider refuses to destroy a note type that has notes unless `force_destroy` is set ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Data Source:** `defectdojo_note_type`, looked up by ID or name ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
+* **New Resources:** `defectdojo_product_platform`, `defectdojo_product_lifecycle` and `defectdojo_product_origin`, with resource identity: the values products use in `platform`, `life_cycle` and `origin`. Changing `value` replaces the entry; set `create_before_destroy` when products use it ([#25](https://github.com/ottramst/terraform-provider-defectdojo/issues/25))
 * **New Resource:** `defectdojo_regulation`, with resource identity. Destroying a regulation removes it from the products that list it ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
 * **New Data Source:** `defectdojo_regulation`, looked up by ID, name or acronym, such as the regulations DefectDojo comes with ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
 
