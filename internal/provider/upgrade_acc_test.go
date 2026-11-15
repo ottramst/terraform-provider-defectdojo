@@ -19,7 +19,7 @@ import (
 // without changes. The first pull request after each release raises it, with
 // the DefectDojo versions that release was tested on: the release pull
 // request runs before its tag exists.
-const upgradeFrom = "0.5.0"
+const upgradeFrom = "1.0.0"
 
 // upgradeFromDefectDojo are the DefectDojo versions upgradeFrom was tested
 // on. On other versions the released provider may not work, so the test is
