@@ -357,7 +357,7 @@ func (r *EngagementResource) Read(ctx context.Context, req resource.ReadRequest,
 	// Product tags in the prior state stay visible.
 	if !r.read(ctx, &data, data.Tags, &resp.Diagnostics) {
 		// Deleted outside Terraform
-		resp.State.RemoveResource(ctx)
+		removeGone(ctx, resp, data.ID)
 		return
 	}
 	if resp.Diagnostics.HasError() {

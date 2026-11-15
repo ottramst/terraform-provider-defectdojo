@@ -49,7 +49,7 @@ The compose stack (shared with go-defectdojo) is PostgreSQL (tmpfs), Valkey, a o
 **Resource pattern** (all files in `internal/provider/`; `resource_product_type.go` is the template):
 - Files are `resource_<name>.go` and `data_source_<name>.go`; constructors are `New<Name>Resource` and `New<Name>DataSource`, registered in `Resources()` and `DataSources()`.
 - Each resource has a struct holding the `*defectdojo.Client` and a model struct with `tfsdk` tags. IDs are DefectDojo's integer IDs, as `types.Int64`.
-- `Read()` removes the resource from state on `defectdojo.ErrNotFound`; deletes of already-deleted objects succeed.
+- `Read()` removes the resource from state on `defectdojo.ErrNotFound` with `removeGone`, which sets the identity first (the framework rejects a null identity after `Read` even when the state is removed, and a state taken over from `doximity/defectdojo` or used with Terraform before 1.12 has none); deletes of already-deleted objects succeed.
 - Errors use descriptive titles: `"Error creating DefectDojo product type"`, with the object ID in the detail.
 - Optional text attributes that DefectDojo stores as `""` or null map to null (`stringOrNull`) and reject `""`, so there is no perpetual diff.
 - DefectDojo strips leading and trailing whitespace from text fields (Python `str.strip`, Unicode-aware), which would make apply fail with "inconsistent result" (a heredoc ends in `\n`): text attributes use `noSurroundingWhitespace()`. Lengths are characters, not bytes: use `stringvalidator.UTF8LengthBetween`.

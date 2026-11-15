@@ -155,7 +155,7 @@ func (r *CICDInfrastructureResource) Read(ctx context.Context, req resource.Read
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(
