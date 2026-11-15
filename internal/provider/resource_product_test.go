@@ -122,6 +122,15 @@ func TestAccProduct(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
+			// The configuration -generate-config-out writes for an import plans no
+			// changes. terraform query writes it from the list resource's state,
+			// which TestListResourceStates checks is the same.
+			{
+				ResourceName:    productAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+			},
 			// Change the SLA configuration (once: DefectDojo then recalculates
 			// in the background, which never finishes without Celery), and
 			// move the product to another product type.

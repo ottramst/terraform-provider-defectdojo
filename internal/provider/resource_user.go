@@ -410,22 +410,39 @@ func permissionCodenames(ctx context.Context, client *defectdojo.Client, u *defe
 	if len(u.ConfigurationPermissions) == 0 {
 		return types.SetValueMust(types.StringType, nil)
 	}
+	codenames, err := configurationPermissionCodenames(ctx, client)
+	if errors.Is(err, defectdojo.ErrForbidden) {
+		diags.AddWarning("Can't read DefectDojo configuration permissions",
+			fmt.Sprintf("User %d has configuration permissions, but reading their codenames needs a superuser: %s. "+
+				"configuration_permissions keeps its previous value.", u.ID, err))
+		return fallback
+	}
+	if err != nil {
+		diags.AddError("Error reading DefectDojo configuration permissions",
+			fmt.Sprintf("Could not list the configuration permissions of user %d: %s", u.ID, err))
+		return types.SetNull(types.StringType)
+	}
+	return codenameSet(u, codenames, diags)
+}
+
+// configurationPermissionCodenames returns the codenames of DefectDojo's
+// configuration permissions by ID. Reading them needs a superuser.
+func configurationPermissionCodenames(ctx context.Context, client *defectdojo.Client) (map[int]string, error) {
 	codenames := make(map[int]string)
 	for p, err := range client.ConfigurationPermissions.ListAll(ctx, nil) {
-		if errors.Is(err, defectdojo.ErrForbidden) {
-			diags.AddWarning("Can't read DefectDojo configuration permissions",
-				fmt.Sprintf("User %d has configuration permissions, but reading their codenames needs a superuser: %s. "+
-					"configuration_permissions keeps its previous value.", u.ID, err))
-			return fallback
-		}
 		if err != nil {
-			diags.AddError("Error reading DefectDojo configuration permissions",
-				fmt.Sprintf("Could not list the configuration permissions of user %d: %s", u.ID, err))
-			return types.SetNull(types.StringType)
+			return nil, err
 		}
 		codenames[p.ID] = p.Codename
 	}
-	var names []string
+	return codenames, nil
+}
+
+// codenameSet returns the codenames of the user's configuration permissions,
+// from the codenames by ID. A permission that codenames lacks is left out
+// with a warning.
+func codenameSet(u *defectdojo.User, codenames map[int]string, diags *diag.Diagnostics) types.Set {
+	names := []string{}
 	var unknown []string
 	for _, id := range u.ConfigurationPermissions {
 		if name, ok := codenames[id]; ok {

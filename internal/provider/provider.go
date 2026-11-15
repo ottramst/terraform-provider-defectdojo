@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -15,6 +16,7 @@ import (
 
 // Ensure DefectDojoProvider satisfies various provider interfaces.
 var _ provider.Provider = &DefectDojoProvider{}
+var _ provider.ProviderWithListResources = &DefectDojoProvider{}
 
 // DefectDojoProvider defines the provider implementation.
 type DefectDojoProvider struct {
@@ -159,10 +161,20 @@ func (p *DefectDojoProvider) Configure(ctx context.Context, req provider.Configu
 		return
 	}
 
-	// Make the DefectDojo client available during DataSource and Resource
-	// type Configure methods.
+	// Make the DefectDojo client available during DataSource, Resource and
+	// ListResource type Configure methods.
 	resp.DataSourceData = client
 	resp.ResourceData = client
+	resp.ListResourceData = client
+}
+
+func (p *DefectDojoProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return []func() list.ListResource{
+		NewEngagementListResource,
+		NewProductListResource,
+		NewProductTypeListResource,
+		NewUserListResource,
+	}
 }
 
 func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Resource {

@@ -498,7 +498,6 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 		diags.AddError("Error reading DefectDojo engagement", fmt.Sprintf("Could not read engagement %d, unexpected error: %s", id, err))
 		return true
 	}
-	hidden := map[string]bool{}
 	// A product that is gone (deleted in the background, with
 	// DD_ASYNC_OBJECT_DELETE) passes no tags on.
 	p, _, err := r.client.Products.Get(ctx, e.Product)
@@ -507,10 +506,20 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 			fmt.Sprintf("Could not read product %d, for the tags it passes on to engagement %d, unexpected error: %s", e.Product, id, err))
 		return true
 	}
+	var productTags []string
 	if p != nil {
-		for _, tag := range p.Tags {
-			hidden[strings.ToLower(tag)] = true
-		}
+		productTags = p.Tags
+	}
+	updateEngagementModel(data, e, visibleTags(e.Tags, productTags, visible), visible)
+	return true
+}
+
+// visibleTags returns the tags of an engagement without those of its product
+// (productTags), unless they are in visible, ignoring case.
+func visibleTags(tags, productTags []string, visible types.Set) []string {
+	hidden := map[string]bool{}
+	for _, tag := range productTags {
+		hidden[strings.ToLower(tag)] = true
 	}
 	if known(visible) {
 		for _, v := range visible.Elements() {
@@ -519,14 +528,13 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 			}
 		}
 	}
-	tags := make([]string, 0, len(e.Tags))
-	for _, tag := range e.Tags {
+	out := make([]string, 0, len(tags))
+	for _, tag := range tags {
 		if !hidden[strings.ToLower(tag)] {
-			tags = append(tags, tag)
+			out = append(out, tag)
 		}
 	}
-	updateEngagementModel(data, e, tags, visible)
-	return true
+	return out
 }
 
 func (r *EngagementResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

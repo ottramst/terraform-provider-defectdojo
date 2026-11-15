@@ -117,6 +117,15 @@ func TestAccEngagement(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
+			// The configuration -generate-config-out writes for an import plans no
+			// changes. terraform query writes it from the list resource's state,
+			// which TestListResourceStates checks is the same.
+			{
+				ResourceName:    engagementAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+			},
 			// Move to another product. Unset optional attributes are cleared;
 			// unset status, type and tags are kept.
 			{

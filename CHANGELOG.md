@@ -1,5 +1,9 @@
 ## Unreleased
 
+FEATURES:
+
+* **New List Resources:** `defectdojo_product_type`, `defectdojo_product`, `defectdojo_engagement` and `defectdojo_user`, for `terraform query` (Terraform 1.14+): find existing objects, optionally filtered by name (`name_contains`, `username_contains`, ignoring case), product type or product, and generate `import` blocks and configuration for them with `terraform query -generate-config-out`. The generated configuration plans no changes; it sets every attribute that has a value, so remove those another system manages ([#28](https://github.com/ottramst/terraform-provider-defectdojo/issues/28))
+
 ENHANCEMENTS:
 
 * `defectdojo_product`: the `user_records` and `revenue` attributes, the estimated number of user records and the estimated revenue, which `doximity/defectdojo` also manages; the `defectdojo_product` data source has them too. `revenue` is written with two decimal places, as DefectDojo returns it (`"100.00"`) ([#64](https://github.com/ottramst/terraform-provider-defectdojo/issues/64))

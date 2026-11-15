@@ -41,10 +41,10 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **System settings**: Manage the settings of the whole instance, such as deduplication, SLA notifications and the notification channels; only the settings in the configuration are changed, and the secrets are write-only
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
 - **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
-- **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+)
+- **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+), or find them with the list resources of `terraform query` (Terraform 1.14+), which generates `import` blocks and their configuration
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
-List resources, migration from `doximity/defectdojo` and more are planned; see the [roadmap](#roadmap).
+List resources for the other objects, migration from `doximity/defectdojo` and more are planned; see the [roadmap](#roadmap).
 
 ## DefectDojo version compatibility
 
@@ -101,6 +101,7 @@ For details, see the:
 - [Provider documentation](docs/index.md) for authentication and environment variables
 - [Resource documentation](docs/resources/) for available resources
 - [Data source documentation](docs/data-sources/) for available data sources
+- [List resource documentation](docs/list-resources/) for `terraform query`
 - [Example configurations](examples/)
 - [Guides](docs/guides/), such as connecting [Dependency-Track](docs/guides/dependency-track.md)
 
