@@ -3,13 +3,13 @@
 page_title: "defectdojo_product_origin Resource - defectdojo"
 subcategory: ""
 description: |-
-  Manages an entry of DefectDojo's product origins, the values of a product's origin. DefectDojo comes with third party library, purchased, contractor, internal, open source and outsourced. Managing them needs a superuser: DefectDojo has no configuration permissions for them.
+  Manages an entry of DefectDojo's product origins, the values of a product's origin. DefectDojo comes with third party library, purchased, contractor, internal, open source and outsourced. Managing them needs a superuser or a staff user: they have no configuration permissions that defectdojo_user could grant.
   -> DefectDojo can't change value, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set lifecycle { create_before_destroy = true } so that the new entry is created, and the products move to it, before the old one is deleted. With create_before_destroy, terraform apply -replace fails, since the new entry would have the same value as the old one.
 ---
 
 # defectdojo_product_origin (Resource)
 
-Manages an entry of DefectDojo's product origins, the values of a product's `origin`. DefectDojo comes with `third party library`, `purchased`, `contractor`, `internal`, `open source` and `outsourced`. Managing them needs a superuser: DefectDojo has no configuration permissions for them.
+Manages an entry of DefectDojo's product origins, the values of a product's `origin`. DefectDojo comes with `third party library`, `purchased`, `contractor`, `internal`, `open source` and `outsourced`. Managing them needs a superuser or a staff user: they have no configuration permissions that `defectdojo_user` could grant.
 
 -> DefectDojo can't change `value`, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted. With `create_before_destroy`, `terraform apply -replace` fails, since the new entry would have the same value as the old one.
 

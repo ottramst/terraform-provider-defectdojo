@@ -101,7 +101,7 @@ func (r *ProductAttributeResource) Schema(_ context.Context, _ resource.SchemaRe
 	k := r.kind
 	resp.Schema = schema.Schema{
 		MarkdownDescription: fmt.Sprintf("Manages an entry of DefectDojo's %ss, the values of a product's `%s`. "+
-			"DefectDojo comes with %s. Managing them needs a superuser: DefectDojo has no configuration permissions for them.\n\n"+
+			"DefectDojo comes with %s. Managing them needs a superuser or a staff user: they have no configuration permissions that `defectdojo_user` could grant.\n\n"+
 			"-> DefectDojo can't change `value`, so changing it replaces the entry, and DefectDojo refuses to delete an entry that products use. "+
 			"Set `lifecycle { create_before_destroy = true }` so that the new entry is created, and the products move to it, before the old one is deleted. "+
 			"With `create_before_destroy`, `terraform apply -replace` fails, since the new entry would have the same value as the old one.",
