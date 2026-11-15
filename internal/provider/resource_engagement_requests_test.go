@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
@@ -86,6 +87,71 @@ resource "defectdojo_engagement" "test" {
 					statecheck.ExpectKnownValue(engagementAddress, tfjsonpath.New("active"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(engagementAddress, tfjsonpath.New("tags"), knownvalue.SetSizeExact(2)),
 				},
+			},
+		},
+	})
+}
+
+// The CI/CD links are sent when created and updated, and as null when they
+// are removed. Runs against a fake DefectDojo, to check the requests.
+func TestAccEngagement_cicdLinksSent(t *testing.T) {
+	fake := &fakeDefectDojo{
+		collection: "engagements",
+		defaults: map[string]any{
+			"status": "Not Started", "engagement_type": "Interactive", "active": true, "tags": []any{},
+		},
+	}
+	server := httptest.NewServer(fake.handler(t))
+	t.Cleanup(server.Close)
+
+	config := func(extra string) string {
+		return fmt.Sprintf(`
+provider "defectdojo" {
+  url       = %[1]q
+  api_token = "test"
+}
+
+resource "defectdojo_engagement" "test" {
+  product_id   = 1
+  name         = "fake"
+  target_start = "2026-01-01"
+  target_end   = "2099-12-31"
+%[2]s}
+`, server.URL, extra)
+	}
+	checkBody := func(last func() map[string]any, want map[string]any) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			body := last()
+			for field, value := range want {
+				got, sent := body[field]
+				if !sent || fmt.Sprint(got) != fmt.Sprint(value) {
+					return fmt.Errorf("%s = %v (sent %v), want %v", field, got, sent, value)
+				}
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config(`
+  cicd_scm_server_id   = 5
+  cicd_build_server_id = 6
+`),
+				Check: checkBody(fake.lastPost, map[string]any{
+					"cicd_scm_server": 5, "cicd_build_server": 6, "cicd_orchestration_engine": nil,
+				}),
+			},
+			{
+				Config: config(`
+  cicd_build_server_id         = 7
+  cicd_orchestration_engine_id = 8
+`),
+				Check: checkBody(fake.lastPatch, map[string]any{
+					"cicd_scm_server": nil, "cicd_build_server": 7, "cicd_orchestration_engine": 8,
+				}),
 			},
 		},
 	})

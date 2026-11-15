@@ -44,6 +44,9 @@ data "defectdojo_engagement" "by_id" {
 - `branch_tag` (String) The branch or tag the engagement tests, or null.
 - `build_id` (String) The ID of the build the engagement tests, or null.
 - `check_list` (Boolean) Whether the engagement includes a check list.
+- `cicd_build_server_id` (Number) The ID of the CI/CD build server of the engagement, or null.
+- `cicd_orchestration_engine_id` (Number) The ID of the CI/CD orchestration engine of the engagement, or null.
+- `cicd_scm_server_id` (Number) The ID of the CI/CD source code management server of the engagement, or null.
 - `commit_hash` (String) The commit the engagement tests, or null.
 - `deduplication_on_engagement` (Boolean) Whether findings are only deduplicated within the engagement.
 - `description` (String) The description of the engagement, or null.
