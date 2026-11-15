@@ -62,6 +62,7 @@ func TestAccRegulation(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("name"), knownvalue.StringExact(renamed)),
+					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("acronym"), knownvalue.StringExact(testAccRegulationAcronym(renamed))),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("category"), knownvalue.StringExact("security")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("jurisdiction"), knownvalue.StringExact("Estonia")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("description"), knownvalue.StringExact("Rules for the handling of card data.")),
@@ -196,9 +197,16 @@ resource "defectdojo_regulation" "test" {
 `, name, testAccRegulationAcronym(name), category, jurisdiction, extra)
 }
 
-// testAccRegulationAcronym returns the acronym testAccRegulationConfig uses.
+// testAccRegulationAcronym returns the acronym testAccRegulationConfig uses:
+// the random part of name, with "-R" when name is renamed, so that a rename
+// changes the acronym too.
 func testAccRegulationAcronym(name string) string {
-	return strings.ToUpper(strings.TrimPrefix(strings.SplitN(name, "-renamed", 2)[0], "acc-"))
+	base, renamed := strings.CutSuffix(name, "-renamed")
+	acronym := strings.ToUpper(strings.TrimPrefix(base, "acc-"))
+	if renamed {
+		acronym += "-R"
+	}
+	return acronym
 }
 
 // testAccCaptureRegulationID stores the ID of the regulation in id.
