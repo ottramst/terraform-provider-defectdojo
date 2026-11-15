@@ -170,6 +170,7 @@ func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Reso
 		NewEngagementResource,
 		NewNotificationWebhookResource,
 		NewNotificationsResource,
+		NewNoteTypeResource,
 		NewProductResource,
 		NewProductTypeResource,
 		NewRegulationResource,
@@ -190,6 +191,7 @@ func (p *DefectDojoProvider) DataSources(_ context.Context) []func() datasource.
 		NewSLAConfigurationDataSource,
 		NewSystemSettingsDataSource,
 		NewJiraInstanceDataSource,
+		NewNoteTypeDataSource,
 		NewUserDataSource,
 	}
 }

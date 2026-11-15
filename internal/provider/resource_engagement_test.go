@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -213,7 +215,7 @@ func TestAccEngagement_forceDestroy(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCaptureEngagementID(&id),
 					func(*terraform.State) error {
-						testAccCreateTest(t, id)
+						testAccCreateTest(t, id, nil)
 						return nil
 					},
 				),
@@ -474,15 +476,52 @@ func testAccCheckEngagementDestroyed(t *testing.T, id *int) resource.TestCheckFu
 }
 
 // testAccCreateTest creates a test in the engagement through the raw API;
-// the client has no tests service.
-func testAccCreateTest(t *testing.T, engagementID int) {
+// the client has no tests service. extra adds fields, such as "environment".
+// It returns the test's ID; the test is deleted with the engagement.
+func testAccCreateTest(t *testing.T, engagementID int, extra map[string]any) int {
 	t.Helper()
 	client := testAccClient(t)
 	body := map[string]any{
 		"engagement": engagementID, "test_type": 1, "title": "acceptance test",
 		"target_start": "2026-01-01T00:00:00Z", "target_end": "2026-01-02T00:00:00Z",
 	}
+	maps.Copy(body, extra)
 	req, err := client.NewRequest(context.Background(), http.MethodPost, "/api/v2/tests/", body)
+	testAccNoError(t, err)
+	var created struct {
+		ID int `json:"id"`
+	}
+	_, err = client.Do(req, &created)
+	testAccNoError(t, err)
+	return created.ID
+}
+
+// testAccCreateTestOutside creates a product type, a product, an engagement
+// and a test, outside Terraform, and returns the test's ID. They are deleted
+// with the product type when the test ends.
+func testAccCreateTestOutside(t *testing.T, extra map[string]any) int {
+	t.Helper()
+	ctx := context.Background()
+	client := testAccClient(t)
+	product, _, err := client.Products.Create(ctx, &defectdojo.Product{
+		Name: randName(t), Description: "acceptance test", ProdType: testAccCreateProductType(t),
+	})
+	testAccNoError(t, err)
+	day := defectdojo.Date{Year: 2026, Month: time.January, Day: 1}
+	engagement, _, err := client.Engagements.Create(ctx, &defectdojo.Engagement{
+		Name: randName(t), Product: product.ID, TargetStart: day, TargetEnd: day,
+	})
+	testAccNoError(t, err)
+	return testAccCreateTest(t, engagement.ID, extra)
+}
+
+// testAccCreateNote adds a note of the note type to the test through the raw
+// API. Notes are deleted with their test or note type.
+func testAccCreateNote(t *testing.T, testID, noteTypeID int) {
+	t.Helper()
+	client := testAccClient(t)
+	body := map[string]any{"entry": "acceptance test", "note_type": noteTypeID}
+	req, err := client.NewRequest(context.Background(), http.MethodPost, "/api/v2/tests/"+strconv.Itoa(testID)+"/notes/", body)
 	testAccNoError(t, err)
 	_, err = client.Do(req, nil)
 	testAccNoError(t, err)
