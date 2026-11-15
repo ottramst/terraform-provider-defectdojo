@@ -8,11 +8,11 @@
 This [Terraform](https://www.terraform.io) provider is built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and allows you to manage the configuration of [OWASP DefectDojo](https://github.com/DefectDojo/django-DefectDojo), the open-source vulnerability management and DevSecOps platform, as code.
 
 > [!NOTE]
-> The provider is in early development (v0.5.0: product types, products, engagements, SLA configurations,
-> users, notifications, notification webhooks, system settings, Jira instances, Jira projects and the lookup objects:
-> regulations, note types, development environments, the announcement, CI/CD infrastructure, product platforms,
-> lifecycles and origins, and test types; list resources for `terraform query`; and migration from `doximity/defectdojo`),
-> and its schema may still change before v1.0. See the [roadmap](#roadmap).
+> The provider is stable from v1.0.0: product types, products, engagements, SLA configurations, users, notifications,
+> notification webhooks, system settings, Jira instances, Jira projects and the lookup objects (regulations, note types,
+> development environments, the announcement, CI/CD infrastructure, product platforms, lifecycles and origins, and test
+> types); list resources for `terraform query`; and migration from `doximity/defectdojo`. See [Stability](#stability) for
+> what v1 promises.
 
 This provider includes:
 
@@ -104,7 +104,7 @@ terraform {
   required_providers {
     defectdojo = {
       source  = "ottramst/defectdojo"
-      version = "~> 0.5.0"
+      version = "~> 1.0"
     }
   }
 }
@@ -140,7 +140,7 @@ Some attributes were renamed or changed meaning, so the configuration needs upda
 
 ## Roadmap
 
-The path to v1.0 is tracked in [milestones](https://github.com/ottramst/terraform-provider-defectdojo/milestones) and on the [DefectDojo roadmap board](https://github.com/users/ottramst/projects/4). Each epic issue lists its resources as sub-issues, and each resource builds on a [go-defectdojo](https://github.com/ottramst/go-defectdojo) service. Contributions are welcome.
+The path to v1.0, and what comes after, is tracked in [milestones](https://github.com/ottramst/terraform-provider-defectdojo/milestones) and on the [DefectDojo roadmap board](https://github.com/users/ottramst/projects/4). Each epic issue lists its resources as sub-issues, and each resource builds on a [go-defectdojo](https://github.com/ottramst/go-defectdojo) service. Contributions are welcome.
 
 ## Building The Provider
 
