@@ -20,7 +20,7 @@ func TestAccDevelopmentEnvironmentDataSource(t *testing.T) {
 	var twinID int
 	t.Cleanup(func() {
 		if twinID != 0 {
-			_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), twinID)
+			_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), twinID, nil)
 			if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 				t.Logf("deleting development environment %d: %v", twinID, err)
 			}
@@ -65,7 +65,7 @@ data "defectdojo_development_environment" "missing" {
 			// the lookup by name fails.
 			{
 				PreConfig: func() {
-					twin, _, err := testAccClient(t).DevelopmentEnvironments.Create(context.Background(), &defectdojo.DevelopmentEnvironment{Name: name})
+					twin, _, err := testAccClient(t).DevelopmentEnvironments.Create(context.Background(), &defectdojo.DevelopmentEnvironment{Name: name}, nil)
 					testAccNoError(t, err)
 					twinID = twin.ID
 				},
@@ -79,7 +79,7 @@ data "defectdojo_development_environment" "by_name" {
 			// A valid config last, for the destroy after the test.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), twinID)
+					_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), twinID, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccDevelopmentEnvironmentConfig(name),

@@ -107,7 +107,7 @@ func (r *NoteTypeResource) Create(ctx context.Context, req resource.CreateReques
 		IsSingle:    data.IsSingle.ValueBool(),
 		IsActive:    data.IsActive.ValueBool(),
 		IsMandatory: data.IsMandatory.ValueBool(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo note type",
@@ -130,7 +130,7 @@ func (r *NoteTypeResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	nt, _, err := r.client.NoteTypes.Get(ctx, int(data.ID.ValueInt64()))
+	nt, _, err := r.client.NoteTypes.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -162,7 +162,7 @@ func (r *NoteTypeResource) Update(ctx context.Context, req resource.UpdateReques
 		IsSingle:    new(data.IsSingle.ValueBool()),
 		IsActive:    new(data.IsActive.ValueBool()),
 		IsMandatory: new(data.IsMandatory.ValueBool()),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo note type",
@@ -185,7 +185,7 @@ func (r *NoteTypeResource) Delete(ctx context.Context, req resource.DeleteReques
 	id := int(data.ID.ValueInt64())
 
 	if !data.ForceDestroy.ValueBool() {
-		n, _, err := r.client.NoteTypes.CountNotes(ctx, id)
+		n, _, err := r.client.NoteTypes.CountNotes(ctx, id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return
 		}
@@ -207,7 +207,7 @@ func (r *NoteTypeResource) Delete(ctx context.Context, req resource.DeleteReques
 		}
 	}
 
-	if _, err := r.client.NoteTypes.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.NoteTypes.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo note type",
 			fmt.Sprintf("Could not delete note type %d, unexpected error: %s", id, err),

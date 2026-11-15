@@ -94,13 +94,15 @@ func (d *CICDInfrastructureDataSource) Read(ctx context.Context, req datasource.
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		ci, _, err = d.client.CICDInfrastructure.Get(ctx, int(data.ID.ValueInt64()))
+		ci, _, err = d.client.CICDInfrastructure.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
 		if !data.InfrastructureType.IsNull() {
 			what += " and type " + data.InfrastructureType.ValueString()
 		}
-		ci, _, err = d.client.CICDInfrastructure.GetByName(ctx, data.Name.ValueString(), data.InfrastructureType.ValueString())
+		ci, _, err = d.client.CICDInfrastructure.GetByName(ctx, data.Name.ValueString(), &defectdojo.GetCICDInfrastructureByNameOptions{
+			InfrastructureType: defectdojo.CICDInfrastructureType(data.InfrastructureType.ValueString()),
+		})
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

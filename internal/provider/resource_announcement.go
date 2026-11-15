@@ -79,8 +79,8 @@ func (r *AnnouncementResource) Schema(_ context.Context, _ resource.SchemaReques
 					"Changing it replaces the announcement, so every user sees it again.",
 				Optional:   true,
 				Computed:   true,
-				Default:    stringdefault.StaticString(defectdojo.AnnouncementStyleInfo),
-				Validators: []validator.String{stringvalidator.OneOf(defectdojo.AnnouncementStyleInfo, defectdojo.AnnouncementStyleSuccess, defectdojo.AnnouncementStyleWarning, defectdojo.AnnouncementStyleDanger)},
+				Default:    stringdefault.StaticString(string(defectdojo.AnnouncementStyleInfo)),
+				Validators: []validator.String{stringvalidator.OneOf(string(defectdojo.AnnouncementStyleInfo), string(defectdojo.AnnouncementStyleSuccess), string(defectdojo.AnnouncementStyleWarning), string(defectdojo.AnnouncementStyleDanger))},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -116,7 +116,7 @@ func (r *AnnouncementResource) Create(ctx context.Context, req resource.CreateRe
 
 	// DefectDojo's own error says only "No more than one Announcement is
 	// allowed".
-	current, _, err := r.client.Announcements.Current(ctx)
+	current, _, err := r.client.Announcements.Current(ctx, nil)
 	switch {
 	case err == nil:
 		resp.Diagnostics.AddError(
@@ -132,9 +132,9 @@ func (r *AnnouncementResource) Create(ctx context.Context, req resource.CreateRe
 
 	created, _, err := r.client.Announcements.Create(ctx, &defectdojo.Announcement{
 		Message:     data.Message.ValueString(),
-		Style:       data.Style.ValueString(),
+		Style:       defectdojo.AnnouncementStyle(data.Style.ValueString()),
 		Dismissable: data.Dismissable.ValueBool(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating DefectDojo announcement", "Could not create the announcement, unexpected error: "+err.Error())
 		return
@@ -154,7 +154,7 @@ func (r *AnnouncementResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	a, _, err := r.client.Announcements.Get(ctx, int(data.ID.ValueInt64()))
+	a, _, err := r.client.Announcements.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -184,7 +184,7 @@ func (r *AnnouncementResource) Update(ctx context.Context, req resource.UpdateRe
 	// dismissable changes in place.
 	updated, _, err := r.client.Announcements.Patch(ctx, int(data.ID.ValueInt64()), &defectdojo.AnnouncementPatch{
 		Dismissable: new(data.Dismissable.ValueBool()),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo announcement",
@@ -205,7 +205,7 @@ func (r *AnnouncementResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	if _, err := r.client.Announcements.Delete(ctx, int(data.ID.ValueInt64())); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.Announcements.Delete(ctx, int(data.ID.ValueInt64()), nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo announcement",
 			fmt.Sprintf("Could not delete announcement %d, unexpected error: %s", data.ID.ValueInt64(), err),
@@ -222,6 +222,6 @@ func (r *AnnouncementResource) ImportState(ctx context.Context, req resource.Imp
 func updateAnnouncementModel(data *AnnouncementResourceModel, a *defectdojo.Announcement) {
 	data.ID = types.Int64Value(int64(a.ID))
 	data.Message = types.StringValue(a.Message)
-	data.Style = types.StringValue(a.Style)
+	data.Style = types.StringValue(string(a.Style))
 	data.Dismissable = types.BoolValue(a.Dismissable)
 }

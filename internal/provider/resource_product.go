@@ -37,12 +37,12 @@ const productDeleteTimeout = 5 * time.Minute
 
 // businessCriticalities are the values of a product's business_criticality.
 var businessCriticalities = []string{
-	defectdojo.BusinessCriticalityVeryHigh,
-	defectdojo.BusinessCriticalityHigh,
-	defectdojo.BusinessCriticalityMedium,
-	defectdojo.BusinessCriticalityLow,
-	defectdojo.BusinessCriticalityVeryLow,
-	defectdojo.BusinessCriticalityNone,
+	string(defectdojo.BusinessCriticalityVeryHigh),
+	string(defectdojo.BusinessCriticalityHigh),
+	string(defectdojo.BusinessCriticalityMedium),
+	string(defectdojo.BusinessCriticalityLow),
+	string(defectdojo.BusinessCriticalityVeryLow),
+	string(defectdojo.BusinessCriticalityNone),
 }
 
 func NewProductResource() resource.Resource {
@@ -266,7 +266,7 @@ func (r *ProductResource) Create(ctx context.Context, req resource.CreateRequest
 		Name:                          data.Name.ValueString(),
 		Description:                   data.Description.ValueString(),
 		ProdType:                      int(data.ProductTypeID.ValueInt64()),
-		BusinessCriticality:           data.BusinessCriticality.ValueString(),
+		BusinessCriticality:           defectdojo.BusinessCriticality(data.BusinessCriticality.ValueString()),
 		Platform:                      data.Platform.ValueString(),
 		Lifecycle:                     data.Lifecycle.ValueString(),
 		Origin:                        data.Origin.ValueString(),
@@ -296,7 +296,7 @@ func (r *ProductResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	created, _, err := r.client.Products.Create(ctx, p)
+	created, _, err := r.client.Products.Create(ctx, p, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo product",
@@ -319,7 +319,7 @@ func (r *ProductResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	p, _, err := r.client.Products.Get(ctx, int(data.ID.ValueInt64()))
+	p, _, err := r.client.Products.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -361,7 +361,7 @@ func (r *ProductResource) Update(ctx context.Context, req resource.UpdateRequest
 		Name:                          new(data.Name.ValueString()),
 		Description:                   new(data.Description.ValueString()),
 		ProdType:                      new(int(data.ProductTypeID.ValueInt64())),
-		BusinessCriticality:           nullableString(data.BusinessCriticality),
+		BusinessCriticality:           nullableEnum[defectdojo.BusinessCriticality](data.BusinessCriticality),
 		Platform:                      nullableString(data.Platform),
 		Lifecycle:                     nullableString(data.Lifecycle),
 		Origin:                        nullableString(data.Origin),
@@ -393,7 +393,7 @@ func (r *ProductResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	updated, _, err := r.client.Products.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.Products.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo product",
@@ -429,7 +429,7 @@ func (r *ProductResource) Delete(ctx context.Context, req resource.DeleteRequest
 	id := int(data.ID.ValueInt64())
 
 	if !data.ForceDestroy.ValueBool() {
-		n, _, err := r.client.Products.CountEngagements(ctx, id)
+		n, _, err := r.client.Products.CountEngagements(ctx, id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return // Deleted outside Terraform
 		}
@@ -451,7 +451,7 @@ func (r *ProductResource) Delete(ctx context.Context, req resource.DeleteRequest
 		}
 	}
 
-	if _, err := r.client.Products.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.Products.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo product",
 			fmt.Sprintf("Could not delete product %d, unexpected error: %s", id, err),
@@ -462,7 +462,7 @@ func (r *ProductResource) Delete(ctx context.Context, req resource.DeleteRequest
 	waitCtx, cancel := context.WithTimeout(ctx, productDeleteTimeout)
 	defer cancel()
 	err := waitForDeletion(waitCtx, func(ctx context.Context) error {
-		_, _, err := r.client.Products.Get(ctx, id)
+		_, _, err := r.client.Products.Get(ctx, id, nil)
 		return err
 	})
 	if err != nil {
@@ -484,7 +484,7 @@ func updateProductModel(data *ProductResourceModel, p *defectdojo.Product, tagRe
 	data.Name = types.StringValue(p.Name)
 	data.Description = types.StringValue(p.Description)
 	data.ProductTypeID = types.Int64Value(int64(p.ProdType))
-	data.BusinessCriticality = stringOrNull(p.BusinessCriticality)
+	data.BusinessCriticality = stringOrNull(string(p.BusinessCriticality))
 	data.Platform = stringOrNull(p.Platform)
 	data.Lifecycle = stringOrNull(p.Lifecycle)
 	data.Origin = stringOrNull(p.Origin)

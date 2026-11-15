@@ -26,7 +26,7 @@ func testAccRestoreSystemSettings(t *testing.T) *defectdojo.SystemSettings {
 	t.Helper()
 	testAccSkipUnlessAcc(t)
 	client := testAccClient(t)
-	before, _, err := client.SystemSettings.Get(context.Background())
+	before, _, err := client.SystemSettings.Get(context.Background(), nil)
 	testAccNoError(t, err)
 	t.Cleanup(func() {
 		maxDupes := defectdojo.Null[int]()
@@ -40,7 +40,7 @@ func testAccRestoreSystemSettings(t *testing.T) *defectdojo.SystemSettings {
 			EngagementAutoCloseDays: new(before.EngagementAutoCloseDays),
 			MaxDupes:                maxDupes,
 			SlackToken:              new(before.SlackToken),
-		})
+		}, nil)
 		if err != nil {
 			t.Errorf("restoring the system settings: %v", err)
 		}
@@ -201,7 +201,7 @@ func TestAccSystemSettings(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).SystemSettings.Patch(context.Background(), before.ID, &defectdojo.SystemSettingsPatch{
 						DisclaimerNotes: new("changed"), EmailFrom: new("changed@example.invalid"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccSystemSettingsConfig(`
@@ -276,7 +276,7 @@ func testAccSystemSettingsConfig(body string) string {
 // testAccCheckSystemSettings checks the system settings in DefectDojo.
 func testAccCheckSystemSettings(t *testing.T, check func(*defectdojo.SystemSettings) error) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		s, _, err := testAccClient(t).SystemSettings.Get(context.Background())
+		s, _, err := testAccClient(t).SystemSettings.Get(context.Background(), nil)
 		if err != nil {
 			return err
 		}

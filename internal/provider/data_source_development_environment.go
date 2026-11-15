@@ -76,10 +76,10 @@ func (d *DevelopmentEnvironmentDataSource) Read(ctx context.Context, req datasou
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		env, _, err = d.client.DevelopmentEnvironments.Get(ctx, int(data.ID.ValueInt64()))
+		env, _, err = d.client.DevelopmentEnvironments.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
-		env, _, err = d.client.DevelopmentEnvironments.GetByName(ctx, data.Name.ValueString())
+		env, _, err = d.client.DevelopmentEnvironments.GetByName(ctx, data.Name.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

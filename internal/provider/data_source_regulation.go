@@ -100,13 +100,13 @@ func (d *RegulationDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	switch {
 	case !data.ID.IsNull():
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		reg, _, err = d.client.Regulations.Get(ctx, int(data.ID.ValueInt64()))
+		reg, _, err = d.client.Regulations.Get(ctx, int(data.ID.ValueInt64()), nil)
 	case !data.Name.IsNull():
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
-		reg, _, err = d.client.Regulations.GetByName(ctx, data.Name.ValueString())
+		reg, _, err = d.client.Regulations.GetByName(ctx, data.Name.ValueString(), nil)
 	default:
 		what = fmt.Sprintf("acronym %q", data.Acronym.ValueString())
-		reg, _, err = d.client.Regulations.GetByAcronym(ctx, data.Acronym.ValueString())
+		reg, _, err = d.client.Regulations.GetByAcronym(ctx, data.Acronym.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

@@ -62,7 +62,7 @@ func (d *SystemSettingsDataSource) Configure(_ context.Context, req datasource.C
 }
 
 func (d *SystemSettingsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
-	settings, _, err := d.client.SystemSettings.Get(ctx)
+	settings, _, err := d.client.SystemSettings.Get(ctx, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading DefectDojo system settings", err.Error())
 		return

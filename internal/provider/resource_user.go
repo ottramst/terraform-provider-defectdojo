@@ -209,7 +209,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	u := &defectdojo.UserCreate{
+	u := &defectdojo.CreateUserRequest{
 		User: defectdojo.User{
 			Username:    data.Username.ValueString(),
 			Email:       data.Email.ValueString(),
@@ -228,7 +228,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		}
 	}
 
-	created, _, err := r.client.Users.Create(ctx, u)
+	created, _, err := r.client.Users.Create(ctx, u, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo user",
@@ -251,7 +251,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	u, _, err := r.client.Users.Get(ctx, int(data.ID.ValueInt64()))
+	u, _, err := r.client.Users.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -301,7 +301,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 	}
 
-	updated, _, err := r.client.Users.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.Users.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo user",
@@ -323,7 +323,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 	id := int(data.ID.ValueInt64())
 
-	_, err := r.client.Users.Delete(ctx, id)
+	_, err := r.client.Users.Delete(ctx, id, nil)
 	switch {
 	case err == nil, errors.Is(err, defectdojo.ErrNotFound):
 	case errors.Is(err, defectdojo.ErrConflict):
@@ -358,7 +358,7 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 func (r *UserResource) permissionIDs(ctx context.Context, set types.Set, diags *diag.Diagnostics) []int {
 	ids := []int{}
 	for _, codename := range stringsFromSet(ctx, set, diags) {
-		p, _, err := r.client.ConfigurationPermissions.GetByCodename(ctx, codename)
+		p, _, err := r.client.ConfigurationPermissions.GetByCodename(ctx, codename, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			diags.AddAttributeError(path.Root("configuration_permissions"),
 				"Unknown DefectDojo configuration permission",

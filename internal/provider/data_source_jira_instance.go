@@ -130,10 +130,10 @@ func (d *JiraInstanceDataSource) Read(ctx context.Context, req datasource.ReadRe
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		ji, _, err = d.client.JiraInstances.Get(ctx, int(data.ID.ValueInt64()))
+		ji, _, err = d.client.JiraInstances.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.ConfigurationName.ValueString())
-		ji, _, err = d.client.JiraInstances.GetByName(ctx, data.ConfigurationName.ValueString())
+		ji, _, err = d.client.JiraInstances.GetByName(ctx, data.ConfigurationName.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

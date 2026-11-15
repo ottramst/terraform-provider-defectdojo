@@ -108,7 +108,7 @@ func TestAccProductType(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).ProductTypes.Patch(context.Background(), id, &defectdojo.ProductTypePatch{
 						Name: new(name + "-changed"), CriticalProduct: new(false),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccProductTypeConfig(renamed, `
@@ -128,7 +128,7 @@ func TestAccProductType(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).ProductTypes.Delete(context.Background(), id)
+					_, err := testAccClient(t).ProductTypes.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccProductTypeConfig(renamed, ""),
@@ -224,7 +224,7 @@ func testAccCheckProductTypeDestroyed(t *testing.T, id *int) resource.TestCheckF
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).ProductTypes.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).ProductTypes.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

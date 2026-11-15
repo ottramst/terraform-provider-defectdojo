@@ -103,7 +103,7 @@ func TestAccRegulation(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Regulations.Patch(context.Background(), id, &defectdojo.RegulationPatch{
 						Jurisdiction: new("Elsewhere"), Description: new("changed"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccRegulationConfig(renamed, "security", ""),
@@ -120,7 +120,7 @@ func TestAccRegulation(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Regulations.Delete(context.Background(), id)
+					_, err := testAccClient(t).Regulations.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccRegulationConfig(renamed, "security", ""),
@@ -170,7 +170,7 @@ resource "defectdojo_product" "test" {
 			// product, and Terraform puts both back.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Regulations.Delete(context.Background(), id)
+					_, err := testAccClient(t).Regulations.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccRegulationConfig(name, "finance", "") + product("[defectdojo_regulation.test.id, 1]"),
@@ -236,7 +236,7 @@ func testAccCheckRegulationDestroyed(t *testing.T, id *int) resource.TestCheckFu
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).Regulations.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).Regulations.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

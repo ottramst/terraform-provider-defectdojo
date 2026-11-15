@@ -101,10 +101,10 @@ func (d *NoteTypeDataSource) Read(ctx context.Context, req datasource.ReadReques
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		nt, _, err = d.client.NoteTypes.Get(ctx, int(data.ID.ValueInt64()))
+		nt, _, err = d.client.NoteTypes.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
-		nt, _, err = d.client.NoteTypes.GetByName(ctx, data.Name.ValueString())
+		nt, _, err = d.client.NoteTypes.GetByName(ctx, data.Name.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

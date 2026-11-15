@@ -227,10 +227,10 @@ func (r *JiraInstanceResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	created, _, err := r.client.JiraInstances.Create(ctx, &defectdojo.JiraInstanceWrite{
+	created, _, err := r.client.JiraInstances.Create(ctx, &defectdojo.CreateJiraInstanceRequest{
 		JiraInstance: jiraInstanceFromModel(&data),
 		Password:     password.ValueString(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo Jira instance",
@@ -253,7 +253,7 @@ func (r *JiraInstanceResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	ji, _, err := r.client.JiraInstances.Get(ctx, int(data.ID.ValueInt64()))
+	ji, _, err := r.client.JiraInstances.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -286,7 +286,7 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 		ConfigurationName:              new(data.ConfigurationName.ValueString()),
 		URL:                            new(data.URL.ValueString()),
 		Username:                       new(data.Username.ValueString()),
-		DefaultIssueType:               new(data.DefaultIssueType.ValueString()),
+		DefaultIssueType:               new(defectdojo.JiraIssueType(data.DefaultIssueType.ValueString())),
 		IssueTemplateDir:               nullableString(data.IssueTemplateDir),
 		EpicNameID:                     new(int(data.EpicNameID.ValueInt64())),
 		OpenStatusKey:                  new(int(data.OpenStatusKey.ValueInt64())),
@@ -320,7 +320,7 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 		patch.Password = new(password.ValueString())
 	}
 
-	updated, _, err := r.client.JiraInstances.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.JiraInstances.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo Jira instance",
@@ -398,7 +398,7 @@ func (r *JiraInstanceResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 	id := int(data.ID.ValueInt64())
 	// DefectDojo answers a delete of an instance in use with a 500.
-	n, _, err := r.client.JiraInstances.CountJiraProjects(ctx, id)
+	n, _, err := r.client.JiraInstances.CountJiraProjects(ctx, id, nil)
 	if errors.Is(err, defectdojo.ErrNotFound) {
 		return
 	}
@@ -416,7 +416,7 @@ func (r *JiraInstanceResource) Delete(ctx context.Context, req resource.DeleteRe
 		)
 		return
 	}
-	if _, err := r.client.JiraInstances.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.JiraInstances.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo Jira instance",
 			fmt.Sprintf("Could not delete Jira instance %d, unexpected error: %s", id, err),
@@ -434,7 +434,7 @@ func jiraInstanceFromModel(data *JiraInstanceResourceModel) defectdojo.JiraInsta
 		ConfigurationName:              data.ConfigurationName.ValueString(),
 		URL:                            data.URL.ValueString(),
 		Username:                       data.Username.ValueString(),
-		DefaultIssueType:               data.DefaultIssueType.ValueString(),
+		DefaultIssueType:               defectdojo.JiraIssueType(data.DefaultIssueType.ValueString()),
 		IssueTemplateDir:               data.IssueTemplateDir.ValueString(),
 		EpicNameID:                     int(data.EpicNameID.ValueInt64()),
 		OpenStatusKey:                  int(data.OpenStatusKey.ValueInt64()),
@@ -460,7 +460,7 @@ func updateJiraInstanceModel(data *JiraInstanceResourceModel, ji *defectdojo.Jir
 	data.URL = types.StringValue(ji.URL)
 	data.Username = types.StringValue(ji.Username)
 	data.PasswordWO = types.StringNull()
-	data.DefaultIssueType = types.StringValue(ji.DefaultIssueType)
+	data.DefaultIssueType = types.StringValue(string(ji.DefaultIssueType))
 	data.IssueTemplateDir = stringOrNull(ji.IssueTemplateDir)
 	data.EpicNameID = types.Int64Value(int64(ji.EpicNameID))
 	data.OpenStatusKey = types.Int64Value(int64(ji.OpenStatusKey))

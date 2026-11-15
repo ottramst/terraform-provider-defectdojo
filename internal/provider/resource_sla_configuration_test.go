@@ -115,7 +115,7 @@ func TestAccSLAConfiguration(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).SLAConfigurations.Patch(context.Background(), id, &defectdojo.SLAConfigurationPatch{
 						Name: new(name + "-changed"), RestartSLAOnReactivation: new(true),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccSLAConfigurationConfig(renamed, testAccSLAConfigurationDays),
@@ -132,7 +132,7 @@ func TestAccSLAConfiguration(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).SLAConfigurations.Delete(context.Background(), id)
+					_, err := testAccClient(t).SLAConfigurations.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccSLAConfigurationConfig(renamed, testAccSLAConfigurationDays),
@@ -207,7 +207,7 @@ func TestAccSLAConfiguration_inUse(t *testing.T) {
 					func(*terraform.State) error {
 						p, _, err := testAccClient(t).Products.Create(context.Background(), &defectdojo.Product{
 							Name: randName(t), Description: "acceptance test", ProdType: productTypeID, SLAConfiguration: id,
-						})
+						}, nil)
 						productID = p.ID
 						return err
 					},
@@ -224,7 +224,7 @@ func TestAccSLAConfiguration_inUse(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Products.Patch(context.Background(), productID, &defectdojo.ProductPatch{
 						SLAConfiguration: &otherID,
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccSLAConfigurationConfig(name, ""),
@@ -240,7 +240,7 @@ func TestAccSLAConfiguration_default(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			sla, _, err := testAccClient(t).SLAConfigurations.Get(context.Background(), 1)
+			sla, _, err := testAccClient(t).SLAConfigurations.Get(context.Background(), 1, nil)
 			if err != nil {
 				return fmt.Errorf("the Default SLA configuration: %w", err)
 			}
@@ -313,7 +313,7 @@ func testAccCheckSLAConfigurationDestroyed(t *testing.T, id *int) resource.TestC
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).SLAConfigurations.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).SLAConfigurations.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

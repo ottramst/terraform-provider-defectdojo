@@ -165,7 +165,7 @@ func TestAccProduct(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Products.Patch(context.Background(), id, &defectdojo.ProductPatch{
 						Name: new(name + "-changed"), Platform: defectdojo.Value("mobile"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccProductConfig(renamed, "second", fmt.Sprintf("  sla_configuration_id = %d\n", sla)),
@@ -182,7 +182,7 @@ func TestAccProduct(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Products.Delete(context.Background(), id)
+					_, err := testAccClient(t).Products.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccProductConfig(renamed, "second", ""),
@@ -247,7 +247,7 @@ func TestAccProduct_tags(t *testing.T) {
 	ptID := testAccCreateProductType(t)
 	_, _, err := client.Products.Create(context.Background(), &defectdojo.Product{
 		Name: randName(t), Description: "holds the tag", ProdType: ptID, Tags: []string{existing},
-	})
+	}, nil)
 	testAccNoError(t, err)
 
 	resource.Test(t, resource.TestCase{
@@ -273,7 +273,7 @@ func TestAccProduct_tags(t *testing.T) {
 					if err := testAccCaptureProductID(&id)(s); err != nil {
 						return err
 					}
-					p, _, err := client.Products.Get(context.Background(), id)
+					p, _, err := client.Products.Get(context.Background(), id, nil)
 					if err != nil {
 						return err
 					}
@@ -356,7 +356,7 @@ func testAccCheckProductDestroyed(t *testing.T, id *int) resource.TestCheckFunc 
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).Products.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).Products.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}
@@ -372,10 +372,10 @@ func testAccCheckProductDestroyed(t *testing.T, id *int) resource.TestCheckFunc 
 func testAccCreateProductType(t *testing.T) int {
 	t.Helper()
 	client := testAccClient(t)
-	pt, _, err := client.ProductTypes.Create(context.Background(), &defectdojo.ProductType{Name: randName(t)})
+	pt, _, err := client.ProductTypes.Create(context.Background(), &defectdojo.ProductType{Name: randName(t)}, nil)
 	testAccNoError(t, err)
 	t.Cleanup(func() {
-		if _, err := client.ProductTypes.Delete(context.Background(), pt.ID); err != nil {
+		if _, err := client.ProductTypes.Delete(context.Background(), pt.ID, nil); err != nil {
 			t.Logf("cleanup: %v", err)
 		}
 	})
@@ -391,10 +391,10 @@ func testAccCreateSLAConfiguration(t *testing.T) int {
 	sla, _, err := client.SLAConfigurations.Create(context.Background(), &defectdojo.SLAConfiguration{
 		Name: randName(t), Critical: 7, High: 30, Medium: 90, Low: 120,
 		EnforceCritical: true, EnforceHigh: true, EnforceMedium: true, EnforceLow: true,
-	})
+	}, nil)
 	testAccNoError(t, err)
 	t.Cleanup(func() {
-		if _, err := client.SLAConfigurations.Delete(context.Background(), sla.ID); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+		if _, err := client.SLAConfigurations.Delete(context.Background(), sla.ID, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 			t.Logf("cleanup: %v", err)
 		}
 	})
@@ -408,6 +408,6 @@ func testAccCreateEngagement(t *testing.T, productID int) {
 	day := defectdojo.Date{Year: 2026, Month: time.January, Day: 1}
 	_, _, err := testAccClient(t).Engagements.Create(context.Background(), &defectdojo.Engagement{
 		Name: randName(t), Product: productID, TargetStart: day, TargetEnd: day,
-	})
+	}, nil)
 	testAccNoError(t, err)
 }

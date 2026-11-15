@@ -26,9 +26,9 @@ var _ resource.ResourceWithIdentity = &CICDInfrastructureResource{}
 
 // cicdInfrastructureTypes are the types DefectDojo accepts.
 var cicdInfrastructureTypes = []string{
-	defectdojo.CICDInfrastructureTypeSCMServer,
-	defectdojo.CICDInfrastructureTypeBuildServer,
-	defectdojo.CICDInfrastructureTypeOrchestration,
+	string(defectdojo.CICDInfrastructureTypeSCMServer),
+	string(defectdojo.CICDInfrastructureTypeBuildServer),
+	string(defectdojo.CICDInfrastructureTypeOrchestration),
 }
 
 func NewCICDInfrastructureResource() resource.Resource {
@@ -116,10 +116,10 @@ func (r *CICDInfrastructureResource) Create(ctx context.Context, req resource.Cr
 
 	created, _, err := r.client.CICDInfrastructure.Create(ctx, &defectdojo.CICDInfrastructure{
 		Name:               data.Name.ValueString(),
-		InfrastructureType: data.InfrastructureType.ValueString(),
+		InfrastructureType: defectdojo.CICDInfrastructureType(data.InfrastructureType.ValueString()),
 		Description:        data.Description.ValueString(),
 		URL:                data.URL.ValueString(),
-	})
+	}, nil)
 	var errResp *defectdojo.ErrorResponse
 	if errors.As(err, &errResp) && errors.Is(err, defectdojo.ErrBadRequest) && len(errResp.Fields["non_field_errors"]) > 0 {
 		resp.Diagnostics.AddError(
@@ -151,7 +151,7 @@ func (r *CICDInfrastructureResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	ci, _, err := r.client.CICDInfrastructure.Get(ctx, int(data.ID.ValueInt64()))
+	ci, _, err := r.client.CICDInfrastructure.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -183,7 +183,7 @@ func (r *CICDInfrastructureResource) Update(ctx context.Context, req resource.Up
 		Name:        new(data.Name.ValueString()),
 		Description: new(data.Description.ValueString()),
 		URL:         new(data.URL.ValueString()),
-	})
+	}, nil)
 	switch {
 	case errors.Is(err, defectdojo.ErrConflict):
 		resp.Diagnostics.AddError(
@@ -212,7 +212,7 @@ func (r *CICDInfrastructureResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	if _, err := r.client.CICDInfrastructure.Delete(ctx, int(data.ID.ValueInt64())); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.CICDInfrastructure.Delete(ctx, int(data.ID.ValueInt64()), nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo CI/CD infrastructure",
 			fmt.Sprintf("Could not delete CI/CD infrastructure object %d, unexpected error: %s", data.ID.ValueInt64(), err),
@@ -229,7 +229,7 @@ func (r *CICDInfrastructureResource) ImportState(ctx context.Context, req resour
 func updateCICDInfrastructureModel(data *CICDInfrastructureModel, ci *defectdojo.CICDInfrastructure) {
 	data.ID = types.Int64Value(int64(ci.ID))
 	data.Name = types.StringValue(ci.Name)
-	data.InfrastructureType = types.StringValue(ci.InfrastructureType)
+	data.InfrastructureType = types.StringValue(string(ci.InfrastructureType))
 	data.Description = stringOrNull(ci.Description)
 	data.URL = stringOrNull(ci.URL)
 }

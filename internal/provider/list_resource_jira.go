@@ -114,10 +114,10 @@ func jiraProjectResults(ctx context.Context, client *defectdojo.Client, req list
 		// The ID stands in for an object that can't be read.
 		names[key] = key
 		if p.Engagement != 0 {
-			if e, _, err := client.Engagements.Get(ctx, p.Engagement); err == nil {
+			if e, _, err := client.Engagements.Get(ctx, p.Engagement, nil); err == nil {
 				names[key] = e.Name
 			}
-		} else if pr, _, err := client.Products.Get(ctx, p.Product); err == nil {
+		} else if pr, _, err := client.Products.Get(ctx, p.Product, nil); err == nil {
 			names[key] = pr.Name
 		}
 		return names[key]

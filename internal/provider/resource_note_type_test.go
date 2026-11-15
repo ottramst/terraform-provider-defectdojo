@@ -108,7 +108,7 @@ resource "defectdojo_note_type" "test" {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).NoteTypes.Patch(context.Background(), id, &defectdojo.NoteTypePatch{
 						Description: new("changed"), IsSingle: new(true),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccNoteTypeConfig(renamed, "  is_active = false\n"),
@@ -125,7 +125,7 @@ resource "defectdojo_note_type" "test" {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).NoteTypes.Delete(context.Background(), id)
+					_, err := testAccClient(t).NoteTypes.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccNoteTypeConfig(renamed, "  is_active = false\n"),
@@ -213,7 +213,7 @@ func testAccCheckNoteTypeDestroyed(t *testing.T, id *int) resource.TestCheckFunc
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).NoteTypes.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).NoteTypes.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

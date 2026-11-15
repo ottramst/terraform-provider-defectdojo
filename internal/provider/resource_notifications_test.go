@@ -61,7 +61,7 @@ resource "defectdojo_notifications" "test" {
 					testAccCaptureNotificationsID(&id),
 					// The settings DefectDojo created for the user were adopted.
 					func(s *terraform.State) error {
-						n, _, err := testAccClient(t).Notifications.GetByScope(context.Background(), testAccStateInt(s, userAddress, "id"), 0, false)
+						n, _, err := testAccClient(t).Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: testAccStateInt(s, userAddress, "id"), Product: 0, Template: false}, nil)
 						if err != nil {
 							return err
 						}
@@ -117,8 +117,8 @@ resource "defectdojo_notifications" "test" {
 			{
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Notifications.Patch(context.Background(), id, &defectdojo.NotificationSettingsPatch{
-						Other: new([]string{"slack"}), ScanAddedEmpty: new("alert"),
-					})
+						Other: new([]defectdojo.NotificationChannel{"slack"}), ScanAddedEmpty: new(defectdojo.NotificationChannel("alert")),
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: user + `
@@ -183,7 +183,7 @@ resource "defectdojo_notifications" "test" {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Notifications.Delete(context.Background(), id)
+					_, err := testAccClient(t).Notifications.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: config,
@@ -198,7 +198,7 @@ resource "defectdojo_notifications" "test" {
 			{
 				Config: product,
 				Check: func(*terraform.State) error {
-					_, _, err := testAccClient(t).Notifications.Get(context.Background(), id)
+					_, _, err := testAccClient(t).Notifications.Get(context.Background(), id, nil)
 					if !errors.Is(err, defectdojo.ErrNotFound) {
 						return fmt.Errorf("Get(%d) error = %v, want the settings deleted", id, err)
 					}
@@ -213,10 +213,10 @@ resource "defectdojo_notifications" "test" {
 func TestAccNotifications_system(t *testing.T) {
 	testAccSkipUnlessAcc(t)
 	client := testAccClient(t)
-	system, _, err := client.Notifications.GetByScope(context.Background(), 0, 0, false)
+	system, _, err := client.Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: 0, Product: 0, Template: false}, nil)
 	testAccNoError(t, err)
 	t.Cleanup(func() {
-		if _, _, err := client.Notifications.Update(context.Background(), system.ID, system); err != nil {
+		if _, _, err := client.Notifications.Update(context.Background(), system.ID, system, nil); err != nil {
 			t.Logf("cleanup: restoring the system-wide notification settings: %v", err)
 		}
 	})
@@ -248,12 +248,12 @@ resource "defectdojo_notifications" "test" {
 func TestAccNotifications_template(t *testing.T) {
 	testAccSkipUnlessAcc(t)
 	client := testAccClient(t)
-	if existing, _, err := client.Notifications.GetByScope(context.Background(), 0, 0, true); err == nil {
+	if existing, _, err := client.Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: 0, Product: 0, Template: true}, nil); err == nil {
 		t.Fatalf("a notification settings template exists already (ID %d); this test needs a server without one", existing.ID)
 	}
 	t.Cleanup(func() {
-		if n, _, err := client.Notifications.GetByScope(context.Background(), 0, 0, true); err == nil {
-			if _, err := client.Notifications.Delete(context.Background(), n.ID); err != nil {
+		if n, _, err := client.Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: 0, Product: 0, Template: true}, nil); err == nil {
+			if _, err := client.Notifications.Delete(context.Background(), n.ID, nil); err != nil {
 				t.Logf("cleanup: deleting the notification settings template: %v", err)
 			}
 		}
@@ -267,7 +267,7 @@ func TestAccNotifications_template(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
 		CheckDestroy: func(*terraform.State) error {
-			if _, _, err := client.Notifications.GetByScope(context.Background(), 0, 0, true); !errors.Is(err, defectdojo.ErrNotFound) {
+			if _, _, err := client.Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: 0, Product: 0, Template: true}, nil); !errors.Is(err, defectdojo.ErrNotFound) {
 				return fmt.Errorf("GetByScope(template) error = %v, want the template deleted", err)
 			}
 			return nil
@@ -299,11 +299,11 @@ resource "defectdojo_notifications" "test" {
 				},
 				// A user created after the template's update gets its events.
 				Check: func(s *terraform.State) error {
-					n, _, err := client.Notifications.GetByScope(context.Background(), testAccStateInt(s, userAddress, "id"), 0, false)
+					n, _, err := client.Notifications.GetByScope(context.Background(), defectdojo.NotificationScope{User: testAccStateInt(s, userAddress, "id"), Product: 0, Template: false}, nil)
 					if err != nil {
 						return err
 					}
-					if !reflect.DeepEqual(n.ProductAdded, []string{"slack"}) {
+					if !reflect.DeepEqual(n.ProductAdded, []defectdojo.NotificationChannel{"slack"}) {
 						return fmt.Errorf("the new user's product_added = %v, want the template's [slack]", n.ProductAdded)
 					}
 					return nil
@@ -383,11 +383,11 @@ func testAccStateInt(s *terraform.State, address, attribute string) int {
 // exist with DefectDojo's defaults.
 func testAccCheckNotificationsDefaults(t *testing.T, id *int) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		n, _, err := testAccClient(t).Notifications.Get(context.Background(), *id)
+		n, _, err := testAccClient(t).Notifications.Get(context.Background(), *id, nil)
 		if err != nil {
 			return fmt.Errorf("the settings were reset, not deleted: %w", err)
 		}
-		alert := []string{"alert"}
+		alert := []defectdojo.NotificationChannel{"alert"}
 		if !reflect.DeepEqual(n.ProductAdded, alert) || !reflect.DeepEqual(n.Other, alert) || !reflect.DeepEqual(n.SLABreach, alert) ||
 			len(n.ScanAddedEmpty) != 0 {
 			return fmt.Errorf("settings %d = %+v, want DefectDojo's defaults", *id, n)

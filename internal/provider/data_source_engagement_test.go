@@ -63,7 +63,7 @@ data "defectdojo_engagement" "by_name" {
 					day := defectdojo.Date{Year: 2026, Month: time.January, Day: 5}
 					e, _, err := testAccClient(t).Engagements.Create(context.Background(), &defectdojo.Engagement{
 						Product: productID, Name: name, TargetStart: day, TargetEnd: day,
-					})
+					}, nil)
 					testAccNoError(t, err)
 					duplicateID = e.ID
 				},
@@ -102,7 +102,7 @@ data "defectdojo_engagement" "no_product" {
 			// destroyed.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Engagements.Delete(context.Background(), duplicateID)
+					_, err := testAccClient(t).Engagements.Delete(context.Background(), duplicateID, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccEngagementConfig(name, "first", ""),

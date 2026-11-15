@@ -111,10 +111,10 @@ func (d *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		u, _, err = d.client.Users.Get(ctx, int(data.ID.ValueInt64()))
+		u, _, err = d.client.Users.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("username %q", data.Username.ValueString())
-		u, _, err = d.client.Users.GetByUsername(ctx, data.Username.ValueString())
+		u, _, err = d.client.Users.GetByUsername(ctx, data.Username.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

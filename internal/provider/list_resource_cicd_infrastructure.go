@@ -39,7 +39,7 @@ func NewCICDInfrastructureListResource() list.ListResource {
 		objects: "CI/CD infrastructure",
 		all: func(ctx context.Context, client *defectdojo.Client, config CICDInfrastructureListModel) iter.Seq2[*defectdojo.CICDInfrastructure, error] {
 			return client.CICDInfrastructure.ListAll(ctx, &defectdojo.ListCICDInfrastructureOptions{
-				InfrastructureType: config.InfrastructureType.ValueString(),
+				InfrastructureType: defectdojo.CICDInfrastructureType(config.InfrastructureType.ValueString()),
 			})
 		},
 		id: id,

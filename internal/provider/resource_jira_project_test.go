@@ -31,7 +31,7 @@ func TestAccJiraProject(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
 		CheckDestroy: func(*terraform.State) error {
-			_, _, err := testAccClient(t).JiraProjects.Get(context.Background(), id)
+			_, _, err := testAccClient(t).JiraProjects.Get(context.Background(), id, nil)
 			if !errors.Is(err, defectdojo.ErrNotFound) {
 				return fmt.Errorf("Jira project %d still exists (%v)", id, err)
 			}
@@ -162,7 +162,7 @@ func TestAccJiraProject(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).JiraProjects.Patch(context.Background(), id, &defectdojo.JiraProjectPatch{
 						ProjectKey: new("CHANGED"), PushNotes: new(true),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccJiraProjectConfig(name, `
@@ -205,7 +205,7 @@ resource "defectdojo_jira_project" "second" {
 			// Without it, everything is created again.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).JiraProjects.Delete(context.Background(), outside)
+					_, err := testAccClient(t).JiraProjects.Delete(context.Background(), outside, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccJiraProjectConfig(name, `
@@ -216,7 +216,7 @@ resource "defectdojo_jira_project" "second" {
 			// Deleted outside Terraform: re-created.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).JiraProjects.Delete(context.Background(), id)
+					_, err := testAccClient(t).JiraProjects.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccJiraProjectConfig(name, `
@@ -240,13 +240,13 @@ func testAccCreateJiraProjectOutside(t *testing.T, name string) int {
 	t.Helper()
 	ctx := context.Background()
 	client := testAccClient(t)
-	instance, _, err := client.JiraInstances.GetByName(ctx, name)
+	instance, _, err := client.JiraInstances.GetByName(ctx, name, nil)
 	testAccNoError(t, err)
 	product, _, err := client.Products.Create(ctx, &defectdojo.Product{
 		Name: name + "-outside", Description: "acceptance test", ProdType: testAccCreateProductType(t),
-	})
+	}, nil)
 	testAccNoError(t, err)
-	p, _, err := client.JiraProjects.Create(ctx, &defectdojo.JiraProject{JiraInstance: instance.ID, Product: product.ID, ProjectKey: "OUT", Enabled: true})
+	p, _, err := client.JiraProjects.Create(ctx, &defectdojo.JiraProject{JiraInstance: instance.ID, Product: product.ID, ProjectKey: "OUT", Enabled: true}, nil)
 	testAccNoError(t, err)
 	return p.ID
 }
@@ -271,7 +271,7 @@ resource "defectdojo_engagement" "test" {
 `+extra) + fmt.Sprintf(engagement, name)
 	}
 	testAccSkipUnlessAcc(t)
-	version, err := testAccClient(t).ServerVersion(context.Background())
+	version, _, err := testAccClient(t).ServerVersion(context.Background(), nil)
 	testAccNoError(t, err)
 	suppress := resource.TestStep{
 		Config: config(`  suppress_sla_notification_comments = true

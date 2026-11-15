@@ -67,7 +67,7 @@ func engagementResults(ctx context.Context, client *defectdojo.Client, req list.
 		if p, ok := products[id]; ok {
 			return p, nil
 		}
-		p, _, err := client.Products.Get(ctx, id)
+		p, _, err := client.Products.Get(ctx, id, nil)
 		if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 			return nil, err
 		}

@@ -56,7 +56,7 @@ func TestAccUser(t *testing.T) {
 					testAccCaptureUserID(&id),
 					// The password works.
 					func(*terraform.State) error {
-						_, _, err := testAccClient(t).Auth.Token(context.Background(), username, testAccPassword)
+						_, _, err := testAccClient(t).Auth.Token(context.Background(), username, testAccPassword, nil)
 						return err
 					},
 				),
@@ -124,7 +124,7 @@ func TestAccUser(t *testing.T) {
 					statecheck.ExpectKnownValue(userAddress, tfjsonpath.New("configuration_permissions"), knownvalue.SetSizeExact(2)),
 				},
 				Check: func(*terraform.State) error {
-					u, _, err := testAccClient(t).Users.Get(context.Background(), id)
+					u, _, err := testAccClient(t).Users.Get(context.Background(), id, nil)
 					if err != nil {
 						return err
 					}
@@ -151,7 +151,7 @@ func TestAccUser(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Users.Patch(context.Background(), id, &defectdojo.UserPatch{
 						Email: new("changed@example.com"), IsActive: new(false),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccUserConfig(username+"-renamed", `
@@ -173,7 +173,7 @@ func TestAccUser(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Users.Delete(context.Background(), id)
+					_, err := testAccClient(t).Users.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccUserConfig(username+"-renamed", ""),
@@ -212,7 +212,7 @@ func TestAccUser_referenced(t *testing.T) {
 					func(*terraform.State) error {
 						p, _, err := testAccClient(t).Products.Create(context.Background(), &defectdojo.Product{
 							Name: randName(t), Description: "acceptance test", ProdType: productTypeID, ProductManager: id,
-						})
+						}, nil)
 						if err != nil {
 							return err
 						}
@@ -231,7 +231,7 @@ func TestAccUser_referenced(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).Products.Patch(context.Background(), productID, &defectdojo.ProductPatch{
 						ProductManager: defectdojo.Null[int](),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccUserConfig(username, ""),
@@ -298,7 +298,7 @@ func testAccCheckUserDestroyed(t *testing.T, id *int) resource.TestCheckFunc {
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).Users.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).Users.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

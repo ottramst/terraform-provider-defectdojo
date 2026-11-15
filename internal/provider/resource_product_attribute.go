@@ -167,7 +167,7 @@ func (r *ProductAttributeResource) Create(ctx context.Context, req resource.Crea
 		Name:         data.Name.ValueString(),
 		Icon:         data.Icon.ValueString(),
 		DisplayOrder: int(data.DisplayOrder.ValueInt64()),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo "+r.kind.object,
@@ -190,7 +190,7 @@ func (r *ProductAttributeResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	a, _, err := r.service.Get(ctx, int(data.ID.ValueInt64()))
+	a, _, err := r.service.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -221,7 +221,7 @@ func (r *ProductAttributeResource) Update(ctx context.Context, req resource.Upda
 		Name:         new(data.Name.ValueString()),
 		Icon:         new(data.Icon.ValueString()),
 		DisplayOrder: new(int(data.DisplayOrder.ValueInt64())),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo "+r.kind.object,
@@ -243,7 +243,7 @@ func (r *ProductAttributeResource) Delete(ctx context.Context, req resource.Dele
 	}
 	id := int(data.ID.ValueInt64())
 
-	_, err := r.service.Delete(ctx, id)
+	_, err := r.service.Delete(ctx, id, nil)
 	switch {
 	case err == nil, errors.Is(err, defectdojo.ErrNotFound):
 	case errors.Is(err, defectdojo.ErrConflict):

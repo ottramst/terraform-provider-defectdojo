@@ -25,14 +25,14 @@ var _ resource.ResourceWithIdentity = &RegulationResource{}
 
 // regulationCategories are the categories DefectDojo accepts.
 var regulationCategories = []string{
-	defectdojo.RegulationCategoryPrivacy,
-	defectdojo.RegulationCategoryFinance,
-	defectdojo.RegulationCategoryEducation,
-	defectdojo.RegulationCategoryMedical,
-	defectdojo.RegulationCategoryCorporate,
-	defectdojo.RegulationCategorySecurity,
-	defectdojo.RegulationCategoryGovernment,
-	defectdojo.RegulationCategoryOther,
+	string(defectdojo.RegulationCategoryPrivacy),
+	string(defectdojo.RegulationCategoryFinance),
+	string(defectdojo.RegulationCategoryEducation),
+	string(defectdojo.RegulationCategoryMedical),
+	string(defectdojo.RegulationCategoryCorporate),
+	string(defectdojo.RegulationCategorySecurity),
+	string(defectdojo.RegulationCategoryGovernment),
+	string(defectdojo.RegulationCategoryOther),
 }
 
 func NewRegulationResource() resource.Resource {
@@ -122,11 +122,11 @@ func (r *RegulationResource) Create(ctx context.Context, req resource.CreateRequ
 	created, _, err := r.client.Regulations.Create(ctx, &defectdojo.Regulation{
 		Name:         data.Name.ValueString(),
 		Acronym:      data.Acronym.ValueString(),
-		Category:     data.Category.ValueString(),
+		Category:     defectdojo.RegulationCategory(data.Category.ValueString()),
 		Jurisdiction: data.Jurisdiction.ValueString(),
 		Description:  data.Description.ValueString(),
 		Reference:    data.Reference.ValueString(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo regulation",
@@ -149,7 +149,7 @@ func (r *RegulationResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	reg, _, err := r.client.Regulations.Get(ctx, int(data.ID.ValueInt64()))
+	reg, _, err := r.client.Regulations.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -179,11 +179,11 @@ func (r *RegulationResource) Update(ctx context.Context, req resource.UpdateRequ
 	updated, _, err := r.client.Regulations.Patch(ctx, int(data.ID.ValueInt64()), &defectdojo.RegulationPatch{
 		Name:         new(data.Name.ValueString()),
 		Acronym:      new(data.Acronym.ValueString()),
-		Category:     new(data.Category.ValueString()),
+		Category:     new(defectdojo.RegulationCategory(data.Category.ValueString())),
 		Jurisdiction: new(data.Jurisdiction.ValueString()),
 		Description:  new(data.Description.ValueString()),
 		Reference:    new(data.Reference.ValueString()),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo regulation",
@@ -204,7 +204,7 @@ func (r *RegulationResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	if _, err := r.client.Regulations.Delete(ctx, int(data.ID.ValueInt64())); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.Regulations.Delete(ctx, int(data.ID.ValueInt64()), nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo regulation",
 			fmt.Sprintf("Could not delete regulation %d, unexpected error: %s", data.ID.ValueInt64(), err),
@@ -221,7 +221,7 @@ func updateRegulationModel(data *RegulationModel, reg *defectdojo.Regulation) {
 	data.ID = types.Int64Value(int64(reg.ID))
 	data.Name = types.StringValue(reg.Name)
 	data.Acronym = types.StringValue(reg.Acronym)
-	data.Category = types.StringValue(reg.Category)
+	data.Category = types.StringValue(string(reg.Category))
 	data.Jurisdiction = types.StringValue(reg.Jurisdiction)
 	data.Description = stringOrNull(reg.Description)
 	data.Reference = stringOrNull(reg.Reference)
