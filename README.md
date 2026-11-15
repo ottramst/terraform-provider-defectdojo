@@ -16,7 +16,7 @@ This [Terraform](https://www.terraform.io) provider is built using the [Terrafor
 
 This provider includes:
 
-- Resources and data sources for DefectDojo configuration objects (`internal/provider/`)
+- Resources, data sources and list resources for DefectDojo configuration objects (`internal/provider/`)
 - Examples (`examples/`) and generated documentation (`docs/`)
 - Acceptance tests against every supported DefectDojo version
 
@@ -43,6 +43,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
 - **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+), or find them with the list resources of `terraform query` (Terraform 1.14+), which generates `import` blocks and their configuration
+- **Migration from doximity/defectdojo**: Take over its product types, products and Jira product configurations without recreating them; see the [migration guide](docs/guides/migrating-from-doximity.md)
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
 More is planned; see the [roadmap](#roadmap).
