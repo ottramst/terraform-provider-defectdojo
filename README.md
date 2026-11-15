@@ -8,14 +8,15 @@
 This [Terraform](https://www.terraform.io) provider is built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and allows you to manage the configuration of [OWASP DefectDojo](https://github.com/DefectDojo/django-DefectDojo), the open-source vulnerability management and DevSecOps platform, as code.
 
 > [!NOTE]
-> The provider is in early development (v0.4.0: product types, products, engagements, SLA configurations,
+> The provider is in early development (v0.5.0: product types, products, engagements, SLA configurations,
 > users, notifications, notification webhooks, system settings, Jira instances, Jira projects and the lookup objects:
 > regulations, note types, development environments, the announcement, CI/CD infrastructure, product platforms,
-> lifecycles and origins, and test types), and its schema may still change before v1.0. See the [roadmap](#roadmap).
+> lifecycles and origins, and test types; list resources for `terraform query`; and migration from `doximity/defectdojo`),
+> and its schema may still change before v1.0. See the [roadmap](#roadmap).
 
 This provider includes:
 
-- Resources and data sources for DefectDojo configuration objects (`internal/provider/`)
+- Resources, data sources and list resources for DefectDojo configuration objects (`internal/provider/`)
 - Examples (`examples/`) and generated documentation (`docs/`)
 - Acceptance tests against every supported DefectDojo version
 
@@ -42,6 +43,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Engagements**: Manage engagements, such as the long-lived CI/CD engagement a pipeline or Dependency-Track imports scans into, and look them up by ID, or by product and name. Tags a product passes on to its engagements are hidden, so they cause no drift
 - **Safe deletes**: DefectDojo deletes everything below a deleted product type, product or engagement, down to findings; the provider refuses unless `force_destroy` is set
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+), or find them with the list resources of `terraform query` (Terraform 1.14+), which generates `import` blocks and their configuration
+- **Migration from doximity/defectdojo**: Take over its product types, products and Jira product configurations without recreating them; see the [migration guide](docs/guides/migrating-from-doximity.md)
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
 More is planned; see the [roadmap](#roadmap).
@@ -80,7 +82,7 @@ terraform {
   required_providers {
     defectdojo = {
       source  = "ottramst/defectdojo"
-      version = "~> 0.4.0"
+      version = "~> 0.5.0"
     }
   }
 }

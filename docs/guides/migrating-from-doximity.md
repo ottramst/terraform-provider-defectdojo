@@ -163,7 +163,7 @@ The changes, resource by resource:
   - `component`, the custom and transition fields, `jira_labels`, `default_assignee`, `enabled`, `epic_issue_type_name` and
     the other settings DefectDojo has are new. Left out, they take DefectDojo's defaults (empty, or `enabled = true` and
     `epic_issue_type_name = "Epic"`). doximity/defectdojo couldn't manage them, so if they were set in DefectDojo's UI, the first
-    plan clears them: **add them to the configuration** before applying.
+    plan shows them reset to those defaults, and applying it resets them: **add them to the configuration** first.
 - **Data sources:**
   - `defectdojo_product_type` looks up by `id` or `name`; `defectdojo_product` too, where doximity/defectdojo's looked up by `id`
     only. Both return numeric IDs.

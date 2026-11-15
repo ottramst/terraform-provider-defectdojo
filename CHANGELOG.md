@@ -1,4 +1,4 @@
-## Unreleased
+## v0.5.0
 
 FEATURES:
 
@@ -18,6 +18,7 @@ NOTES:
 
 * New guide, *Migrate from doximity/defectdojo*: the provider configuration, the changed attributes, and how the state moves without recreating anything ([#30](https://github.com/ottramst/terraform-provider-defectdojo/issues/30))
 * `defectdojo_product`: like the other optional attributes, `user_records` and `revenue` are cleared when they aren't configured. After upgrading, the next plan shows an update for every product whose user records or revenue were set outside Terraform, which clears them; add them to the configuration before applying it to keep them ([#64](https://github.com/ottramst/terraform-provider-defectdojo/issues/64))
+* Completes the v0.5.0 milestone (adoption: list resources for `terraform query`, and migration from `doximity/defectdojo`), built on go-defectdojo v0.4.0. Tested against DefectDojo 3.4.304 and 3.5.103, with Terraform 1.16 and 1.17
 
 ## v0.4.0
 

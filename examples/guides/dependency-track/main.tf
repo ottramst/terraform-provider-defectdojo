@@ -4,7 +4,7 @@ terraform {
   required_providers {
     defectdojo = {
       source  = "ottramst/defectdojo"
-      version = "~> 0.2.0"
+      version = "~> 0.5.0"
     }
     dependencytrack = {
       source  = "ottramst/dependencytrack"
