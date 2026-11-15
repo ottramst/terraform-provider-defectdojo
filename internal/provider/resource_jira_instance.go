@@ -305,8 +305,10 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 	// The password is sent when its version changes, since Terraform can't
 	// compare write-only values, and when the URL changes, which DefectDojo
 	// allows only with the password. Without one, nothing is sent: ModifyPlan
-	// refused the cases that need it, except a new version that was unknown
-	// at plan time, refused here.
+	// refused the cases that need it, also a version that was unknown at plan
+	// time, when Terraform plans again during the apply. The check below is a
+	// defensive one, so that a version whose password was never sent can't be
+	// stored.
 	if password.IsNull() && !data.PasswordWOVersion.IsNull() && !data.PasswordWOVersion.Equal(state.PasswordWOVersion) {
 		resp.Diagnostics.AddAttributeError(path.Root("password_wo"), "Missing Jira password",
 			"A new password_wo_version sends password_wo to DefectDojo, but password_wo isn't set. "+
@@ -343,7 +345,9 @@ func jiraProjectsUsing(n int) string {
 // ModifyPlan requires password_wo when DefectDojo needs the password: to
 // create the instance, to change its URL, and when a new password_wo_version
 // asks to send it. A password unknown at plan time, such as an attribute of a
-// resource created in the same apply, passes.
+// resource created in the same apply, passes; Terraform plans again during the
+// apply, when unknown values are known, so a version that turns out new without
+// a password is refused then.
 func (r *JiraInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return

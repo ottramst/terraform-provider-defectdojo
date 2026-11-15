@@ -162,7 +162,8 @@ resource "defectdojo_jira_instance" "test" {
 
 // A password that is unknown at plan time, such as an attribute of a resource
 // created in the same apply, passes the plan and is sent. A new version that
-// is unknown at plan time, without a password, fails at apply.
+// is unknown at plan time, without a password, fails at apply, when Terraform
+// plans again with the known version.
 func TestAccJiraInstance_unknownValues(t *testing.T) {
 	fake := &fakeDefectDojo{
 		collection: "jira_instances",
