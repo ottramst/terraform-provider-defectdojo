@@ -26,3 +26,31 @@ jobs:
             (echo; echo "go.mod/go.sum are not tidy. Run 'go mod tidy' (also in tools/) and commit."; exit 1)
       - run: make build-ci
       - run: make test
+      # From v1.0.0, TestSchemaCompatibility (in make test) compares the
+      # schemas with the latest release's, in testdata/schema-baseline.json.
+      # Only a release pull request may regenerate it, and without changing
+      # the provider's code, which would then be compared with itself.
+      - name: Check that only a release changes the schema baseline
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          git fetch --quiet --depth=1 origin "$BASE_REF"
+          baseline=internal/provider/testdata/schema-baseline.json
+          if ! git diff --name-status FETCH_HEAD HEAD -- "$baseline" | grep -q '^[MD]'; then
+            exit 0
+          fi
+          case "$PR_TITLE" in
+            "chore: release "*) ;;
+            *)
+              echo "::error file=$baseline::Only a release pull request (titled 'chore: release …') may change the schema baseline."
+              exit 1
+              ;;
+          esac
+          code=$(git diff --name-only FETCH_HEAD HEAD -- 'internal/provider/*.go' | grep -v '_test\.go$' || true)
+          if [ -n "$code" ]; then
+            echo "::error file=$baseline::A release pull request that changes the schema baseline may not change the provider's code:"
+            echo "$code"
+            exit 1
+          fi

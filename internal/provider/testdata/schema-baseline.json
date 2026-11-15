@@ -1,0 +1,2685 @@
+{
+  "provider": {
+    "api_token": {
+      "type": "string",
+      "optional": true,
+      "sensitive": true
+    },
+    "password": {
+      "type": "string",
+      "optional": true,
+      "sensitive": true
+    },
+    "url": {
+      "type": "string",
+      "optional": true
+    },
+    "username": {
+      "type": "string",
+      "optional": true
+    }
+  },
+  "resources": {
+    "defectdojo_announcement": {
+      "attributes": {
+        "dismissable": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "message": {
+          "type": "string",
+          "required": true,
+          "requires_replace": true
+        },
+        "style": {
+          "type": "string",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to info",
+          "requires_replace": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_cicd_infrastructure": {
+      "attributes": {
+        "description": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "infrastructure_type": {
+          "type": "string",
+          "required": true,
+          "requires_replace": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "url": {
+          "type": "string",
+          "optional": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_development_environment": {
+      "attributes": {
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_engagement": {
+      "attributes": {
+        "active": {
+          "type": "bool",
+          "computed": true
+        },
+        "api_test": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "branch_tag": {
+          "type": "string",
+          "optional": true
+        },
+        "build_id": {
+          "type": "string",
+          "optional": true
+        },
+        "check_list": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "cicd_build_server_id": {
+          "type": "number",
+          "optional": true
+        },
+        "cicd_orchestration_engine_id": {
+          "type": "number",
+          "optional": true
+        },
+        "cicd_scm_server_id": {
+          "type": "number",
+          "optional": true
+        },
+        "commit_hash": {
+          "type": "string",
+          "optional": true
+        },
+        "deduplication_on_engagement": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "description": {
+          "type": "string",
+          "optional": true
+        },
+        "engagement_type": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "first_contacted": {
+          "type": "string",
+          "optional": true
+        },
+        "force_destroy": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "lead_id": {
+          "type": "number",
+          "optional": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "pen_test": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "product_id": {
+          "type": "number",
+          "required": true
+        },
+        "reason": {
+          "type": "string",
+          "optional": true
+        },
+        "source_code_management_uri": {
+          "type": "string",
+          "optional": true
+        },
+        "status": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "tags": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "target_end": {
+          "type": "string",
+          "required": true
+        },
+        "target_start": {
+          "type": "string",
+          "required": true
+        },
+        "test_strategy": {
+          "type": "string",
+          "optional": true
+        },
+        "threat_model": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "tracker": {
+          "type": "string",
+          "optional": true
+        },
+        "version": {
+          "type": "string",
+          "optional": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_jira_instance": {
+      "attributes": {
+        "accepted_mapping_resolution": {
+          "type": "string",
+          "optional": true
+        },
+        "close_status_key": {
+          "type": "number",
+          "required": true
+        },
+        "configuration_name": {
+          "type": "string",
+          "required": true
+        },
+        "critical_mapping_severity": {
+          "type": "string",
+          "required": true
+        },
+        "default_issue_type": {
+          "type": "string",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to Bug"
+        },
+        "epic_name_id": {
+          "type": "number",
+          "required": true
+        },
+        "false_positive_mapping_resolution": {
+          "type": "string",
+          "optional": true
+        },
+        "finding_jira_sync": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "finding_text": {
+          "type": "string",
+          "optional": true
+        },
+        "global_jira_sla_notification": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "high_mapping_severity": {
+          "type": "string",
+          "required": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "info_mapping_severity": {
+          "type": "string",
+          "required": true
+        },
+        "issue_template_dir": {
+          "type": "string",
+          "optional": true
+        },
+        "low_mapping_severity": {
+          "type": "string",
+          "required": true
+        },
+        "medium_mapping_severity": {
+          "type": "string",
+          "required": true
+        },
+        "open_status_key": {
+          "type": "number",
+          "required": true
+        },
+        "password_wo": {
+          "type": "string",
+          "required": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "password_wo_version": {
+          "type": "number",
+          "optional": true
+        },
+        "url": {
+          "type": "string",
+          "required": true
+        },
+        "username": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_jira_project": {
+      "attributes": {
+        "add_vulnerability_id_to_jira_label": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "close_transition_fields": {
+          "type": "string",
+          "optional": true
+        },
+        "component": {
+          "type": "string",
+          "optional": true
+        },
+        "custom_fields": {
+          "type": "string",
+          "optional": true
+        },
+        "default_assignee": {
+          "type": "string",
+          "optional": true
+        },
+        "enable_engagement_epic_mapping": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "enabled": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "engagement_id": {
+          "type": "number",
+          "optional": true,
+          "requires_replace": true
+        },
+        "epic_issue_type_name": {
+          "type": "string",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to Epic"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "issue_template_dir": {
+          "type": "string",
+          "optional": true
+        },
+        "jira_instance_id": {
+          "type": "number",
+          "required": true
+        },
+        "jira_labels": {
+          "type": "string",
+          "optional": true
+        },
+        "product_id": {
+          "type": "number",
+          "optional": true,
+          "requires_replace": true
+        },
+        "product_jira_sla_notification": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "project_key": {
+          "type": "string",
+          "optional": true
+        },
+        "push_all_issues": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "push_notes": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "reopen_transition_fields": {
+          "type": "string",
+          "optional": true
+        },
+        "risk_acceptance_expiration_notification": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "suppress_sla_notification_comments": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_note_type": {
+      "attributes": {
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "force_destroy": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "is_active": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "is_mandatory": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "is_single": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_notification_webhook": {
+      "attributes": {
+        "first_error": {
+          "type": "string",
+          "computed": true
+        },
+        "header_name": {
+          "type": "string",
+          "optional": true
+        },
+        "header_value_wo": {
+          "type": "string",
+          "optional": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "header_value_wo_version": {
+          "type": "number",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "last_error": {
+          "type": "string",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "note": {
+          "type": "string",
+          "computed": true
+        },
+        "status": {
+          "type": "string",
+          "computed": true
+        },
+        "url": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_notifications": {
+      "attributes": {
+        "auto_close_engagement": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "close_engagement": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "code_review": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "engagement_added": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "jira_update": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "other": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "product_added": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "product_id": {
+          "type": "number",
+          "optional": true,
+          "requires_replace": true
+        },
+        "product_type_added": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "review_requested": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "risk_acceptance_expiration": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "scan_added": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "scan_added_empty": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to []"
+        },
+        "sla_breach": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "sla_breach_combined": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "stale_engagement": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "template": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false",
+          "requires_replace": true
+        },
+        "test_added": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "upcoming_engagement": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        },
+        "user_id": {
+          "type": "number",
+          "optional": true,
+          "requires_replace": true
+        },
+        "user_mentioned": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to [\"alert\"]"
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_product": {
+      "attributes": {
+        "authorized_users": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "business_criticality": {
+          "type": "string",
+          "optional": true
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "disable_sla_breach_notifications": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "enable_full_risk_acceptance": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "enable_product_tag_inheritance": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "enable_simple_risk_acceptance": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "external_audience": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "force_destroy": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "internet_accessible": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "life_cycle": {
+          "type": "string",
+          "optional": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "origin": {
+          "type": "string",
+          "optional": true
+        },
+        "platform": {
+          "type": "string",
+          "optional": true
+        },
+        "product_manager_id": {
+          "type": "number",
+          "optional": true
+        },
+        "product_type_id": {
+          "type": "number",
+          "required": true
+        },
+        "regulation_ids": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "revenue": {
+          "type": "string",
+          "optional": true
+        },
+        "sla_configuration_id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "tags": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "team_manager_id": {
+          "type": "number",
+          "optional": true
+        },
+        "technical_contact_id": {
+          "type": "number",
+          "optional": true
+        },
+        "user_records": {
+          "type": "number",
+          "optional": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_product_lifecycle": {
+      "attributes": {
+        "display_order": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 0"
+        },
+        "icon": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "requires_replace": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_product_origin": {
+      "attributes": {
+        "display_order": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 0"
+        },
+        "icon": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "requires_replace": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_product_platform": {
+      "attributes": {
+        "display_order": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 0"
+        },
+        "icon": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "requires_replace": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_product_type": {
+      "attributes": {
+        "authorized_users": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "critical_product": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "description": {
+          "type": "string",
+          "optional": true
+        },
+        "force_destroy": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "key_product": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_regulation": {
+      "attributes": {
+        "acronym": {
+          "type": "string",
+          "required": true
+        },
+        "category": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "jurisdiction": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "reference": {
+          "type": "string",
+          "optional": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_sla_configuration": {
+      "attributes": {
+        "critical": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 7"
+        },
+        "description": {
+          "type": "string",
+          "optional": true
+        },
+        "enforce_critical": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "enforce_high": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "enforce_low": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "enforce_medium": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "high": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 30"
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "low": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 120"
+        },
+        "medium": {
+          "type": "number",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to 90"
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "restart_sla_on_reactivation": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_system_settings": {
+      "attributes": {
+        "add_vulnerability_id_to_jira_label": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "allow_anonymous_survey_response": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "api_expose_error_details": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "delete_duplicates": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "disable_jira_webhook_secret": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "disclaimer_notes": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "disclaimer_notifications": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "disclaimer_reports": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "disclaimer_reports_forced": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "email_from": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "enable_benchmark": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_calendar": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_checklists": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_cvss3_display": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_cvss4_display": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_deduplication": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_endpoint_metadata_import": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_finding_groups": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_finding_sla": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_github": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_jira": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_jira_web_hook": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_mail_notifications": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_msteams_notifications": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_notify_sla_active": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_notify_sla_active_verified": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_notify_sla_exponential_backoff": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_notify_sla_jira_only": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_product_grade": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_product_tag_inheritance": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_product_tracking_files": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_questionnaires": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_similar_findings": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_slack_notifications": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_ui_table_based_searching": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_user_profile_editable": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enable_webhooks_notifications": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enforce_verified_status": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enforce_verified_status_jira": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enforce_verified_status_metrics": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "enforce_verified_status_product_grading": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "engagement_auto_close": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "engagement_auto_close_days": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "false_positive_history": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "filter_string_matching": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "jira_labels": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "jira_minimum_severity": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "jira_webhook_secret_wo": {
+          "type": "string",
+          "optional": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "jira_webhook_secret_wo_version": {
+          "type": "number",
+          "optional": true
+        },
+        "lowercase_character_required": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "mail_notifications_to": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "max_dupes": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "maximum_password_length": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "minimum_password_length": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "msteams_url_wo": {
+          "type": "string",
+          "optional": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "msteams_url_wo_version": {
+          "type": "number",
+          "optional": true
+        },
+        "non_common_password_required": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "number_character_required": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "product_grade_a": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "product_grade_b": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "product_grade_c": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "product_grade_d": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "product_grade_f": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "retroactive_false_positive_history": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "risk_acceptance_form_default_days": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "risk_acceptance_notify_before_expiration": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "slack_channel": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "slack_token_wo": {
+          "type": "string",
+          "optional": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "slack_token_wo_version": {
+          "type": "number",
+          "optional": true
+        },
+        "slack_username": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "special_character_required": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "team_name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "uppercase_character_required": {
+          "type": "bool",
+          "optional": true,
+          "computed": true
+        },
+        "url_prefix": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "webhooks_notifications_timeout": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    },
+    "defectdojo_user": {
+      "attributes": {
+        "configuration_permissions": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "optional": true,
+          "computed": true
+        },
+        "date_joined": {
+          "type": "string",
+          "computed": true
+        },
+        "email": {
+          "type": "string",
+          "required": true
+        },
+        "first_name": {
+          "type": "string",
+          "optional": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "is_active": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to true"
+        },
+        "is_staff": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "is_superuser": {
+          "type": "bool",
+          "optional": true,
+          "computed": true,
+          "default": "value defaults to false"
+        },
+        "last_name": {
+          "type": "string",
+          "optional": true
+        },
+        "password_wo": {
+          "type": "string",
+          "optional": true,
+          "sensitive": true,
+          "write_only": true
+        },
+        "username": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "identity": {
+        "attributes": {
+          "id": {
+            "type": "number",
+            "required_for_import": true
+          }
+        }
+      }
+    }
+  },
+  "data_sources": {
+    "defectdojo_cicd_infrastructure": {
+      "attributes": {
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "infrastructure_type": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "url": {
+          "type": "string",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_development_environment": {
+      "attributes": {
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_engagement": {
+      "attributes": {
+        "active": {
+          "type": "bool",
+          "computed": true
+        },
+        "api_test": {
+          "type": "bool",
+          "computed": true
+        },
+        "branch_tag": {
+          "type": "string",
+          "computed": true
+        },
+        "build_id": {
+          "type": "string",
+          "computed": true
+        },
+        "check_list": {
+          "type": "bool",
+          "computed": true
+        },
+        "cicd_build_server_id": {
+          "type": "number",
+          "computed": true
+        },
+        "cicd_orchestration_engine_id": {
+          "type": "number",
+          "computed": true
+        },
+        "cicd_scm_server_id": {
+          "type": "number",
+          "computed": true
+        },
+        "commit_hash": {
+          "type": "string",
+          "computed": true
+        },
+        "deduplication_on_engagement": {
+          "type": "bool",
+          "computed": true
+        },
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "engagement_type": {
+          "type": "string",
+          "computed": true
+        },
+        "first_contacted": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "lead_id": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "pen_test": {
+          "type": "bool",
+          "computed": true
+        },
+        "product_id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "reason": {
+          "type": "string",
+          "computed": true
+        },
+        "source_code_management_uri": {
+          "type": "string",
+          "computed": true
+        },
+        "status": {
+          "type": "string",
+          "computed": true
+        },
+        "tags": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "computed": true
+        },
+        "target_end": {
+          "type": "string",
+          "computed": true
+        },
+        "target_start": {
+          "type": "string",
+          "computed": true
+        },
+        "test_strategy": {
+          "type": "string",
+          "computed": true
+        },
+        "threat_model": {
+          "type": "bool",
+          "computed": true
+        },
+        "tracker": {
+          "type": "string",
+          "computed": true
+        },
+        "version": {
+          "type": "string",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_jira_instance": {
+      "attributes": {
+        "accepted_mapping_resolution": {
+          "type": "string",
+          "computed": true
+        },
+        "close_status_key": {
+          "type": "number",
+          "computed": true
+        },
+        "configuration_name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "critical_mapping_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "default_issue_type": {
+          "type": "string",
+          "computed": true
+        },
+        "epic_name_id": {
+          "type": "number",
+          "computed": true
+        },
+        "false_positive_mapping_resolution": {
+          "type": "string",
+          "computed": true
+        },
+        "finding_jira_sync": {
+          "type": "bool",
+          "computed": true
+        },
+        "finding_text": {
+          "type": "string",
+          "computed": true
+        },
+        "global_jira_sla_notification": {
+          "type": "bool",
+          "computed": true
+        },
+        "high_mapping_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "info_mapping_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "issue_template_dir": {
+          "type": "string",
+          "computed": true
+        },
+        "low_mapping_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "medium_mapping_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "open_status_key": {
+          "type": "number",
+          "computed": true
+        },
+        "url": {
+          "type": "string",
+          "computed": true
+        },
+        "username": {
+          "type": "string",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_note_type": {
+      "attributes": {
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "is_active": {
+          "type": "bool",
+          "computed": true
+        },
+        "is_mandatory": {
+          "type": "bool",
+          "computed": true
+        },
+        "is_single": {
+          "type": "bool",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_product": {
+      "attributes": {
+        "authorized_users": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "computed": true
+        },
+        "business_criticality": {
+          "type": "string",
+          "computed": true
+        },
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "disable_sla_breach_notifications": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_full_risk_acceptance": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_product_tag_inheritance": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_simple_risk_acceptance": {
+          "type": "bool",
+          "computed": true
+        },
+        "external_audience": {
+          "type": "bool",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "internet_accessible": {
+          "type": "bool",
+          "computed": true
+        },
+        "life_cycle": {
+          "type": "string",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "origin": {
+          "type": "string",
+          "computed": true
+        },
+        "platform": {
+          "type": "string",
+          "computed": true
+        },
+        "product_manager_id": {
+          "type": "number",
+          "computed": true
+        },
+        "product_type_id": {
+          "type": "number",
+          "computed": true
+        },
+        "regulation_ids": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "computed": true
+        },
+        "revenue": {
+          "type": "string",
+          "computed": true
+        },
+        "sla_configuration_id": {
+          "type": "number",
+          "computed": true
+        },
+        "tags": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "computed": true
+        },
+        "team_manager_id": {
+          "type": "number",
+          "computed": true
+        },
+        "technical_contact_id": {
+          "type": "number",
+          "computed": true
+        },
+        "user_records": {
+          "type": "number",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_product_type": {
+      "attributes": {
+        "authorized_users": {
+          "type": [
+            "set",
+            "number"
+          ],
+          "computed": true
+        },
+        "critical_product": {
+          "type": "bool",
+          "computed": true
+        },
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "key_product": {
+          "type": "bool",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_regulation": {
+      "attributes": {
+        "acronym": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "category": {
+          "type": "string",
+          "computed": true
+        },
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "jurisdiction": {
+          "type": "string",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "reference": {
+          "type": "string",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_sla_configuration": {
+      "attributes": {
+        "critical": {
+          "type": "number",
+          "computed": true
+        },
+        "description": {
+          "type": "string",
+          "computed": true
+        },
+        "enforce_critical": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_high": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_low": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_medium": {
+          "type": "bool",
+          "computed": true
+        },
+        "high": {
+          "type": "number",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "low": {
+          "type": "number",
+          "computed": true
+        },
+        "medium": {
+          "type": "number",
+          "computed": true
+        },
+        "name": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        },
+        "restart_sla_on_reactivation": {
+          "type": "bool",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_system_settings": {
+      "attributes": {
+        "add_vulnerability_id_to_jira_label": {
+          "type": "bool",
+          "computed": true
+        },
+        "allow_anonymous_survey_response": {
+          "type": "bool",
+          "computed": true
+        },
+        "api_expose_error_details": {
+          "type": "bool",
+          "computed": true
+        },
+        "delete_duplicates": {
+          "type": "bool",
+          "computed": true
+        },
+        "disable_jira_webhook_secret": {
+          "type": "bool",
+          "computed": true
+        },
+        "disclaimer_notes": {
+          "type": "string",
+          "computed": true
+        },
+        "disclaimer_notifications": {
+          "type": "string",
+          "computed": true
+        },
+        "disclaimer_reports": {
+          "type": "string",
+          "computed": true
+        },
+        "disclaimer_reports_forced": {
+          "type": "bool",
+          "computed": true
+        },
+        "email_from": {
+          "type": "string",
+          "computed": true
+        },
+        "enable_benchmark": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_calendar": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_checklists": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_cvss3_display": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_cvss4_display": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_deduplication": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_endpoint_metadata_import": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_finding_groups": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_finding_sla": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_github": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_jira": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_jira_web_hook": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_mail_notifications": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_msteams_notifications": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_notify_sla_active": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_notify_sla_active_verified": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_notify_sla_exponential_backoff": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_notify_sla_jira_only": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_product_grade": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_product_tag_inheritance": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_product_tracking_files": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_questionnaires": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_similar_findings": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_slack_notifications": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_ui_table_based_searching": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_user_profile_editable": {
+          "type": "bool",
+          "computed": true
+        },
+        "enable_webhooks_notifications": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_verified_status": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_verified_status_jira": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_verified_status_metrics": {
+          "type": "bool",
+          "computed": true
+        },
+        "enforce_verified_status_product_grading": {
+          "type": "bool",
+          "computed": true
+        },
+        "engagement_auto_close": {
+          "type": "bool",
+          "computed": true
+        },
+        "engagement_auto_close_days": {
+          "type": "number",
+          "computed": true
+        },
+        "false_positive_history": {
+          "type": "bool",
+          "computed": true
+        },
+        "filter_string_matching": {
+          "type": "bool",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "computed": true
+        },
+        "install_id": {
+          "type": "string",
+          "computed": true
+        },
+        "jira_labels": {
+          "type": "string",
+          "computed": true
+        },
+        "jira_minimum_severity": {
+          "type": "string",
+          "computed": true
+        },
+        "lowercase_character_required": {
+          "type": "bool",
+          "computed": true
+        },
+        "mail_notifications_to": {
+          "type": "string",
+          "computed": true
+        },
+        "max_dupes": {
+          "type": "number",
+          "computed": true
+        },
+        "maximum_password_length": {
+          "type": "number",
+          "computed": true
+        },
+        "minimum_password_length": {
+          "type": "number",
+          "computed": true
+        },
+        "non_common_password_required": {
+          "type": "bool",
+          "computed": true
+        },
+        "number_character_required": {
+          "type": "bool",
+          "computed": true
+        },
+        "product_grade_a": {
+          "type": "number",
+          "computed": true
+        },
+        "product_grade_b": {
+          "type": "number",
+          "computed": true
+        },
+        "product_grade_c": {
+          "type": "number",
+          "computed": true
+        },
+        "product_grade_d": {
+          "type": "number",
+          "computed": true
+        },
+        "product_grade_f": {
+          "type": "number",
+          "computed": true
+        },
+        "read_only_mode": {
+          "type": "bool",
+          "computed": true
+        },
+        "retroactive_false_positive_history": {
+          "type": "bool",
+          "computed": true
+        },
+        "risk_acceptance_form_default_days": {
+          "type": "number",
+          "computed": true
+        },
+        "risk_acceptance_notify_before_expiration": {
+          "type": "number",
+          "computed": true
+        },
+        "slack_channel": {
+          "type": "string",
+          "computed": true
+        },
+        "slack_username": {
+          "type": "string",
+          "computed": true
+        },
+        "special_character_required": {
+          "type": "bool",
+          "computed": true
+        },
+        "team_name": {
+          "type": "string",
+          "computed": true
+        },
+        "uppercase_character_required": {
+          "type": "bool",
+          "computed": true
+        },
+        "url_prefix": {
+          "type": "string",
+          "computed": true
+        },
+        "webhooks_notifications_timeout": {
+          "type": "number",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_test_types": {
+      "attributes": {
+        "name": {
+          "type": "string",
+          "optional": true
+        },
+        "names": {
+          "type": [
+            "list",
+            "string"
+          ],
+          "computed": true
+        },
+        "test_types": {
+          "nesting": "LIST",
+          "computed": true
+        },
+        "test_types.active": {
+          "type": "bool",
+          "computed": true
+        },
+        "test_types.dynamic_tool": {
+          "type": "bool",
+          "computed": true
+        },
+        "test_types.id": {
+          "type": "number",
+          "computed": true
+        },
+        "test_types.name": {
+          "type": "string",
+          "computed": true
+        },
+        "test_types.static_tool": {
+          "type": "bool",
+          "computed": true
+        }
+      }
+    },
+    "defectdojo_user": {
+      "attributes": {
+        "configuration_permissions": {
+          "type": [
+            "set",
+            "string"
+          ],
+          "computed": true
+        },
+        "date_joined": {
+          "type": "string",
+          "computed": true
+        },
+        "email": {
+          "type": "string",
+          "computed": true
+        },
+        "first_name": {
+          "type": "string",
+          "computed": true
+        },
+        "id": {
+          "type": "number",
+          "optional": true,
+          "computed": true
+        },
+        "is_active": {
+          "type": "bool",
+          "computed": true
+        },
+        "is_staff": {
+          "type": "bool",
+          "computed": true
+        },
+        "is_superuser": {
+          "type": "bool",
+          "computed": true
+        },
+        "last_login": {
+          "type": "string",
+          "computed": true
+        },
+        "last_name": {
+          "type": "string",
+          "computed": true
+        },
+        "username": {
+          "type": "string",
+          "optional": true,
+          "computed": true
+        }
+      }
+    }
+  },
+  "list_resources": {
+    "defectdojo_cicd_infrastructure": {
+      "attributes": {
+        "infrastructure_type": {
+          "type": "string",
+          "optional": true
+        },
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_development_environment": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_engagement": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        },
+        "product_id": {
+          "type": "number",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_jira_instance": {
+      "attributes": {
+        "configuration_name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_jira_project": {
+      "attributes": {
+        "engagement_id": {
+          "type": "number",
+          "optional": true
+        },
+        "product_id": {
+          "type": "number",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_note_type": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_notification_webhook": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_notifications": {
+      "attributes": {
+        "product_id": {
+          "type": "number",
+          "optional": true
+        },
+        "template": {
+          "type": "bool",
+          "optional": true
+        },
+        "user_id": {
+          "type": "number",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_product": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        },
+        "product_type_id": {
+          "type": "number",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_product_lifecycle": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_product_origin": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_product_platform": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_product_type": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_regulation": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_sla_configuration": {
+      "attributes": {
+        "name_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    },
+    "defectdojo_user": {
+      "attributes": {
+        "username_contains": {
+          "type": "string",
+          "optional": true
+        }
+      }
+    }
+  }
+}
