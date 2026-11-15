@@ -178,7 +178,7 @@ func (r *ProductTypeResource) Read(ctx context.Context, req resource.ReadRequest
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -332,6 +332,15 @@ func setIDIdentity(ctx context.Context, identity *tfsdk.ResourceIdentity, id typ
 		return nil
 	}
 	return identity.Set(ctx, IDIdentityModel{ID: id})
+}
+
+// removeGone removes an object that is gone from the state, after setting the
+// identity from its ID: the framework rejects a null identity after Read even
+// when the state is removed, and a state without identity (one taken over from
+// doximity/defectdojo, or used with Terraform before 1.12) has a null one.
+func removeGone(ctx context.Context, resp *resource.ReadResponse, id types.Int64) {
+	resp.Diagnostics.Append(setIDIdentity(ctx, resp.Identity, id)...)
+	resp.State.RemoveResource(ctx)
 }
 
 // importByID reads the numeric ID from the import ID, or from the identity

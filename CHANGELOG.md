@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+* Planning failed with "Missing Resource Identity After Read" when an object had been deleted outside Terraform and the state had no resource identity: a state taken over from `doximity/defectdojo`, or one used with Terraform before 1.12, which doesn't send identities. The resource is now removed from the state and planned for creation ([#63](https://github.com/ottramst/terraform-provider-defectdojo/issues/63))
+
 ## v0.4.0
 
 FEATURES:
