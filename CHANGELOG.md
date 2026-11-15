@@ -7,6 +7,10 @@ ENHANCEMENTS:
 * The provider's `url` is checked at plan time, as the client checks it: an absolute http or https URL ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
 * Descriptions say that removing `product_manager_id`, `technical_contact_id`, `team_manager_id` and `lead_id` clears them, that changing a Jira project's `engagement_id` forces a new resource, and that removing a webhook's `header_value_wo` with its version removes the value ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
 
+NOTES:
+
+* The README describes what v1 promises: semantic versioning of the schema, what counts as breaking, what happens when DefectDojo removes a feature, and the supported DefectDojo and Terraform versions. The provider's page on the Registry has a "Requirements and compatibility" section; Terraform 1.11 or later is required ([#33](https://github.com/ottramst/terraform-provider-defectdojo/issues/33))
+
 ## v0.5.0
 
 FEATURES:

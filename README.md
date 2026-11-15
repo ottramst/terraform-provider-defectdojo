@@ -48,9 +48,31 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 
 More is planned; see the [roadmap](#roadmap).
 
+## Stability
+
+From v1.0.0, the provider follows [semantic versioning](https://semver.org/): a configuration and a state
+that work with a v1 release keep working with later v1 releases. A change that can break them needs v2.0.0:
+
+- **Breaking:** removing or renaming a resource, data source, list resource or attribute; changing an
+  attribute's type; making an attribute required, or one that could be set computed-only; changing a default
+  or what `null` means for an attribute (such as `authorized_users`, left as it is when unset, versus
+  `lead_id`, cleared when unset); a change that newly forces replacement; changing a resource identity.
+- **Not breaking:** new resources, data sources, list resources and optional attributes; deprecations; a new
+  validator that rejects only values DefectDojo rejects anyway; fixes that make the provider match DefectDojo.
+
+CI enforces this: every pull request compares the schemas with the latest release's, and applies a
+configuration with the latest release before planning it with the new build, which must plan no changes.
+
+**When DefectDojo removes a feature** in a minor release, the provider doesn't break configurations on the
+versions that still have it: an attribute whose field DefectDojo removes is deprecated (Terraform warns when it
+is set) and kept until v2; a resource whose endpoint DefectDojo removes is deprecated, and fails with
+DefectDojo's error on versions without it. Values DefectDojo itself defines, such as the codenames of
+`configuration_permissions`, follow DefectDojo: the `*_tool_type` and `*_tool_configuration` permissions,
+which DefectDojo 3.6 removes, fail with the existing "unknown codename" error on 3.6.
+
 ## DefectDojo version compatibility
 
-Acceptance tests run in CI against **DefectDojo 3.4.304** and **3.5.103** (all legs are required to pass) across Terraform 1.16 and 1.17.
+Acceptance tests run in CI against **DefectDojo 3.4.304** and **3.5.103** (all legs are required to pass) across Terraform 1.16 and 1.17. Moving the tested DefectDojo versions forward is a minor release of the provider.
 
 ### Support policy
 
@@ -67,13 +89,13 @@ DefectDojo ships a minor release every month and patches every week, and support
 
 A nightly canary job runs the acceptance tests against DefectDojo's development build, and a weekly job opens an issue when a new minor release is out.
 
-Terraform follows the same policy. HashiCorp supports the two newest Terraform minor releases, currently **1.17** and **1.16**, and CI tests those. The provider uses plugin protocol 6, so it still works with older Terraform 1.x releases, but EOL Terraform versions are supported on a best-effort basis only.
+Terraform follows the same policy. HashiCorp supports the two newest Terraform minor releases, currently **1.17** and **1.16**, and CI tests those. The provider requires Terraform 1.11 or later (see [Requirements](#requirements)); EOL releases from 1.11 on get best-effort support only.
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0 (protocol 6); write-only attributes (`password_wo`, `header_value_wo`, the system settings' secrets, the Jira instance password) need 1.11+, and resource identity 1.12+. CI tests the non-EOL releases, currently 1.16 and 1.17 (see [support policy](#support-policy))
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) 1.11 or later, which the write-only attributes (`password_wo`, `header_value_wo`, the system settings' secrets) need. Import by resource identity needs 1.12, and `terraform query` 1.14. CI tests the non-EOL releases, currently 1.16 and 1.17; older releases are untested (see [support policy](#support-policy))
 - [Go](https://golang.org/doc/install) >= 1.27 (only required to build the provider from source)
-- [DefectDojo](https://github.com/DefectDojo/django-DefectDojo) 3.4.x or 3.5.x. Most configuration objects can only be managed by a superuser
+- [DefectDojo](https://github.com/DefectDojo/django-DefectDojo) 3.4.x or 3.5.x, tested in CI; other 3.x releases get best-effort support (see [support policy](#support-policy)). Most configuration objects can only be managed by a superuser
 
 ## Using the Provider
 

@@ -88,12 +88,31 @@ CI tests the latest patch of the two newest DefectDojo minor releases (see the
 2. Update `.github/defectdojo-versions.json`: drop the oldest minor and add the new release. Set the
    `DD_VERSION` default in `docker-compose.yml` to the new release too; CI checks that they match.
 3. Run the acceptance tests against both versions.
-4. Update the tested versions in `README.md`, the provider description in `internal/provider/provider.go`
-   (then `make generate`), and `CLAUDE.md`, and add a `NOTES` entry to the CHANGELOG.
+4. Update the tested versions in `README.md`, `templates/index.md.tmpl`,
+   `templates/guides/migrating-from-doximity.md.tmpl` (then `make generate`), and
+   `CLAUDE.md`, and add a `NOTES` entry to the CHANGELOG. This is a minor release: DefectDojo versions moving
+   forward don't break configurations (see [Stability](README.md#stability)). `TestAccUpgradeFromLatestRelease`
+   skips DefectDojo versions the latest release wasn't tested on.
 
 The same applies to Terraform: the `terraform-version` matrix in `.github/workflows/test.yml` covers the two
 newest Terraform minor releases (the ones HashiCorp supports). When a new minor ships, add it, drop the oldest,
-and update the versions in `README.md` and `CLAUDE.md`.
+and update the versions in `README.md`, `templates/index.md.tmpl`, `templates/guides/migrating-from-doximity.md.tmpl`
+(then `make generate`) and `CLAUDE.md`.
+
+## Compatibility
+
+From v1.0.0 a change that can break a configuration or a state of the latest release needs a new major
+version; [Stability](README.md#stability) lists what counts. Two checks catch most of it:
+
+- `TestSchemaCompatibility` (in `make test`) compares the schemas, identities, defaults and forced
+  replacements with `internal/provider/testdata/schema-baseline.json`, the latest release's. Only a release
+  pull request changes the baseline, with `go test ./internal/provider -run TestSchemaCompatibility -update`.
+- `TestAccUpgradeFromLatestRelease` (acceptance) applies a configuration with the latest release from the
+  Registry, then expects no changes with your build. Add a resource to its configuration when you add one.
+
+What they can't see is up to review: a changed meaning of `null`, a validator that rejects what DefectDojo
+accepts, or a `Read` that stores a different value. When DefectDojo removes a feature, deprecate the
+attribute or resource (`DeprecationMessage`) instead of removing it.
 
 ## Pull requests
 
@@ -107,7 +126,13 @@ and update the versions in `README.md` and `CLAUDE.md`.
 
 ## Releases
 
-Maintainers release by pushing a `vX.Y.Z` tag. The release workflow checks that go-defectdojo is a
-tagged release, builds and signs the artifacts with GoReleaser, attests their build provenance, and
-publishes a GitHub release that the Terraform Registry picks up. Before tagging, move the
-`## Unreleased` entries in `CHANGELOG.md` under the new version.
+Maintainers release by pushing a `vX.Y.Z` tag: a patch release for bug fixes, a minor release for new
+features or DefectDojo versions. The release workflow checks that go-defectdojo is a tagged release, builds
+and signs the artifacts with GoReleaser, attests their build provenance, and publishes a GitHub release that
+the Terraform Registry picks up. Before tagging, in the release pull request (titled `chore: release vX.Y.Z`):
+
+1. Move the `## Unreleased` entries in `CHANGELOG.md` under the new version.
+2. Regenerate the schema baseline: `go test ./internal/provider -run TestSchemaCompatibility -update`.
+
+After the release, the next pull request raises `upgradeFrom` and `upgradeFromDefectDojo` in
+`internal/provider/upgrade_acc_test.go` to the new release.

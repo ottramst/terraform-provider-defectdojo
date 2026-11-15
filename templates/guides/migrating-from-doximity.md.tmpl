@@ -23,8 +23,8 @@ Nothing is recreated: the state keeps each object's DefectDojo ID, and the first
 
 - **DefectDojo 3.4 or 3.5.** This provider supports and tests the two newest DefectDojo minor releases. If you still run
   DefectDojo 2.x, upgrade DefectDojo first.
-- **Terraform 1.8 or later** for the `moved` block of the Jira configuration. This provider's write-only attributes need
-  Terraform 1.11, resource identity 1.12, and `terraform query` 1.14; it is tested with Terraform 1.16 and 1.17.
+- **Terraform 1.11 or later**, this provider's minimum, which also covers the `moved` block of the Jira configuration
+  (Terraform 1.8). Resource identity needs 1.12, and `terraform query` 1.14; the provider is tested with Terraform 1.16 and 1.17.
 - **A backup of the state** (`terraform state pull > backup.tfstate`).
 
 ## 1. The provider configuration
