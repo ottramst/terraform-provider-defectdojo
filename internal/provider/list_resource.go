@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"iter"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -120,6 +121,60 @@ func listIDAttribute(description string) schema.Int64Attribute {
 		MarkdownDescription: description,
 		Optional:            true,
 		Validators:          []validator.Int64{int64validator.AtLeast(1)},
+	}
+}
+
+// NameListModel describes the configuration of a list resource whose only
+// filter is name_contains.
+type NameListModel struct {
+	NameContains types.String `tfsdk:"name_contains"`
+}
+
+// nameListResource returns a list resource of objects with a name, filtered
+// by name_contains on the client side (DefectDojo's name filters are exact, if
+// it has any), whose state is the model M filled by update and whose display
+// name is the name.
+func nameListResource[T, M any](typeName, objects, description string,
+	all func(ctx context.Context, client *defectdojo.Client) iter.Seq2[*T, error],
+	id func(*T) int, name func(*T) string, update func(*M, *T),
+) *listResource[NameListModel, T] {
+	return &listResource[NameListModel, T]{
+		typeName: typeName,
+		schema: schema.Schema{
+			MarkdownDescription: description + listNotes,
+			Attributes: map[string]schema.Attribute{
+				"name_contains": listContainsAttribute(objects, "name"),
+			},
+		},
+		objects: objects,
+		all: func(ctx context.Context, client *defectdojo.Client, _ NameListModel) iter.Seq2[*T, error] {
+			return all(ctx, client)
+		},
+		id:      id,
+		keep:    func(object *T, config NameListModel) bool { return containsFold(name(object), config.NameContains) },
+		results: modelResults[NameListModel](id, name, update),
+	}
+}
+
+// sortedByID returns all objects of all ordered by ID. It reads every object
+// before returning the first: for collections whose order isn't total, where
+// paging by offset could skip objects.
+func sortedByID[T any](all iter.Seq2[*T, error], id func(*T) int) iter.Seq2[*T, error] {
+	return func(yield func(*T, error) bool) {
+		var objects []*T
+		for object, err := range all {
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+			objects = append(objects, object)
+		}
+		slices.SortFunc(objects, func(a, b *T) int { return id(a) - id(b) })
+		for _, object := range objects {
+			if !yield(object, nil) {
+				return
+			}
+		}
 	}
 }
 

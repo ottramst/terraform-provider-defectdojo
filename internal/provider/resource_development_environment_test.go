@@ -67,6 +67,15 @@ func TestAccDevelopmentEnvironment(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
+			// The configuration -generate-config-out writes for an import plans no
+			// changes. terraform query writes it from the list resource's state,
+			// which TestListResourceStates checks is the same.
+			{
+				ResourceName:    developmentEnvironmentAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+			},
 			// Changed outside Terraform: the change is reverted
 			{
 				PreConfig: func() {

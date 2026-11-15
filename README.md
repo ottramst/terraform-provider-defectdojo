@@ -44,7 +44,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+), or find them with the list resources of `terraform query` (Terraform 1.14+), which generates `import` blocks and their configuration
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
-List resources for the other objects, migration from `doximity/defectdojo` and more are planned; see the [roadmap](#roadmap).
+Migration from `doximity/defectdojo` and more are planned; see the [roadmap](#roadmap).
 
 ## DefectDojo version compatibility
 

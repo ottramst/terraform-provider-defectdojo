@@ -258,3 +258,245 @@ func (f int64ExactFunc) CheckValue(other any) error {
 func (f int64ExactFunc) String() string {
 	return fmt.Sprint(f())
 }
+
+// TestAccListResourcesConfiguration lists the configuration objects created in
+// the first step with terraform query, filtered by the random prefix of their
+// names, in another case.
+func TestAccListResourcesConfiguration(t *testing.T) {
+	testAccSkipUnlessAcc(t)
+	prefix := randName(t)
+	upper := strings.ToUpper(prefix)
+	ids := map[string]int64{}
+	identity := func(address string) map[string]knownvalue.Check {
+		return map[string]knownvalue.Check{"id": int64ExactFunc(func() int64 { return ids[address] })}
+	}
+	byIdentity := func(address string) queryfilter.QueryFilter {
+		return queryfilter.ByResourceIdentity(identity(address))
+	}
+	// one checks that list block address finds only the object created at
+	// resource, with the display name displayName.
+	one := func(address, resource string, displayName knownvalue.Check) []querycheck.QueryResultCheck {
+		return []querycheck.QueryResultCheck{
+			querycheck.ExpectLength(address, 1),
+			querycheck.ExpectIdentity(address, identity(resource)),
+			querycheck.ExpectResourceDisplayName(address, byIdentity(resource), displayName),
+		}
+	}
+	name := knownvalue.StringExact
+	var checks []querycheck.QueryResultCheck
+	for _, c := range [][]querycheck.QueryResultCheck{
+		one("defectdojo_sla_configuration.test", "defectdojo_sla_configuration.test", name(prefix)),
+		one("defectdojo_jira_instance.test", "defectdojo_jira_instance.test", name(prefix)),
+		one("defectdojo_jira_project.test", "defectdojo_jira_project.test", name("LST / "+prefix)),
+		one("defectdojo_notification_webhook.test", "defectdojo_notification_webhook.test", name(prefix)),
+		one("defectdojo_notifications.test", "defectdojo_notifications.test", stringExactFunc(func() string { return fmt.Sprintf("user 1, product %d", ids["defectdojo_product.test"]) })),
+		one("defectdojo_regulation.test", "defectdojo_regulation.test", name(prefix)),
+		one("defectdojo_note_type.test", "defectdojo_note_type.test", name(prefix)),
+		one("defectdojo_development_environment.test", "defectdojo_development_environment.test", name(prefix)),
+		one("defectdojo_cicd_infrastructure.test", "defectdojo_cicd_infrastructure.test", name(prefix)),
+		one("defectdojo_product_platform.test", "defectdojo_product_platform.test", name(prefix+"-platform")),
+		one("defectdojo_product_lifecycle.test", "defectdojo_product_lifecycle.test", name(prefix+"-lifecycle")),
+		one("defectdojo_product_origin.test", "defectdojo_product_origin.test", name(prefix+"-origin")),
+		{
+			querycheck.ExpectLength("defectdojo_cicd_infrastructure.other_type", 0),
+			querycheck.ExpectResourceKnownValues("defectdojo_note_type.test", byIdentity("defectdojo_note_type.test"), []querycheck.KnownValueCheck{
+				{Path: tfjsonpath.New("is_active"), KnownValue: knownvalue.Bool(false)},
+				{Path: tfjsonpath.New("force_destroy"), KnownValue: knownvalue.Bool(false)},
+			}),
+			querycheck.ExpectResourceKnownValues("defectdojo_jira_instance.test", byIdentity("defectdojo_jira_instance.test"), []querycheck.KnownValueCheck{
+				{Path: tfjsonpath.New("password_wo"), KnownValue: knownvalue.Null()},
+				{Path: tfjsonpath.New("url"), KnownValue: knownvalue.StringExact("https://" + prefix + ".example.invalid")},
+			}),
+		},
+	} {
+		checks = append(checks, c...)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// terraform query needs Terraform 1.14+.
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_14_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListResourcesConfigurationConfig(prefix),
+				Check: func(s *terraform.State) error {
+					for address, rs := range s.RootModule().Resources {
+						var id int64
+						if _, err := fmt.Sscan(rs.Primary.ID, &id); err != nil {
+							return fmt.Errorf("%s: %w", address, err)
+						}
+						ids[address] = id
+					}
+					return nil
+				},
+			},
+			{
+				Query:             true,
+				Config:            testAccListResourcesConfigurationQuery(upper),
+				QueryResultChecks: checks,
+			},
+		},
+	})
+}
+
+func testAccListResourcesConfigurationConfig(prefix string) string {
+	return fmt.Sprintf(`
+resource "defectdojo_sla_configuration" "test" {
+  name = %[1]q
+}
+
+resource "defectdojo_jira_instance" "test" {
+  configuration_name        = %[1]q
+  url                       = "https://%[1]s.example.invalid"
+  username                  = "bot"
+  password_wo               = "fake-token"
+  epic_name_id              = 10011
+  open_status_key           = 11
+  close_status_key          = 31
+  info_mapping_severity     = "Lowest"
+  low_mapping_severity      = "Low"
+  medium_mapping_severity   = "Medium"
+  high_mapping_severity     = "High"
+  critical_mapping_severity = "Highest"
+}
+
+resource "defectdojo_product_type" "test" {
+  name = %[1]q
+}
+
+resource "defectdojo_product" "test" {
+  name            = %[1]q
+  description     = "list"
+  product_type_id = defectdojo_product_type.test.id
+}
+
+resource "defectdojo_jira_project" "test" {
+  jira_instance_id = defectdojo_jira_instance.test.id
+  product_id       = defectdojo_product.test.id
+  project_key      = "LST"
+}
+
+resource "defectdojo_notification_webhook" "test" {
+  name = %[1]q
+  url  = "http://%[1]s.invalid/hook"
+}
+
+resource "defectdojo_notifications" "test" {
+  user_id    = 1
+  product_id = defectdojo_product.test.id
+  other      = ["alert"]
+}
+
+resource "defectdojo_regulation" "test" {
+  name         = %[1]q
+  acronym      = %[2]q
+  category     = "other"
+  jurisdiction = "Nowhere"
+}
+
+# Inactive, so that it never keeps findings from being closed.
+resource "defectdojo_note_type" "test" {
+  name         = %[1]q
+  description  = "list"
+  is_active    = false
+  is_mandatory = false
+}
+
+resource "defectdojo_development_environment" "test" {
+  name = %[1]q
+}
+
+resource "defectdojo_cicd_infrastructure" "test" {
+  name                = %[1]q
+  infrastructure_type = "build_server"
+}
+
+resource "defectdojo_product_platform" "test" {
+  value = "%[1]s-platform"
+  name  = %[1]q
+}
+
+resource "defectdojo_product_lifecycle" "test" {
+  value = "%[1]s-lifecycle"
+  name  = %[1]q
+}
+
+resource "defectdojo_product_origin" "test" {
+  value = "%[1]s-origin"
+  name  = %[1]q
+}
+`, prefix, testAccRegulationAcronym(prefix))
+}
+
+// testAccListResourcesConfigurationQuery lists the objects of
+// testAccListResourcesConfigurationConfig, filtered by their prefix in upper
+// case, or by their product.
+func testAccListResourcesConfigurationQuery(upper string) string {
+	named := ""
+	for _, typ := range []string{"sla_configuration", "notification_webhook", "regulation", "note_type", "development_environment",
+		"product_platform", "product_lifecycle", "product_origin"} {
+		named += fmt.Sprintf(`
+list "defectdojo_%s" "test" {
+  provider         = defectdojo
+  include_resource = true
+  config {
+    name_contains = %q
+  }
+}
+`, typ, upper)
+	}
+	return named + fmt.Sprintf(`
+list "defectdojo_jira_instance" "test" {
+  provider         = defectdojo
+  include_resource = true
+  config {
+    configuration_name_contains = %[1]q
+  }
+}
+
+list "defectdojo_jira_project" "test" {
+  provider = defectdojo
+  config {
+    product_id = defectdojo_product.test.id
+  }
+}
+
+list "defectdojo_notifications" "test" {
+  provider = defectdojo
+  config {
+    product_id = defectdojo_product.test.id
+  }
+}
+
+list "defectdojo_cicd_infrastructure" "test" {
+  provider = defectdojo
+  config {
+    infrastructure_type = "build_server"
+    name_contains       = %[1]q
+  }
+}
+
+list "defectdojo_cicd_infrastructure" "other_type" {
+  provider = defectdojo
+  config {
+    infrastructure_type = "scm_server"
+    name_contains       = %[1]q
+  }
+}
+`, upper)
+}
+
+// stringExactFunc checks that a value is the string value returns when the
+// check runs, such as one with an ID captured in an earlier step.
+type stringExactFunc func() string
+
+func (f stringExactFunc) CheckValue(other any) error {
+	return knownvalue.StringExact(f()).CheckValue(other)
+}
+
+func (f stringExactFunc) String() string {
+	return f()
+}
