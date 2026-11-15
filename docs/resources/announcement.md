@@ -3,13 +3,13 @@
 page_title: "defectdojo_announcement Resource - defectdojo"
 subcategory: ""
 description: |-
-  Manages DefectDojo's announcement: a banner on every page for every user. DefectDojo keeps at most one announcement, and it always has the ID 1. Managing it needs a superuser or the announcement configuration permissions.
+  Manages DefectDojo's announcement: a banner on every page for every user. DefectDojo keeps at most one announcement, and it always has the ID 1. Managing it needs a superuser: change_announcement is the only configuration permission for it, and reading, creating and deleting it need more.
   A change of message or style replaces the announcement, as DefectDojo's UI does, so that every user sees the new one, including users who dismissed the old one. create_before_destroy can't work, since DefectDojo keeps only one announcement. Creating the resource fails when an announcement exists; import it with the ID 1 instead.
 ---
 
 # defectdojo_announcement (Resource)
 
-Manages DefectDojo's announcement: a banner on every page for every user. DefectDojo keeps at most one announcement, and it always has the ID 1. Managing it needs a superuser or the announcement configuration permissions.
+Manages DefectDojo's announcement: a banner on every page for every user. DefectDojo keeps at most one announcement, and it always has the ID 1. Managing it needs a superuser: `change_announcement` is the only configuration permission for it, and reading, creating and deleting it need more.
 
 A change of `message` or `style` replaces the announcement, as DefectDojo's UI does, so that every user sees the new one, including users who dismissed the old one. `create_before_destroy` can't work, since DefectDojo keeps only one announcement. Creating the resource fails when an announcement exists; import it with the ID 1 instead.
 
