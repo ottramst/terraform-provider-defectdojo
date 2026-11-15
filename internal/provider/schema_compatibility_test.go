@@ -15,6 +15,12 @@ import (
 	fwprovider "github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
@@ -506,5 +512,35 @@ func TestSchemaIncompatibilities(t *testing.T) {
 				t.Errorf("want one problem containing %q, got %q", tt.want, problems)
 			}
 		})
+	}
+}
+
+// The framework's RequiresReplace modifiers are recognized by their
+// unexported type: a framework release that renames it must fail here
+// rather than turn the check off.
+func TestFrameworkModifiersRequiresReplace(t *testing.T) {
+	ctx := context.Background()
+	tests := map[string]any{
+		"RequiresReplace": schema.StringAttribute{
+			PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+		},
+		"RequiresReplaceIfConfigured": schema.Int64Attribute{
+			PlanModifiers: []planmodifier.Int64{int64planmodifier.RequiresReplaceIfConfigured()},
+		},
+		"RequiresReplaceIf": schema.BoolAttribute{
+			PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplaceIf(
+				func(context.Context, planmodifier.BoolRequest, *boolplanmodifier.RequiresReplaceIfFuncResponse) {}, "custom", "custom")},
+		},
+	}
+	for name, attr := range tests {
+		if _, requiresReplace := frameworkModifiers(ctx, t, name, attr); !requiresReplace {
+			t.Errorf("%s: not recognized", name)
+		}
+	}
+	if def, requiresReplace := frameworkModifiers(ctx, t, "UseStateForUnknown", schema.StringAttribute{
+		Default:       stringdefault.StaticString("x"),
+		PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	}); requiresReplace || def != "value defaults to x" {
+		t.Errorf("UseStateForUnknown with a default: got %q, %t; want the default and no replacement", def, requiresReplace)
 	}
 }
