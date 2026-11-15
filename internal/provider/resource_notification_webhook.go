@@ -198,7 +198,7 @@ func (r *NotificationWebhookResource) Read(ctx context.Context, req resource.Rea
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(

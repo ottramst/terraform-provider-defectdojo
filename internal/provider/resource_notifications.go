@@ -277,7 +277,7 @@ func (r *NotificationsResource) Read(ctx context.Context, req resource.ReadReque
 	if err != nil {
 		// Deleted outside Terraform, or with its user or product
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(

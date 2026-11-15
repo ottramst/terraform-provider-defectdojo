@@ -280,7 +280,7 @@ func (r *SystemSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	if known(id) && id.ValueInt64() != int64(settings.ID) {
 		resp.Diagnostics.AddWarning("DefectDojo system settings not found",
 			fmt.Sprintf("DefectDojo's system settings have the ID %d, not %d; removing them from the state. Import them with the ID %d.", settings.ID, id.ValueInt64(), settings.ID))
-		resp.State.RemoveResource(ctx)
+		removeGone(ctx, resp, id)
 		return
 	}
 	resp.State.Raw = req.State.Raw

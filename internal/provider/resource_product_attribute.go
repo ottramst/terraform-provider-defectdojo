@@ -196,7 +196,7 @@ func (r *ProductAttributeResource) Read(ctx context.Context, req resource.ReadRe
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(

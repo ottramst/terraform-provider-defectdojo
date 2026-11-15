@@ -313,7 +313,7 @@ func (r *JiraProjectResource) Read(ctx context.Context, req resource.ReadRequest
 	if err != nil {
 		// Deleted outside Terraform, also with its product or engagement.
 		if errors.Is(err, defectdojo.ErrNotFound) {
-			resp.State.RemoveResource(ctx)
+			removeGone(ctx, resp, data.ID)
 			return
 		}
 		resp.Diagnostics.AddError(
