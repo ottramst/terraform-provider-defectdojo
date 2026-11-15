@@ -26,3 +26,37 @@ jobs:
             (echo; echo "go.mod/go.sum are not tidy. Run 'go mod tidy' (also in tools/) and commit."; exit 1)
       - run: make build-ci
       - run: make test
+      # From v1.0.0, TestSchemaCompatibility (in make test) compares the
+      # schemas with the latest release's, in testdata/schema-baseline.json.
+      # Only a release pull request may change it, and it must: the baseline
+      # must then be the regenerated schemas, without changes to the
+      # provider's code, which would be compared with themselves.
+      - name: Check that only a release changes the schema baseline
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          baseline=internal/provider/testdata/schema-baseline.json
+          case "$PR_TITLE" in
+            "chore: release "*)
+              go test ./internal/provider -run TestSchemaCompatibility -count=1 -update
+              git diff --exit-code -- "$baseline" || {
+                echo "::error file=$baseline::Regenerate the schema baseline: go test ./internal/provider -run TestSchemaCompatibility -update"
+                exit 1
+              }
+              code=$(git diff --name-only "$BASE_SHA" HEAD -- 'internal/provider/*.go' | grep -v '_test\.go$' || true)
+              if [ -n "$code" ] && git diff --name-status "$BASE_SHA" HEAD -- "$baseline" | grep -q '^M'; then
+                echo "::error file=$baseline::A release pull request that changes the schema baseline may not change the provider's code:"
+                echo "$code"
+                exit 1
+              fi
+              ;;
+            *)
+              if git diff --name-status "$BASE_SHA" HEAD -- "$baseline" | grep -q '^[MD]'; then
+                echo "::error file=$baseline::Only a release pull request (titled 'chore: release …') may change the schema baseline."
+                exit 1
+              fi
+              ;;
+          esac
