@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
-	github.com/ottramst/go-defectdojo v0.3.1-0.20261115095759-568f7f6b1e6f
+	github.com/ottramst/go-defectdojo v0.3.1-0.20261115101406-70c29effa17f
 )
 
 require (

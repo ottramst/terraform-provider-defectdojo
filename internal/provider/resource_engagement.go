@@ -88,6 +88,9 @@ type EngagementResourceModel struct {
 	PenTest                   types.Bool   `tfsdk:"pen_test"`
 	CheckList                 types.Bool   `tfsdk:"check_list"`
 	LeadID                    types.Int64  `tfsdk:"lead_id"`
+	CICDSCMServerID           types.Int64  `tfsdk:"cicd_scm_server_id"`
+	CICDBuildServerID         types.Int64  `tfsdk:"cicd_build_server_id"`
+	CICDOrchestrationEngineID types.Int64  `tfsdk:"cicd_orchestration_engine_id"`
 	Tags                      types.Set    `tfsdk:"tags"`
 	ForceDestroy              types.Bool   `tfsdk:"force_destroy"`
 }
@@ -97,6 +100,15 @@ func (r *EngagementResource) Metadata(_ context.Context, req resource.MetadataRe
 }
 
 func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	cicd := func(what, infrastructureType string) schema.Int64Attribute {
+		return schema.Int64Attribute{
+			MarkdownDescription: "The ID of the CI/CD " + what + " of the engagement, a `defectdojo_cicd_infrastructure` of type `" + infrastructureType + "`; " +
+				"DefectDojo rejects an object of another type. Removing it clears the link, also when it was set outside Terraform. " +
+				"Deleting the CI/CD infrastructure object clears it too.",
+			Optional:   true,
+			Validators: []validator.Int64{int64validator.AtLeast(1)},
+		}
+	}
 	text := func(description string, maxLength int) schema.StringAttribute {
 		return schema.StringAttribute{
 			MarkdownDescription: description + ", at most " + strconv.Itoa(maxLength) + " characters, without leading or trailing whitespace, which DefectDojo removes.",
@@ -218,6 +230,9 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:            true,
 				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 			},
+			"cicd_scm_server_id":           cicd("source code management server", "scm_server"),
+			"cicd_build_server_id":         cicd("build server", "build_server"),
+			"cicd_orchestration_engine_id": cicd("orchestration engine", "orchestration"),
 			"tags": schema.SetAttribute{
 				MarkdownDescription: "The tags of the engagement, each at most 255 characters, without spaces, commas or quotes. " +
 					"Tags are compared ignoring case, and the provider keeps the configured spelling. " +
@@ -288,6 +303,9 @@ func (r *EngagementResource) Create(ctx context.Context, req resource.CreateRequ
 		PenTest:                   data.PenTest.ValueBool(),
 		CheckList:                 data.CheckList.ValueBool(),
 		Lead:                      int(data.LeadID.ValueInt64()),
+		CICDSCMServer:             int(data.CICDSCMServerID.ValueInt64()),
+		CICDBuildServer:           int(data.CICDBuildServerID.ValueInt64()),
+		CICDOrchestrationEngine:   int(data.CICDOrchestrationEngineID.ValueInt64()),
 		// Unknown (not configured): empty, DefectDojo's default.
 		Status:         data.Status.ValueString(),
 		EngagementType: data.EngagementType.ValueString(),
@@ -385,6 +403,9 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 		PenTest:                   new(data.PenTest.ValueBool()),
 		CheckList:                 new(data.CheckList.ValueBool()),
 		Lead:                      nullableInt(data.LeadID),
+		CICDSCMServer:             nullableInt(data.CICDSCMServerID),
+		CICDBuildServer:           nullableInt(data.CICDBuildServerID),
+		CICDOrchestrationEngine:   nullableInt(data.CICDOrchestrationEngineID),
 	}
 	// Status and type are sent only when the plan changes them, so that an
 	// unrelated change never reopens an engagement closed elsewhere.
@@ -593,6 +614,9 @@ func updateEngagementModel(data *EngagementResourceModel, e *defectdojo.Engageme
 	data.PenTest = types.BoolValue(e.PenTest)
 	data.CheckList = types.BoolValue(e.CheckList)
 	data.LeadID = int64OrNull(e.Lead)
+	data.CICDSCMServerID = int64OrNull(e.CICDSCMServer)
+	data.CICDBuildServerID = int64OrNull(e.CICDBuildServer)
+	data.CICDOrchestrationEngineID = int64OrNull(e.CICDOrchestrationEngine)
 	data.Tags = tagSet(tags, tagReference)
 	// Imported resources get the default.
 	if data.ForceDestroy.IsNull() || data.ForceDestroy.IsUnknown() {
