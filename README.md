@@ -8,10 +8,11 @@
 This [Terraform](https://www.terraform.io) provider is built using the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and allows you to manage the configuration of [OWASP DefectDojo](https://github.com/DefectDojo/django-DefectDojo), the open-source vulnerability management and DevSecOps platform, as code.
 
 > [!NOTE]
-> The provider is in early development (v0.4.0: product types, products, engagements, SLA configurations,
+> The provider is in early development (v0.5.0: product types, products, engagements, SLA configurations,
 > users, notifications, notification webhooks, system settings, Jira instances, Jira projects and the lookup objects:
 > regulations, note types, development environments, the announcement, CI/CD infrastructure, product platforms,
-> lifecycles and origins, and test types), and its schema may still change before v1.0. See the [roadmap](#roadmap).
+> lifecycles and origins, and test types; list resources for `terraform query`; and migration from `doximity/defectdojo`),
+> and its schema may still change before v1.0. See the [roadmap](#roadmap).
 
 This provider includes:
 
@@ -80,7 +81,7 @@ terraform {
   required_providers {
     defectdojo = {
       source  = "ottramst/defectdojo"
-      version = "~> 0.4.0"
+      version = "~> 0.5.0"
     }
   }
 }

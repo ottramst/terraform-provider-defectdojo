@@ -8,7 +8,7 @@ Terraform provider for [OWASP DefectDojo](https://github.com/DefectDojo/django-D
 
 The provider supports and tests the latest patch of the two newest DefectDojo minor releases (currently 3.4.304 and 3.5.103), listed once in `.github/defectdojo-versions.json`. DefectDojo 2.x is not supported: 3.0 removed the role-based access endpoints (groups, members, roles) from the open-source edition, and access is granted with `authorized_users` on product types and products. Most configuration endpoints need a superuser.
 
-Scope is DefectDojo's configuration, planned as milestones: product types, products and engagements (v0.1.0); SLA configurations, users, notifications and webhooks (v0.2.0); system settings and Jira (v0.3.0); lookup objects (v0.4.0); list resources and migration from `doximity/defectdojo` (v0.5.0). Runtime data (findings, tests, imports) is out of scope. Endpoints removed in DefectDojo 3.6 (tool types, tool configurations, API scan configurations) are not supported.
+Scope is DefectDojo's configuration, planned as milestones: product types, products and engagements (v0.1.0); SLA configurations, users, notifications and webhooks (v0.2.0); system settings and Jira (v0.3.0); lookup objects (v0.4.0); list resources and migration from `doximity/defectdojo` (v0.5.0); compatibility guarantees (v1.0.0). Runtime data (findings, tests, imports) is out of scope. Endpoints removed in DefectDojo 3.6 (tool types, tool configurations, API scan configurations) are not supported.
 
 ## Common Commands
 
