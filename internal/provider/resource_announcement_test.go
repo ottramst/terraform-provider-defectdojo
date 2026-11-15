@@ -73,6 +73,21 @@ func TestAccAnnouncement(t *testing.T) {
 					statecheck.ExpectKnownValue(announcementAddress, tfjsonpath.New("style"), knownvalue.StringExact("warning")),
 				},
 			},
+			// The style alone replaces it too
+			{
+				Config: testAccAnnouncementConfig("Maintenance moved to Sunday.", "  style       = \"danger\"\n  dismissable = true\n"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(announcementAddress, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(announcementAddress, tfjsonpath.New("style"), knownvalue.StringExact("danger")),
+				},
+			},
+			{
+				Config: testAccAnnouncementConfig("Maintenance moved to Sunday.", "  style       = \"warning\"\n  dismissable = true\n"),
+			},
 			// Import by ID
 			{
 				ResourceName:      announcementAddress,

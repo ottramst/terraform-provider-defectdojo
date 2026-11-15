@@ -32,7 +32,7 @@ resource "defectdojo_announcement" "maintenance" {
 
 ### Optional
 
-- `dismissable` (Boolean) Whether users can dismiss the banner. Defaults to `false`. Changing it doesn't replace the announcement. A dismissal doesn't last: DefectDojo shows the banner again to a user whenever their user record is saved.
+- `dismissable` (Boolean) Whether users can dismiss the banner. Defaults to `false`. Changing it doesn't replace the announcement, so turning it off doesn't show the banner again to users who dismissed it; change the message to replace it. A dismissal doesn't last either: DefectDojo shows the banner again to a user whenever their user record is saved.
 - `style` (String) The style of the banner: one of `info`, `success`, `warning` and `danger`. Defaults to `info`. Changing it replaces the announcement, so every user sees it again.
 
 ### Read-Only

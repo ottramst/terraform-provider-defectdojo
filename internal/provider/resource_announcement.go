@@ -86,8 +86,9 @@ func (r *AnnouncementResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"dismissable": schema.BoolAttribute{
-				MarkdownDescription: "Whether users can dismiss the banner. Defaults to `false`. Changing it doesn't replace the announcement. " +
-					"A dismissal doesn't last: DefectDojo shows the banner again to a user whenever their user record is saved.",
+				MarkdownDescription: "Whether users can dismiss the banner. Defaults to `false`. Changing it doesn't replace the announcement, " +
+					"so turning it off doesn't show the banner again to users who dismissed it; change the message to replace it. " +
+					"A dismissal doesn't last either: DefectDojo shows the banner again to a user whenever their user record is saved.",
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
