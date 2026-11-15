@@ -55,6 +55,9 @@ type EngagementDataSourceModel struct {
 	PenTest                   types.Bool   `tfsdk:"pen_test"`
 	CheckList                 types.Bool   `tfsdk:"check_list"`
 	LeadID                    types.Int64  `tfsdk:"lead_id"`
+	CICDSCMServerID           types.Int64  `tfsdk:"cicd_scm_server_id"`
+	CICDBuildServerID         types.Int64  `tfsdk:"cicd_build_server_id"`
+	CICDOrchestrationEngineID types.Int64  `tfsdk:"cicd_orchestration_engine_id"`
 	Tags                      types.Set    `tfsdk:"tags"`
 }
 
@@ -111,6 +114,18 @@ func (d *EngagementDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			"check_list":                  flag("Whether the engagement includes a check list."),
 			"lead_id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the user who leads the engagement, or null.",
+				Computed:            true,
+			},
+			"cicd_scm_server_id": schema.Int64Attribute{
+				MarkdownDescription: "The ID of the CI/CD source code management server of the engagement, or null.",
+				Computed:            true,
+			},
+			"cicd_build_server_id": schema.Int64Attribute{
+				MarkdownDescription: "The ID of the CI/CD build server of the engagement, or null.",
+				Computed:            true,
+			},
+			"cicd_orchestration_engine_id": schema.Int64Attribute{
+				MarkdownDescription: "The ID of the CI/CD orchestration engine of the engagement, or null.",
 				Computed:            true,
 			},
 			"tags": schema.SetAttribute{
@@ -210,6 +225,9 @@ func (d *EngagementDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		PenTest:                   m.PenTest,
 		CheckList:                 m.CheckList,
 		LeadID:                    m.LeadID,
+		CICDSCMServerID:           m.CICDSCMServerID,
+		CICDBuildServerID:         m.CICDBuildServerID,
+		CICDOrchestrationEngineID: m.CICDOrchestrationEngineID,
 		Tags:                      m.Tags,
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

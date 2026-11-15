@@ -30,6 +30,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Notification webhooks**: Manage system notification webhooks, with a write-only header value for their authentication
 - **Jira instances**: Manage the connections to Jira servers, with a write-only password or API token, and look them up by ID or name
 - **Jira projects**: Connect products and engagements to Jira projects, with custom and transition fields as JSON
+- **CI/CD infrastructure**: Manage the SCM servers, build servers and orchestration engines that engagements link to, and look them up by ID or name
 - **Announcement**: Manage the banner DefectDojo shows every user; a new message replaces it, so everyone sees it again
 - **Development environments**: Manage the environments tests run in, and look them up by ID or name
 - **Note types**: Manage the types of notes on findings, tests and engagements; a note type with notes is only destroyed with `force_destroy`, since DefectDojo deletes its notes with it

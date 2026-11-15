@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Resource:** `defectdojo_announcement`, with resource identity: DefectDojo's banner for every user. A change of `message` or `style` replaces it, as DefectDojo's UI does, so that users who dismissed the old one see the new one ([#23](https://github.com/ottramst/terraform-provider-defectdojo/issues/23))
+* **New Resource:** `defectdojo_cicd_infrastructure`, with resource identity: a source code management server, build server or orchestration engine. Changing its type replaces it, since DefectDojo can't change it ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
+* **New Data Source:** `defectdojo_cicd_infrastructure`, looked up by ID, or by name and type ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
 * **New Resource:** `defectdojo_development_environment`, with resource identity. A name that another environment has is refused, since it would break the imports that name it, and an environment that tests use can't be destroyed ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
 * **New Data Source:** `defectdojo_development_environment`, looked up by ID or name; a name that several environments have is an error ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
 * **New Resource:** `defectdojo_note_type`, with resource identity. DefectDojo deletes the notes of a note type with it, so the provider refuses to destroy a note type that has notes unless `force_destroy` is set ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
@@ -10,6 +12,14 @@ FEATURES:
 * **New Resource:** `defectdojo_regulation`, with resource identity. Destroying a regulation removes it from the products that list it ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
 * **New Data Source:** `defectdojo_regulation`, looked up by ID, name or acronym, such as the regulations DefectDojo comes with ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
 * **New Data Source:** `defectdojo_test_types`: the test types, such as the scanners DefectDojo can import, optionally filtered by name ([#26](https://github.com/ottramst/terraform-provider-defectdojo/issues/26))
+
+ENHANCEMENTS:
+
+* `defectdojo_engagement`: the `cicd_scm_server_id`, `cicd_build_server_id` and `cicd_orchestration_engine_id` attributes link an engagement to its CI/CD infrastructure; the `defectdojo_engagement` data source has them too ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
+
+NOTES:
+
+* `defectdojo_engagement`: like `lead_id`, the new CI/CD links are cleared when they aren't configured. After upgrading, the next plan shows an update for every engagement whose CI/CD links were set outside Terraform, which clears them; add the links to the configuration before applying it to keep them ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
 
 ## v0.3.0
 

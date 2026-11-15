@@ -73,6 +73,9 @@ resource "defectdojo_engagement" "pentest" {
 - `branch_tag` (String) The branch or tag the engagement tests, at most 150 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `build_id` (String) The ID of the build the engagement tests, at most 150 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `check_list` (Boolean) Whether the engagement includes a check list. Defaults to `true`.
+- `cicd_build_server_id` (Number) The ID of the CI/CD build server of the engagement, a `defectdojo_cicd_infrastructure` of type `build_server`; DefectDojo rejects an object of another type. Removing it clears the link, also when it was set outside Terraform. Deleting the CI/CD infrastructure object clears it too.
+- `cicd_orchestration_engine_id` (Number) The ID of the CI/CD orchestration engine of the engagement, a `defectdojo_cicd_infrastructure` of type `orchestration`; DefectDojo rejects an object of another type. Removing it clears the link, also when it was set outside Terraform. Deleting the CI/CD infrastructure object clears it too.
+- `cicd_scm_server_id` (Number) The ID of the CI/CD source code management server of the engagement, a `defectdojo_cicd_infrastructure` of type `scm_server`; DefectDojo rejects an object of another type. Removing it clears the link, also when it was set outside Terraform. Deleting the CI/CD infrastructure object clears it too.
 - `commit_hash` (String) The commit the engagement tests, at most 150 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `deduplication_on_engagement` (Boolean) Whether findings are only deduplicated within the engagement, instead of within the product. Defaults to `false`.
 - `description` (String) The description of the engagement, at most 2000 characters, without leading or trailing whitespace, which DefectDojo removes.
