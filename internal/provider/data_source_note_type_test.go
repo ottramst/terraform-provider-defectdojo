@@ -48,7 +48,6 @@ data "defectdojo_note_type" "missing" {
 `, name+"-missing"),
 				ExpectError: regexp.MustCompile(`DefectDojo note type not found`),
 			},
-			// A valid config last, for the destroy after the test.
 			{
 				Config: `
 data "defectdojo_note_type" "both" {
@@ -58,6 +57,7 @@ data "defectdojo_note_type" "both" {
 `,
 				ExpectError: regexp.MustCompile(`Invalid Attribute Combination`),
 			},
+			// A valid config last, for the destroy after the test.
 			{
 				Config: testAccNoteTypeConfig(name, "  is_active = false\n"),
 			},
