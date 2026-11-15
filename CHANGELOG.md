@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New List Resources:** `defectdojo_product_type`, `defectdojo_product`, `defectdojo_engagement` and `defectdojo_user`, for `terraform query` (Terraform 1.14+): find existing objects, optionally filtered by name (`name_contains`, `username_contains`, ignoring case), product type or product, and generate `import` blocks and configuration for them with `terraform query -generate-config-out`. The generated configuration plans no changes; it sets every attribute that has a value, so remove those another system manages ([#28](https://github.com/ottramst/terraform-provider-defectdojo/issues/28))
+* **New List Resources:** `defectdojo_sla_configuration`, `defectdojo_jira_instance`, `defectdojo_jira_project`, `defectdojo_notification_webhook`, `defectdojo_notifications`, `defectdojo_regulation`, `defectdojo_note_type`, `defectdojo_development_environment`, `defectdojo_cicd_infrastructure`, `defectdojo_product_platform`, `defectdojo_product_lifecycle` and `defectdojo_product_origin`, for `terraform query`, so that every resource except the singletons (`defectdojo_system_settings` and `defectdojo_announcement`) has one. The generated configuration of a Jira instance lacks the required `password_wo`, which DefectDojo never returns ([#65](https://github.com/ottramst/terraform-provider-defectdojo/issues/65))
 
 ENHANCEMENTS:
 

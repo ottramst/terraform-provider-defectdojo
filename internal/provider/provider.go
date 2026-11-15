@@ -170,9 +170,21 @@ func (p *DefectDojoProvider) Configure(ctx context.Context, req provider.Configu
 
 func (p *DefectDojoProvider) ListResources(_ context.Context) []func() list.ListResource {
 	return []func() list.ListResource{
+		NewCICDInfrastructureListResource,
+		NewDevelopmentEnvironmentListResource,
 		NewEngagementListResource,
+		NewJiraInstanceListResource,
+		NewJiraProjectListResource,
+		NewNoteTypeListResource,
+		NewNotificationsListResource,
+		NewNotificationWebhookListResource,
+		NewProductLifecycleListResource,
 		NewProductListResource,
+		NewProductOriginListResource,
+		NewProductPlatformListResource,
 		NewProductTypeListResource,
+		NewRegulationListResource,
+		NewSLAConfigurationListResource,
 		NewUserListResource,
 	}
 }

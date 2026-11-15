@@ -62,6 +62,75 @@ var listFixtures = map[string][]map[string]any{
 	"configuration_permissions": {
 		{"id": 9, "name": "Can add product type", "codename": "add_product_type"},
 	},
+	"sla_configurations": {
+		{
+			"id": 18, "name": "Strict", "description": "Internet-facing products", "critical": 3, "enforce_critical": true, "high": 14,
+			"enforce_high": true, "medium": 60, "enforce_medium": true, "low": 90, "enforce_low": false, "restart_sla_on_reactivation": true,
+		},
+	},
+	"jira_instances": {
+		{
+			"id": 1, "configuration_name": "", "url": "https://jira.example.com", "username": "defectdojo-bot", "default_issue_type": "Security",
+			"issue_template_dir": nil, "epic_name_id": 10011, "open_status_key": 11, "close_status_key": 31, "info_mapping_severity": "Lowest",
+			"low_mapping_severity": "Low", "medium_mapping_severity": "Medium", "high_mapping_severity": "High", "critical_mapping_severity": "Highest",
+			"finding_text": "Reported by DefectDojo", "accepted_mapping_resolution": "Won't Fix", "false_positive_mapping_resolution": nil,
+			"global_jira_sla_notification": true, "finding_jira_sync": false,
+		},
+	},
+	"jira_projects": {
+		{
+			"id": 2, "project_key": "SEC", "issue_template_dir": nil, "component": "web,api",
+			"custom_fields":           map[string]any{"customfield_10122": []any{map[string]any{"name": "8.0.1"}}},
+			"close_transition_fields": map[string]any{"resolution": map[string]any{"name": "Won't Fix"}}, "reopen_transition_fields": nil,
+			"default_assignee": nil, "jira_labels": "security defectdojo", "add_vulnerability_id_to_jira_label": false, "push_all_issues": true,
+			"enable_engagement_epic_mapping": false, "epic_issue_type_name": "Epic", "push_notes": false, "product_jira_sla_notification": false,
+			"suppress_sla_notification_comments": false, "risk_acceptance_expiration_notification": false, "enabled": true,
+			"jira_instance": 1, "product": 1, "engagement": nil,
+		},
+		{
+			"id": 3, "project_key": "PEN", "epic_issue_type_name": "Epic", "enabled": true, "jira_instance": 1, "product": nil, "engagement": 2,
+		},
+	},
+	"notification_webhooks": {
+		{"id": 5, "name": "Pager", "url": "https://pager.example.com", "header_name": nil, "header_value": nil, "status": "active", "owner": nil},
+		{
+			"id": 4, "name": "Chat relay", "url": "https://hooks.example.com/defectdojo", "header_name": "Authorization",
+			"header_value": "Bearer fake-token", "status": "active", "first_error": nil, "last_error": nil, "note": "", "owner": nil,
+		},
+	},
+	"notifications": {
+		{
+			"id": 2, "product": nil, "user": nil, "template": false, "product_type_added": []any{"alert"}, "product_added": []any{"alert", "mail"},
+			"engagement_added": []any{}, "scan_added": []any{"alert"}, "scan_added_empty": []any{},
+		},
+		{"id": 3, "product": nil, "user": nil, "template": true, "scan_added": []any{"mail"}},
+		{"id": 4, "product": 1, "user": 7, "template": false},
+	},
+	"regulations": {
+		{
+			"id": 29, "name": "GDPR Test", "acronym": "GDPR-T", "category": "privacy", "jurisdiction": "European Union",
+			"description": "A test regulation.", "reference": "https://example.com/gdpr",
+		},
+	},
+	"note_type": {
+		{"id": 6, "name": "Sign-off", "description": "The release sign-off.", "is_single": true, "is_active": false, "is_mandatory": true},
+	},
+	"development_environments": {
+		{"id": 12, "name": "QA"},
+	},
+	"cicd_infrastructure": {
+		{"id": 8, "name": "Jenkins", "description": "The main build server.", "url": "https://jenkins.example.com", "infrastructure_type": "build_server"},
+	},
+	"product_platforms": {
+		{"id": 9, "value": "tv", "name": "TV", "icon": "", "display_order": 0},
+		{"id": 8, "value": "kiosk", "name": "Kiosk", "icon": "tv", "display_order": 60},
+	},
+	"product_lifecycles": {
+		{"id": 1, "value": "construction", "name": "Construction", "icon": "", "display_order": 10},
+	},
+	"product_origins": {
+		{"id": 1, "value": "internal", "name": "Internal", "icon": "", "display_order": 10},
+	},
 }
 
 // listFake serves listFixtures: lists of each collection (without filters)
@@ -149,6 +218,19 @@ func TestListResourceStates(t *testing.T) {
 		"defectdojo_product":      {"products", []string{"Shop"}},
 		"defectdojo_engagement":   {"engagements", []string{"Shop / CI", "Shop / Pentest"}},
 		"defectdojo_user":         {"users", []string{"dependency-track", "reader"}},
+
+		"defectdojo_sla_configuration":       {"sla_configurations", []string{"Strict"}},
+		"defectdojo_jira_instance":           {"jira_instances", []string{"https://jira.example.com"}},
+		"defectdojo_jira_project":            {"jira_projects", []string{"SEC / Shop", "PEN / Pentest"}},
+		"defectdojo_notification_webhook":    {"notification_webhooks", []string{"Chat relay", "Pager"}},
+		"defectdojo_notifications":           {"notifications", []string{"system-wide", "template", "user 7, product 1"}},
+		"defectdojo_regulation":              {"regulations", []string{"GDPR Test"}},
+		"defectdojo_note_type":               {"note_type", []string{"Sign-off"}},
+		"defectdojo_development_environment": {"development_environments", []string{"QA"}},
+		"defectdojo_cicd_infrastructure":     {"cicd_infrastructure", []string{"Jenkins"}},
+		"defectdojo_product_platform":        {"product_platforms", []string{"kiosk", "tv"}},
+		"defectdojo_product_lifecycle":       {"product_lifecycles", []string{"construction"}},
+		"defectdojo_product_origin":          {"product_origins", []string{"internal"}},
 	}
 	if len(tests) != len(schemas.ListResourceSchemas) {
 		t.Errorf("%d list resources are tested, %d are registered", len(tests), len(schemas.ListResourceSchemas))

@@ -81,6 +81,15 @@ func TestAccRegulation(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
+			// The configuration -generate-config-out writes for an import plans no
+			// changes. terraform query writes it from the list resource's state,
+			// which TestListResourceStates checks is the same.
+			{
+				ResourceName:    regulationAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+			},
 			// Removing the optional attributes clears them
 			{
 				Config: testAccRegulationConfig(renamed, "security", ""),

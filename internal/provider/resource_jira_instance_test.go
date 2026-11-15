@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -127,6 +128,16 @@ func TestAccJiraInstance(t *testing.T) {
 				ResourceName:    jiraInstanceAddress,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
+			// The configuration -generate-config-out writes for an import lacks the
+			// required password_wo, which DefectDojo never returns.
+			{
+				Config:          testAccJiraInstanceConfig(name+"-renamed", "https://other-"+name+".example.invalid", ""),
+				ResourceName:    jiraInstanceAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+				ExpectError:     regexp.MustCompile(`password_wo`),
 			},
 			// Changed outside Terraform: the change is reverted.
 			{
