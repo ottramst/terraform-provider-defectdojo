@@ -190,6 +190,7 @@ func (p *DefectDojoProvider) DataSources(_ context.Context) []func() datasource.
 		NewRegulationDataSource,
 		NewSLAConfigurationDataSource,
 		NewSystemSettingsDataSource,
+		NewTestTypesDataSource,
 		NewJiraInstanceDataSource,
 		NewNoteTypeDataSource,
 		NewUserDataSource,
