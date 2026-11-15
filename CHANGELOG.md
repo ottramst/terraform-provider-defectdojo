@@ -18,7 +18,7 @@ ENHANCEMENTS:
 
 NOTES:
 
-* `defectdojo_engagement`: like `lead_id`, the new CI/CD links are cleared when they aren't configured. After upgrading, the first apply that changes an engagement clears links set outside Terraform; add them to the configuration to keep them ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
+* `defectdojo_engagement`: like `lead_id`, the new CI/CD links are cleared when they aren't configured. After upgrading, the next plan shows an update for every engagement whose CI/CD links were set outside Terraform, which clears them; add the links to the configuration before applying it to keep them ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
 
 ## v0.3.0
 

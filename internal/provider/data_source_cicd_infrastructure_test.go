@@ -17,8 +17,13 @@ func TestAccCICDInfrastructureDataSource(t *testing.T) {
 	objects := testAccCICDInfrastructureConfig(name, "build_server", `  url = "https://ci.example.com"
 `) + fmt.Sprintf(`
 resource "defectdojo_cicd_infrastructure" "scm" {
-  name                = %q
+  name                = %[1]q
   infrastructure_type = "scm_server"
+}
+
+resource "defectdojo_cicd_infrastructure" "unique" {
+  name                = "%[1]s-k8s"
+  infrastructure_type = "orchestration"
 }
 `, name)
 
@@ -36,6 +41,10 @@ data "defectdojo_cicd_infrastructure" "by_name" {
   name                = defectdojo_cicd_infrastructure.test.name
   infrastructure_type = "build_server"
 }
+
+data "defectdojo_cicd_infrastructure" "unique" {
+  name = defectdojo_cicd_infrastructure.unique.name
+}
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("data.defectdojo_cicd_infrastructure.by_id", tfjsonpath.New("name"),
@@ -45,6 +54,9 @@ data "defectdojo_cicd_infrastructure" "by_name" {
 					statecheck.ExpectKnownValue("data.defectdojo_cicd_infrastructure.by_id", tfjsonpath.New("infrastructure_type"), knownvalue.StringExact("build_server")),
 					statecheck.ExpectKnownValue("data.defectdojo_cicd_infrastructure.by_id", tfjsonpath.New("url"), knownvalue.StringExact("https://ci.example.com")),
 					statecheck.ExpectKnownValue("data.defectdojo_cicd_infrastructure.by_id", tfjsonpath.New("description"), knownvalue.Null()),
+					statecheck.CompareValuePairs("data.defectdojo_cicd_infrastructure.unique", tfjsonpath.New("id"),
+						"defectdojo_cicd_infrastructure.unique", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("data.defectdojo_cicd_infrastructure.unique", tfjsonpath.New("infrastructure_type"), knownvalue.StringExact("orchestration")),
 				},
 			},
 			// Two types share the name: the lookup needs the type.

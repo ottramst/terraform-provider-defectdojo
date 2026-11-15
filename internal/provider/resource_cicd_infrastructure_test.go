@@ -133,8 +133,8 @@ func TestAccCICDInfrastructure(t *testing.T) {
 	})
 }
 
-// A rename onto a name that another object of the type has fails with an
-// explanation; the same name with another type is fine.
+// A create or a rename onto a name that another object of the type has fails
+// with an explanation; the same name with another type is fine.
 func TestAccCICDInfrastructure_nameTaken(t *testing.T) {
 	name := randName(t)
 	var id int
@@ -163,6 +163,15 @@ resource "defectdojo_cicd_infrastructure" "build" {
 			},
 			{
 				Config:      config(name),
+				ExpectError: regexp.MustCompile(`(?s)Another\s+CI/CD\s+infrastructure\s+object\s+of\s+type\s+scm_server\s+is\s+named`),
+			},
+			{
+				Config: config(name+"-second") + fmt.Sprintf(`
+resource "defectdojo_cicd_infrastructure" "third" {
+  name                = %q
+  infrastructure_type = "scm_server"
+}
+`, name),
 				ExpectError: regexp.MustCompile(`(?s)Another\s+CI/CD\s+infrastructure\s+object\s+of\s+type\s+scm_server\s+is\s+named`),
 			},
 			{
@@ -244,7 +253,7 @@ data "defectdojo_engagement" "test" {
 				Config: engagement(`
   cicd_scm_server_id = defectdojo_cicd_infrastructure.build.id
 `),
-				ExpectError: regexp.MustCompile(`cicd_scm_server`),
+				ExpectError: regexp.MustCompile(`cicd_scm_server:\s+Invalid\s+pk`),
 			},
 			// The SCM server deleted outside Terraform: DefectDojo clears the
 			// link, and Terraform creates the object again and links it.

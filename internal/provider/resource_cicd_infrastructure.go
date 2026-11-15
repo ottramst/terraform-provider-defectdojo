@@ -120,6 +120,15 @@ func (r *CICDInfrastructureResource) Create(ctx context.Context, req resource.Cr
 		Description:        data.Description.ValueString(),
 		URL:                data.URL.ValueString(),
 	})
+	var errResp *defectdojo.ErrorResponse
+	if errors.As(err, &errResp) && errors.Is(err, defectdojo.ErrBadRequest) && len(errResp.Fields["non_field_errors"]) > 0 {
+		resp.Diagnostics.AddError(
+			"DefectDojo CI/CD infrastructure name is taken",
+			fmt.Sprintf("Another CI/CD infrastructure object of type %s is named %q; names are unique within a type. DefectDojo: %s",
+				data.InfrastructureType.ValueString(), data.Name.ValueString(), err),
+		)
+		return
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo CI/CD infrastructure",
