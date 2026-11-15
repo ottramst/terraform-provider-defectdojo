@@ -34,6 +34,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Announcement**: Manage the banner DefectDojo shows every user; a new message replaces it, so everyone sees it again
 - **Development environments**: Manage the environments tests run in, and look them up by ID or name
 - **Note types**: Manage the types of notes on findings, tests and engagements; a note type with notes is only destroyed with `force_destroy`, since DefectDojo deletes its notes with it
+- **Product platforms, lifecycles and origins**: Manage the values products use in `platform`, `life_cycle` and `origin`
 - **Regulations**: Manage regulations, such as NIS2, and look up the ones DefectDojo comes with by ID, name or acronym for a product's `regulation_ids`
 - **Test types**: List the test types, such as the scanners DefectDojo can import, for example to check a scan type in a `check` block
 - **System settings**: Manage the settings of the whole instance, such as deduplication, SLA notifications and the notification channels; only the settings in the configuration are changed, and the secrets are write-only
