@@ -65,7 +65,8 @@ func TestReadGoneWithoutIdentity(t *testing.T) {
 
 	for name, schema := range schemas.ResourceSchemas {
 		t.Run(name, func(t *testing.T) {
-			if _, ok := identities.IdentitySchemas[name]; !ok {
+			identitySchema, ok := identities.IdentitySchemas[name]
+			if !ok {
 				t.Fatal("the resource has no identity schema")
 			}
 			typ, ok := schema.ValueType().(tftypes.Object)
@@ -91,6 +92,16 @@ func TestReadGoneWithoutIdentity(t *testing.T) {
 			}
 			if !newState.IsNull() {
 				t.Errorf("the state was not removed: %s", newState)
+			}
+			if resp.NewIdentity == nil || resp.NewIdentity.IdentityData == nil {
+				t.Fatal("no identity was returned")
+			}
+			identity, err := resp.NewIdentity.IdentityData.Unmarshal(identitySchema.ValueType())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := tftypes.NewValue(identitySchema.ValueType(), map[string]tftypes.Value{"id": tftypes.NewValue(tftypes.Number, 7)}); !identity.Equal(want) {
+				t.Errorf("identity = %s, want %s", identity, want)
 			}
 		})
 	}
