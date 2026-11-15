@@ -61,8 +61,8 @@ output "zap_test_type_id" {
 
 ### Read-Only
 
-- `names` (List of String) The names of the test types, ordered by name.
-- `test_types` (Attributes List) The test types, ordered by name. (see [below for nested schema](#nestedatt--test_types))
+- `names` (List of String) The names of the test types, in the order of `test_types`.
+- `test_types` (Attributes List) The test types, ordered by name, case-sensitively, as Terraform's `sort()` does: names starting with a lowercase letter come last. (see [below for nested schema](#nestedatt--test_types))
 
 <a id="nestedatt--test_types"></a>
 ### Nested Schema for `test_types`

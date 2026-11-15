@@ -28,6 +28,11 @@ data "defectdojo_test_types" "api" {
 data "defectdojo_test_types" "other_case" {
   name = "api test"
 }
+
+# DefectDojo strips the whitespace from its filter; the provider doesn't.
+data "defectdojo_test_types" "spaces" {
+  name = " API Test "
+}
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.defectdojo_test_types.api", tfjsonpath.New("names"),
@@ -42,6 +47,7 @@ data "defectdojo_test_types" "other_case" {
 						})})),
 					statecheck.ExpectKnownValue("data.defectdojo_test_types.other_case", tfjsonpath.New("names"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue("data.defectdojo_test_types.other_case", tfjsonpath.New("test_types"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("data.defectdojo_test_types.spaces", tfjsonpath.New("names"), knownvalue.ListSizeExact(0)),
 				},
 				Check: testAccCheckAllTestTypes,
 			},

@@ -68,7 +68,7 @@ func (d *TestTypesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"test_types": schema.ListNestedAttribute{
-				MarkdownDescription: "The test types, ordered by name.",
+				MarkdownDescription: "The test types, ordered by name, case-sensitively, as Terraform's `sort()` does: names starting with a lowercase letter come last.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -96,7 +96,7 @@ func (d *TestTypesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 				},
 			},
 			"names": schema.ListAttribute{
-				MarkdownDescription: "The names of the test types, ordered by name.",
+				MarkdownDescription: "The names of the test types, in the order of `test_types`.",
 				ElementType:         types.StringType,
 				Computed:            true,
 			},
@@ -123,7 +123,8 @@ func (d *TestTypesDataSource) Read(ctx context.Context, req datasource.ReadReque
 			resp.Diagnostics.AddError("Error reading DefectDojo test types", "Could not list the test types: "+err.Error())
 			return
 		}
-		// The filter is exact today; check again in case a version loosens it.
+		// DefectDojo strips surrounding whitespace from the filter, so check
+		// the name again.
 		if data.Name.IsNull() || tt.Name == data.Name.ValueString() {
 			testTypes = append(testTypes, tt)
 		}
