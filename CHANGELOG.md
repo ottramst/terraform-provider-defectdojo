@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Resource:** `defectdojo_development_environment`, with resource identity. An environment that tests use can't be destroyed ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
+* **New Data Source:** `defectdojo_development_environment`, looked up by ID or name; a name that several environments have is an error ([#22](https://github.com/ottramst/terraform-provider-defectdojo/issues/22))
 * **New Resource:** `defectdojo_note_type`, with resource identity. DefectDojo deletes the notes of a note type with it, so the provider refuses to destroy a note type that has notes unless `force_destroy` is set ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Data Source:** `defectdojo_note_type`, looked up by ID or name ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Resource:** `defectdojo_regulation`, with resource identity. Destroying a regulation removes it from the products that list it ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
