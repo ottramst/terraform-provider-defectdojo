@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,14 @@ import (
 func TestAccDevelopmentEnvironmentDataSource(t *testing.T) {
 	name := randName(t)
 	var twinID int
+	t.Cleanup(func() {
+		if twinID != 0 {
+			_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), twinID)
+			if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+				t.Logf("deleting development environment %d: %v", twinID, err)
+			}
+		}
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

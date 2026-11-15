@@ -103,6 +103,20 @@ func TestAccDevelopmentEnvironment(t *testing.T) {
 	})
 }
 
+// A name that an environment already has is refused, with the import hint.
+func TestAccDevelopmentEnvironment_nameTaken(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDevelopmentEnvironmentConfig("Development"),
+				ExpectError: regexp.MustCompile(`(?s)already\s+has\s+a\s+development\s+environment\s+named\s+"Development".*import\s+the\s+existing`),
+			},
+		},
+	})
+}
+
 // An environment that a test uses can't be destroyed; the error says why.
 func TestAccDevelopmentEnvironment_inUse(t *testing.T) {
 	testAccSkipUnlessAcc(t)

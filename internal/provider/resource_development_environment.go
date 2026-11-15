@@ -48,6 +48,7 @@ func (r *DevelopmentEnvironmentResource) Schema(_ context.Context, _ resource.Sc
 			"Managing environments needs a superuser or the development environment configuration permissions.\n\n" +
 			"-> DefectDojo's imports find the environment of a scan by name (`Development` when the import names none), " +
 			"so keep names unique, and keep an environment named `Development` for imports that name none. " +
+			"Creating one with a name that an environment already has fails; import that environment instead. " +
 			"An environment that tests use can't be destroyed.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
@@ -77,6 +78,25 @@ func (r *DevelopmentEnvironmentResource) Create(ctx context.Context, req resourc
 	var data DevelopmentEnvironmentModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// A second environment with the name would break the imports that name
+	// it, so refuse one, and suggest importing the existing environment.
+	existing, _, err := r.client.DevelopmentEnvironments.GetByName(ctx, data.Name.ValueString())
+	switch {
+	case err == nil:
+		resp.Diagnostics.AddError(
+			"DefectDojo development environment exists",
+			fmt.Sprintf("DefectDojo already has a development environment named %q (ID %d). "+
+				"A second one would break the imports that name it; import the existing one instead.", existing.Name, existing.ID),
+		)
+		return
+	case !errors.Is(err, defectdojo.ErrNotFound):
+		resp.Diagnostics.AddError(
+			"Error creating DefectDojo development environment",
+			"Could not check for a development environment named "+strconv.Quote(data.Name.ValueString())+": "+err.Error(),
+		)
 		return
 	}
 
@@ -160,8 +180,8 @@ func (r *DevelopmentEnvironmentResource) Delete(ctx context.Context, req resourc
 		resp.Diagnostics.AddError(
 			"DefectDojo development environment is in use",
 			fmt.Sprintf("Development environment %d (%q) can't be deleted while tests use it. "+
-				"Move or delete the tests first, or keep the environment and remove it from the configuration with a removed block.",
-				id, data.Name.ValueString()),
+				"Move or delete the tests first, or keep the environment and remove it from the configuration with a removed block. DefectDojo: %s",
+				id, data.Name.ValueString(), err),
 		)
 	default:
 		resp.Diagnostics.AddError(
