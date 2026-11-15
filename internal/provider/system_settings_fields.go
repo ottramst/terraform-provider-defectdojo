@@ -180,7 +180,7 @@ func (s systemSetting) resourceAttribute() schema.Attribute {
 		}
 	case settingInt, settingNullableInt:
 		return schema.Int64Attribute{
-			MarkdownDescription: description, Optional: true, Computed: true, Validators: s.int64Validators,
+			MarkdownDescription: description, Optional: true, Computed: true, Validators: append([]validator.Int64{int32Range()}, s.int64Validators...),
 			PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 		}
 	default:

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -106,6 +108,7 @@ func (r *ProductTypeResource) Schema(_ context.Context, _ resource.SchemaRequest
 				ElementType: types.Int64Type,
 				Optional:    true,
 				Computed:    true,
+				Validators:  []validator.Set{setvalidator.ValueInt64sAre(int64validator.AtLeast(1))},
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},

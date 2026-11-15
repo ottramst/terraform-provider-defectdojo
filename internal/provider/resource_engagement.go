@@ -226,7 +226,7 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"pen_test":                    flag("Whether the engagement includes penetration tests.", true),
 			"check_list":                  flag("Whether the engagement includes a check list.", true),
 			"lead_id": schema.Int64Attribute{
-				MarkdownDescription: "The ID of the user who leads the engagement, an active user.",
+				MarkdownDescription: "The ID of the user who leads the engagement, an active user. When it is not set, it is cleared.",
 				Optional:            true,
 				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 			},

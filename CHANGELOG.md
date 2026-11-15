@@ -1,3 +1,12 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+* `defectdojo_jira_instance`: `password_wo` is optional. It is still required, at plan time, to create an instance, to change its URL and with a new `password_wo_version`; otherwise the instance, such as an imported one or the configuration `terraform query -generate-config-out` writes, plans without it. Removing `password_wo` with its version keeps DefectDojo's password ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
+* Values DefectDojo rejects fail at plan time: integers beyond DefectDojo's 32-bit columns (the system settings, the Jira instance's `epic_name_id` and status keys, the SLA days), IDs below 1 (the product type's `authorized_users`, the Jira project's IDs), and a product's `platform`, `life_cycle` and `origin` longer than 50 characters or with surrounding whitespace ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
+* The provider's `url` is checked at plan time, as the client checks it: an absolute http or https URL ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
+* Descriptions say that removing `product_manager_id`, `technical_contact_id`, `team_manager_id` and `lead_id` clears them, that changing a Jira project's `engagement_id` forces a new resource, and that removing a webhook's `header_value_wo` with its version removes the value ([#32](https://github.com/ottramst/terraform-provider-defectdojo/issues/32))
+
 ## v0.5.0
 
 FEATURES:

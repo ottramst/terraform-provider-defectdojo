@@ -100,7 +100,7 @@ const changedBetweenPlanAndApply = "If it changes elsewhere between the plan and
 func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	userID := func(role string) schema.Int64Attribute {
 		return schema.Int64Attribute{
-			MarkdownDescription: "The ID of the product's " + role + ", an active user.",
+			MarkdownDescription: "The ID of the product's " + role + ", an active user. When it is not set, it is cleared.",
 			Optional:            true,
 			Validators:          []validator.Int64{int64validator.AtLeast(1)},
 		}
@@ -109,8 +109,9 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		return schema.StringAttribute{
 			MarkdownDescription: "The " + what + " of the product: the value of an entry of DefectDojo's product " + what + "s, such as " + values + ", " +
 				"or of a `defectdojo_product_" + what + "`.",
-			Optional:   true,
-			Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
+			Optional: true,
+			// The limits of the entries' values.
+			Validators: []validator.String{stringvalidator.UTF8LengthBetween(1, 50), noSurroundingWhitespace()},
 		}
 	}
 	flag := func(description string, value bool) schema.BoolAttribute {

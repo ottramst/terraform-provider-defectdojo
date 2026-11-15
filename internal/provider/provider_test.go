@@ -7,8 +7,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwprovider "github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/ottramst/go-defectdojo"
 )
@@ -109,6 +112,29 @@ func TestProvider_schemas(t *testing.T) {
 		}
 		if _, ok := resp.DataSourceSchemas[name]; !ok {
 			t.Errorf("data source %s is not registered", name)
+		}
+	}
+}
+
+func TestBaseURLValidator(t *testing.T) {
+	tests := map[string]bool{
+		"https://defectdojo.example.com":     true,
+		"HTTPS://defectdojo.example.com":     true, // the client accepts it
+		"http://localhost:8080/defectdojo/":  true,
+		"":                                   true, // reported as missing
+		"defectdojo.example.com":             false,
+		"ftp://defectdojo.example.com":       false,
+		"https://":                           false,
+		"https://defectdojo.example.com/%zz": false,
+		"/api/v2/":                           false,
+	}
+	for in, valid := range tests {
+		var resp validator.StringResponse
+		baseURLValidator{}.ValidateString(context.Background(), validator.StringRequest{
+			Path: path.Root("url"), ConfigValue: types.StringValue(in),
+		}, &resp)
+		if resp.Diagnostics.HasError() == valid {
+			t.Errorf("%q: valid = %t, want %t (%v)", in, !resp.Diagnostics.HasError(), valid, resp.Diagnostics)
 		}
 	}
 }

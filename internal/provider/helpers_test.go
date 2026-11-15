@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -213,5 +214,20 @@ func TestRevenueValidator(t *testing.T) {
 				t.Errorf("valid = %v, want %v", valid, tt.valid)
 			}
 		})
+	}
+}
+
+// DefectDojo stores these integers in 32-bit columns; 0 and negative numbers
+// are valid there.
+func TestInt32Range(t *testing.T) {
+	for value, valid := range map[int64]bool{
+		0: true, -1: true, 10011: true, math.MaxInt32: true, math.MinInt32: true,
+		math.MaxInt32 + 1: false, math.MinInt32 - 1: false,
+	} {
+		var resp validator.Int64Response
+		int32Range().ValidateInt64(context.Background(), validator.Int64Request{ConfigValue: types.Int64Value(value)}, &resp)
+		if resp.Diagnostics.HasError() == valid {
+			t.Errorf("%d: valid = %t, want %t", value, !resp.Diagnostics.HasError(), valid)
+		}
 	}
 }

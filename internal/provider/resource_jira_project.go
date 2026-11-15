@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -116,17 +117,20 @@ func (r *JiraProjectResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"jira_instance_id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the Jira instance.",
 				Required:            true,
+				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 			},
 			"product_id": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the product. Exactly one of `product_id` and `engagement_id` must be set; changing either forces a new resource.",
 				Optional:            true,
+				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"engagement_id": schema.Int64Attribute{
-				MarkdownDescription: "The ID of the engagement. Exactly one of `product_id` and `engagement_id` must be set.",
+				MarkdownDescription: "The ID of the engagement. Exactly one of `product_id` and `engagement_id` must be set; changing either forces a new resource.",
 				Optional:            true,
+				Validators:          []validator.Int64{int64validator.AtLeast(1)},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},

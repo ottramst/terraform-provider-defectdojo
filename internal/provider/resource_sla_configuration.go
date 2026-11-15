@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -74,7 +75,7 @@ func slaDaysAttribute(severity string, days int64) schema.Int64Attribute {
 		Computed: true,
 		Default:  int64default.StaticInt64(days),
 		Validators: []validator.Int64{
-			int64validator.AtLeast(1),
+			int64validator.Between(1, math.MaxInt32),
 		},
 	}
 }

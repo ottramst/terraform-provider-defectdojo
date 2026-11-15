@@ -52,8 +52,6 @@ variable "jira_api_token" {
 
 ### Required
 
-> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
-
 - `close_status_key` (Number) The ID of the Jira transition that closes issues.
 - `configuration_name` (String) The name of the Jira instance. Names don't have to be unique, but the data source looks instances up by name. At most 2000 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `critical_mapping_severity` (String) The Jira priority of critical findings' issues, such as `Critical`. At most 200 characters, without leading or trailing whitespace, which DefectDojo removes.
@@ -63,11 +61,12 @@ variable "jira_api_token" {
 - `low_mapping_severity` (String) The Jira priority of low findings' issues, such as `Low`. At most 200 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `medium_mapping_severity` (String) The Jira priority of medium findings' issues, such as `Medium`. At most 200 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `open_status_key` (Number) The ID of the Jira transition that reopens issues, from `https://<jira>/rest/api/latest/issue/<key>/transitions`.
-- `password_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) The password or API token of the Jira account, at most 2000 characters, without leading or trailing whitespace, which DefectDojo removes. It is write-only: never stored in the plan or state, and DefectDojo never returns it. The provider sends it when the instance is created, when `password_wo_version` changes, and when `url` changes, which DefectDojo allows only with the password (a URL that differs only in a trailing slash isn't a change). Terraform can't detect a change of a write-only value: change `password_wo_version` to send a new one. Requires Terraform 1.11 or later.
 - `url` (String) The HTTP or HTTPS URL of the Jira server, at most 2000 characters.
 - `username` (String) The user name or email address of the Jira account. At most 2000 characters, without leading or trailing whitespace, which DefectDojo removes.
 
 ### Optional
+
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
 - `accepted_mapping_resolution` (String) Jira resolutions, separated by commas, that make the finding of an issue closed in Jira risk accepted. At most 300 characters.
 - `default_issue_type` (String) The type of new Jira issues. DefectDojo offers `Task`, `Story`, `Epic`, `Spike`, `Bug` and `Security`, and `DD_JIRA_EXTRA_ISSUE_TYPES` adds more. Defaults to `Bug`.
@@ -76,7 +75,8 @@ variable "jira_api_token" {
 - `finding_text` (String) Text added to the issues of findings, such as whom to contact.
 - `global_jira_sla_notification` (Boolean) Whether DefectDojo posts SLA notifications as comments on issues; each Jira project can override it. Defaults to `true`.
 - `issue_template_dir` (String) The folder of the Django templates that render issue descriptions, such as `issue-trackers/jira_full`; by default DefectDojo's. At most 255 characters.
-- `password_wo_version` (Number) The version of `password_wo`. Changing it sends the password.
+- `password_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) The password or API token of the Jira account, at most 2000 characters, without leading or trailing whitespace, which DefectDojo removes. It is write-only: never stored in the plan or state, and DefectDojo never returns it. The provider sends it when the instance is created, when `password_wo_version` changes, and when `url` changes, which DefectDojo allows only with the password (a URL that differs only in a trailing slash isn't a change): it is required then, and otherwise optional, so that an imported instance can be managed without it. Terraform can't detect a change of a write-only value: change `password_wo_version` to send a new one. Removing it together with `password_wo_version` keeps the password DefectDojo has. Requires Terraform 1.11 or later.
+- `password_wo_version` (Number) The version of `password_wo`. Changing it, or removing it while `password_wo` is set, sends the password; setting a new version needs `password_wo`.
 
 ### Read-Only
 
