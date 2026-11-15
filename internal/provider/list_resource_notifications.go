@@ -2,9 +2,12 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"iter"
+	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -49,6 +52,25 @@ func NewNotificationsListResource() list.ListResource {
 		id: id,
 		results: modelResults[NotificationsListModel](id, notificationsDisplayName,
 			updateNotificationsModel),
+		failure: func(err error, config NotificationsListModel) diag.Diagnostics {
+			// The user and product filters reject objects that don't exist
+			// with a 400.
+			var errResp *defectdojo.ErrorResponse
+			if errors.As(err, &errResp) && errResp.StatusCode == http.StatusBadRequest {
+				var diags diag.Diagnostics
+				switch {
+				case len(errResp.Fields["user"]) > 0:
+					diags.AddError("DefectDojo user not found",
+						fmt.Sprintf("There is no user with the ID %d, or the provider user may not see it.", config.UserID.ValueInt64()))
+					return diags
+				case len(errResp.Fields["product"]) > 0:
+					diags.AddError("DefectDojo product not found",
+						fmt.Sprintf("There is no product with the ID %d, or the provider user may not see it.", config.ProductID.ValueInt64()))
+					return diags
+				}
+			}
+			return listError("notification settings")(err)
+		},
 	}
 }
 

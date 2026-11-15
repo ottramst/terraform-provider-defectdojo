@@ -10,7 +10,7 @@ import (
 
 func NewSLAConfigurationListResource() list.ListResource {
 	return nameListResource("_sla_configuration", "SLA configurations",
-		"Lists the DefectDojo SLA configurations, ordered by name, including the Default one (ID 1).",
+		"Lists the DefectDojo SLA configurations, ordered by ID, including the Default one (ID 1).",
 		func(ctx context.Context, client *defectdojo.Client) iter.Seq2[*defectdojo.SLAConfiguration, error] {
 			return client.SLAConfigurations.ListAll(ctx, nil)
 		},
@@ -93,6 +93,11 @@ func productAttributeListResource(kind productAttributeKind) list.ListResource {
 		id,
 		func(a *defectdojo.ProductAttribute) string { return a.Name },
 		updateProductAttributeModel)
+	// Products show the value, so the filter matches it too.
+	r.schema.Attributes["name_contains"] = listContainsAttribute(kind.object+"s", "name or value")
+	r.keep = func(a *defectdojo.ProductAttribute, config NameListModel) bool {
+		return containsFold(a.Name, config.NameContains) || containsFold(a.Value, config.NameContains)
+	}
 	r.results = modelResults[NameListModel](id, func(a *defectdojo.ProductAttribute) string { return a.Value }, updateProductAttributeModel)
 	return r
 }

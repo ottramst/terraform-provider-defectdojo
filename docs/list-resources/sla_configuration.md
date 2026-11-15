@@ -3,13 +3,13 @@
 page_title: "defectdojo_sla_configuration List Resource - defectdojo"
 subcategory: ""
 description: |-
-  Lists the DefectDojo SLA configurations, ordered by name, including the Default one (ID 1).
+  Lists the DefectDojo SLA configurations, ordered by ID, including the Default one (ID 1).
   Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the list block sets limit. terraform query -generate-config-out writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as authorized_users and tags): remove the ones another system manages before applying the generated configuration.
 ---
 
 # defectdojo_sla_configuration (List Resource)
 
-Lists the DefectDojo SLA configurations, ordered by name, including the Default one (ID 1).
+Lists the DefectDojo SLA configurations, ordered by ID, including the Default one (ID 1).
 
 Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the `list` block sets `limit`. `terraform query -generate-config-out` writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as `authorized_users` and `tags`): remove the ones another system manages before applying the generated configuration.
 

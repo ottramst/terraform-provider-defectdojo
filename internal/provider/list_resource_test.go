@@ -299,6 +299,8 @@ func TestAccListResourcesConfiguration(t *testing.T) {
 		one("defectdojo_product_origin.test", "defectdojo_product_origin.test", name(prefix+"-origin")),
 		{
 			querycheck.ExpectLength("defectdojo_cicd_infrastructure.other_type", 0),
+			// The platform's name is the prefix; only its value contains "-platform".
+			querycheck.ExpectLength("defectdojo_product_platform.by_value", 1),
 			querycheck.ExpectResourceKnownValues("defectdojo_note_type.test", byIdentity("defectdojo_note_type.test"), []querycheck.KnownValueCheck{
 				{Path: tfjsonpath.New("is_active"), KnownValue: knownvalue.Bool(false)},
 				{Path: tfjsonpath.New("force_destroy"), KnownValue: knownvalue.Bool(false)},
@@ -337,6 +339,17 @@ func TestAccListResourcesConfiguration(t *testing.T) {
 				Query:             true,
 				Config:            testAccListResourcesConfigurationQuery(upper),
 				QueryResultChecks: checks,
+			},
+			// Filters by a product or user that doesn't exist.
+			{
+				Query:       true,
+				Config:      listMissingFilterQuery("defectdojo_jira_project", "product_id"),
+				ExpectError: regexp.MustCompile(`DefectDojo product not found`),
+			},
+			{
+				Query:       true,
+				Config:      listMissingFilterQuery("defectdojo_notifications", "user_id"),
+				ExpectError: regexp.MustCompile(`DefectDojo user not found`),
 			},
 		},
 	})
@@ -479,6 +492,13 @@ list "defectdojo_cicd_infrastructure" "test" {
   }
 }
 
+list "defectdojo_product_platform" "by_value" {
+  provider = defectdojo
+  config {
+    name_contains = "%[1]s-PLATFORM"
+  }
+}
+
 list "defectdojo_cicd_infrastructure" "other_type" {
   provider = defectdojo
   config {
@@ -499,4 +519,17 @@ func (f stringExactFunc) CheckValue(other any) error {
 
 func (f stringExactFunc) String() string {
 	return f()
+}
+
+// listMissingFilterQuery lists the objects of typ whose attribute, an ID,
+// names an object that doesn't exist.
+func listMissingFilterQuery(typ, attribute string) string {
+	return fmt.Sprintf(`
+list %q "missing" {
+  provider = defectdojo
+  config {
+    %s = 2147483647
+  }
+}
+`, typ, attribute)
 }

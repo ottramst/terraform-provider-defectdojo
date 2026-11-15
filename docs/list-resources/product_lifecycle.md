@@ -38,4 +38,4 @@ list "defectdojo_product_lifecycle" "filtered" {
 
 ### Optional
 
-- `name_contains` (String) Only list the product lifecycles whose name contains this text, ignoring case.
+- `name_contains` (String) Only list the product lifecycles whose name or value contains this text, ignoring case.
