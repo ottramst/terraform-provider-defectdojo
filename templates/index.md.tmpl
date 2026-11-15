@@ -1,0 +1,30 @@
+---
+page_title: "{{.ProviderShortName}} Provider"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.ProviderShortName}} Provider
+
+{{ .Description | trimspace }}
+
+## Requirements and compatibility
+
+- **DefectDojo:** the latest patch of the two newest minor releases, tested in CI: 3.4.304 and 3.5.103. Older 3.x releases get
+  best-effort support; DefectDojo 2.x is not supported. Most configuration objects can only be managed by a superuser.
+- **Terraform:** 1.11 or later, which the write-only attributes need (the passwords, secrets and tokens). Import by resource identity
+  needs 1.12, `terraform query` with the list resources 1.14, and the `moved` block of the
+  [migration from doximity/defectdojo](guides/migrating-from-doximity) 1.8. CI tests the two newest Terraform minor releases,
+  1.16 and 1.17.
+- **Stability:** from v1.0.0, the provider follows [semantic versioning](https://semver.org/). A change that can break a configuration
+  or a state of the latest release needs a new major version; when DefectDojo removes a feature, the attributes and resources that
+  manage it are deprecated first. See the [README](https://github.com/ottramst/terraform-provider-defectdojo#stability).
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}

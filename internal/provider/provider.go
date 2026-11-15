@@ -55,7 +55,7 @@ func (p *DefectDojoProvider) Schema(_ context.Context, _ provider.SchemaRequest,
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Terraform provider for [OWASP DefectDojo](https://github.com/DefectDojo/django-DefectDojo), " +
 			"the open-source vulnerability management platform. " +
-			"It supports and is tested against the latest patch of the two newest DefectDojo minor releases, which the README lists; " +
+			"It supports and is tested against the latest patch of the two newest DefectDojo minor releases, listed under Requirements and compatibility; " +
 			"older versions get best-effort support only, and DefectDojo 2.x is not supported.\n\n" +
 			"The provider authenticates with an API v2 token (`api_token`), or with a `username` and `password` (HTTP basic authentication), " +
 			"which also works when API tokens are disabled on the server. When both are set, the token is used. " +
