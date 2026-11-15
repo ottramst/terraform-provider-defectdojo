@@ -167,6 +167,7 @@ func (p *DefectDojoProvider) Configure(ctx context.Context, req provider.Configu
 
 func (p *DefectDojoProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewAnnouncementResource,
 		NewDevelopmentEnvironmentResource,
 		NewEngagementResource,
 		NewNotificationWebhookResource,
