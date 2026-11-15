@@ -31,7 +31,7 @@ func TestAccJiraInstance(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
 		CheckDestroy: func(*terraform.State) error {
-			_, _, err := testAccClient(t).JiraInstances.Get(context.Background(), id)
+			_, _, err := testAccClient(t).JiraInstances.Get(context.Background(), id, nil)
 			if !errors.Is(err, defectdojo.ErrNotFound) {
 				return fmt.Errorf("Jira instance %d still exists (%v)", id, err)
 			}
@@ -142,7 +142,7 @@ func TestAccJiraInstance(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).JiraInstances.Patch(context.Background(), id, &defectdojo.JiraInstancePatch{
 						Username: new("changed"), FindingJiraSync: new(true),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccJiraInstanceConfig(name+"-renamed", "https://other-"+name+".example.invalid", `
@@ -161,7 +161,7 @@ func TestAccJiraInstance(t *testing.T) {
 			// Deleted outside Terraform: re-created.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).JiraInstances.Delete(context.Background(), id)
+					_, err := testAccClient(t).JiraInstances.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccJiraInstanceConfig(name+"-renamed", "https://other-"+name+".example.invalid", `

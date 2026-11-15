@@ -40,7 +40,7 @@ func NewNotificationsListResource() list.ListResource {
 		},
 		objects: "notification settings",
 		all: func(ctx context.Context, client *defectdojo.Client, config NotificationsListModel) iter.Seq2[*defectdojo.NotificationSettings, error] {
-			opts := &defectdojo.ListNotificationsOptions{
+			opts := &defectdojo.ListNotificationSettingsOptions{
 				User:    int(config.UserID.ValueInt64()),
 				Product: int(config.ProductID.ValueInt64()),
 			}

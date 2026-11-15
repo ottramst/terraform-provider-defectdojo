@@ -86,7 +86,7 @@ func (r *DevelopmentEnvironmentResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	created, _, err := r.client.DevelopmentEnvironments.Create(ctx, &defectdojo.DevelopmentEnvironment{Name: data.Name.ValueString()})
+	created, _, err := r.client.DevelopmentEnvironments.Create(ctx, &defectdojo.DevelopmentEnvironment{Name: data.Name.ValueString()}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo development environment",
@@ -109,7 +109,7 @@ func (r *DevelopmentEnvironmentResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	env, _, err := r.client.DevelopmentEnvironments.Get(ctx, int(data.ID.ValueInt64()))
+	env, _, err := r.client.DevelopmentEnvironments.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -146,7 +146,7 @@ func (r *DevelopmentEnvironmentResource) Update(ctx context.Context, req resourc
 
 	updated, _, err := r.client.DevelopmentEnvironments.Patch(ctx, int(data.ID.ValueInt64()), &defectdojo.DevelopmentEnvironmentPatch{
 		Name: new(data.Name.ValueString()),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo development environment",
@@ -168,7 +168,7 @@ func (r *DevelopmentEnvironmentResource) Delete(ctx context.Context, req resourc
 	}
 	id := int(data.ID.ValueInt64())
 
-	_, err := r.client.DevelopmentEnvironments.Delete(ctx, id)
+	_, err := r.client.DevelopmentEnvironments.Delete(ctx, id, nil)
 	switch {
 	case err == nil, errors.Is(err, defectdojo.ErrNotFound):
 	case errors.Is(err, defectdojo.ErrConflict):
@@ -190,7 +190,7 @@ func (r *DevelopmentEnvironmentResource) Delete(ctx context.Context, req resourc
 // adding an error when one has: a second environment with the name would
 // break the imports that name it.
 func (r *DevelopmentEnvironmentResource) checkNameFree(ctx context.Context, name string, diags *diag.Diagnostics) bool {
-	existing, _, err := r.client.DevelopmentEnvironments.GetByName(ctx, name)
+	existing, _, err := r.client.DevelopmentEnvironments.GetByName(ctx, name, nil)
 	switch {
 	case err == nil:
 		diags.AddError(

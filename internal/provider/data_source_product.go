@@ -145,10 +145,10 @@ func (d *ProductDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		p, _, err = d.client.Products.Get(ctx, int(data.ID.ValueInt64()))
+		p, _, err = d.client.Products.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
-		p, _, err = d.client.Products.GetByName(ctx, data.Name.ValueString())
+		p, _, err = d.client.Products.GetByName(ctx, data.Name.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

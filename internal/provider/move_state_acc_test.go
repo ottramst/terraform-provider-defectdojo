@@ -53,7 +53,7 @@ func testAccMigrationGuideConfig(t *testing.T, file, prefix string, jiraInstance
 func testAccCreateJiraInstance(t *testing.T, name string) int {
 	t.Helper()
 	client := testAccClient(t)
-	ji, _, err := client.JiraInstances.Create(context.Background(), &defectdojo.JiraInstanceWrite{
+	ji, _, err := client.JiraInstances.Create(context.Background(), &defectdojo.CreateJiraInstanceRequest{
 		JiraInstance: defectdojo.JiraInstance{
 			ConfigurationName: name, URL: "https://" + name + ".example.invalid", Username: "bot",
 			EpicNameID: 10011, OpenStatusKey: 11, CloseStatusKey: 31,
@@ -61,10 +61,10 @@ func testAccCreateJiraInstance(t *testing.T, name string) int {
 			HighMappingSeverity: "High", CriticalMappingSeverity: "Highest",
 		},
 		Password: "fake-token",
-	})
+	}, nil)
 	testAccNoError(t, err)
 	t.Cleanup(func() {
-		if _, err := client.JiraInstances.Delete(context.Background(), ji.ID); err != nil {
+		if _, err := client.JiraInstances.Delete(context.Background(), ji.ID, nil); err != nil {
 			t.Errorf("deleting Jira instance %d: %v", ji.ID, err)
 		}
 	})
@@ -144,9 +144,9 @@ resource "defectdojo_product_type" "test" {
 			{
 				PreConfig: func() {
 					client := testAccClient(t)
-					pt, _, err := client.ProductTypes.GetByName(context.Background(), name)
+					pt, _, err := client.ProductTypes.GetByName(context.Background(), name, nil)
 					testAccNoError(t, err)
-					_, err = client.ProductTypes.Delete(context.Background(), pt.ID)
+					_, err = client.ProductTypes.Delete(context.Background(), pt.ID, nil)
 					testAccNoError(t, err)
 				},
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

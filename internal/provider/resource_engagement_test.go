@@ -155,7 +155,7 @@ func TestAccEngagement(t *testing.T) {
 					later := defectdojo.Date{Year: 2100, Month: time.January, Day: 15}
 					_, _, err := testAccClient(t).Engagements.Patch(context.Background(), id, &defectdojo.EngagementPatch{
 						Name: defectdojo.Value(name + "-changed"), TargetEnd: &later, Version: defectdojo.Value("9"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccEngagementConfig(renamed, "second", ""),
@@ -174,7 +174,7 @@ func TestAccEngagement(t *testing.T) {
 			// status, a change of another attribute doesn't reopen it
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Engagements.Close(context.Background(), id)
+					_, err := testAccClient(t).Engagements.Close(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccEngagementConfig(renamed, "second", `
@@ -193,7 +193,7 @@ func TestAccEngagement(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Engagements.Delete(context.Background(), id)
+					_, err := testAccClient(t).Engagements.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccEngagementConfig(renamed, "second", ""),
@@ -296,7 +296,7 @@ resource "defectdojo_engagement" "test" {
 	// DefectDojo may store a configured spelling of an inherited tag.
 	inDefectDojo := func(want ...string) resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			e, _, err := testAccClient(t).Engagements.Get(context.Background(), id)
+			e, _, err := testAccClient(t).Engagements.Get(context.Background(), id, nil)
 			if err != nil {
 				return err
 			}
@@ -473,7 +473,7 @@ func testAccCheckEngagementDestroyed(t *testing.T, id *int) resource.TestCheckFu
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).Engagements.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).Engagements.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}
@@ -514,12 +514,12 @@ func testAccCreateTestOutside(t *testing.T, extra map[string]any) int {
 	client := testAccClient(t)
 	product, _, err := client.Products.Create(ctx, &defectdojo.Product{
 		Name: randName(t), Description: "acceptance test", ProdType: testAccCreateProductType(t),
-	})
+	}, nil)
 	testAccNoError(t, err)
 	day := defectdojo.Date{Year: 2026, Month: time.January, Day: 1}
 	engagement, _, err := client.Engagements.Create(ctx, &defectdojo.Engagement{
 		Name: randName(t), Product: product.ID, TargetStart: day, TargetEnd: day,
-	})
+	}, nil)
 	testAccNoError(t, err)
 	return testAccCreateTest(t, engagement.ID, extra)
 }
@@ -583,7 +583,7 @@ resource "defectdojo_engagement" "test" {
 	noTags := statecheck.ExpectKnownValue(engagementAddress, tfjsonpath.New("tags"), knownvalue.SetSizeExact(0))
 	inDefectDojo := func(want string) resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			e, _, err := testAccClient(t).Engagements.Get(context.Background(), id)
+			e, _, err := testAccClient(t).Engagements.Get(context.Background(), id, nil)
 			if err != nil {
 				return err
 			}

@@ -33,11 +33,11 @@ var _ resource.ResourceWithConfigValidators = &NotificationsResource{}
 
 // notificationChannels are the channels DefectDojo can notify on.
 var notificationChannels = []string{
-	defectdojo.NotificationChannelSlack,
-	defectdojo.NotificationChannelMSTeams,
-	defectdojo.NotificationChannelMail,
-	defectdojo.NotificationChannelWebhooks,
-	defectdojo.NotificationChannelAlert,
+	string(defectdojo.NotificationChannelSlack),
+	string(defectdojo.NotificationChannelMSTeams),
+	string(defectdojo.NotificationChannelMail),
+	string(defectdojo.NotificationChannelWebhooks),
+	string(defectdojo.NotificationChannelAlert),
 }
 
 func NewNotificationsResource() resource.Resource {
@@ -88,7 +88,7 @@ func eventAttribute(when string) schema.SetAttribute {
 		ElementType:         types.StringType,
 		Optional:            true,
 		Computed:            true,
-		Default:             setdefault.StaticValue(channelSet([]string{defectdojo.NotificationChannelAlert})),
+		Default:             setdefault.StaticValue(channelSet([]defectdojo.NotificationChannel{defectdojo.NotificationChannelAlert})),
 		Validators: []validator.Set{
 			setvalidator.ValueStringsAre(stringvalidator.OneOf(notificationChannels...)),
 		},
@@ -143,7 +143,7 @@ func (r *NotificationsResource) Schema(_ context.Context, _ resource.SchemaReque
 			ElementType: types.StringType,
 			Optional:    true,
 			Computed:    true,
-			Default:     setdefault.StaticValue(channelSet([]string{})),
+			Default:     setdefault.StaticValue(channelSet([]defectdojo.NotificationChannel{})),
 			Validators: []validator.Set{
 				setvalidator.SizeAtMost(1),
 				setvalidator.ValueStringsAre(stringvalidator.OneOf(notificationChannels...)),
@@ -235,7 +235,7 @@ func (r *NotificationsResource) Create(ctx context.Context, req resource.CreateR
 
 	// DefectDojo creates the system-wide and personal settings itself: adopt
 	// existing settings of the scope.
-	existing, _, err := r.client.Notifications.GetByScope(ctx, user, product, template)
+	existing, _, err := r.client.Notifications.GetByScope(ctx, defectdojo.NotificationScope{User: user, Product: product, Template: template}, nil)
 	var result *defectdojo.NotificationSettings
 	switch {
 	case err == nil:
@@ -243,7 +243,7 @@ func (r *NotificationsResource) Create(ctx context.Context, req resource.CreateR
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		result, _, err = r.client.Notifications.Patch(ctx, existing.ID, patch)
+		result, _, err = r.client.Notifications.Patch(ctx, existing.ID, patch, nil)
 		tflog.Debug(ctx, "adopted existing notification settings", map[string]any{"id": existing.ID})
 	case errors.Is(err, defectdojo.ErrNotFound):
 		settings := notificationSettings(ctx, &data, &resp.Diagnostics)
@@ -251,7 +251,7 @@ func (r *NotificationsResource) Create(ctx context.Context, req resource.CreateR
 			return
 		}
 		settings.User, settings.Product, settings.Template = user, product, template
-		result, _, err = r.client.Notifications.Create(ctx, settings)
+		result, _, err = r.client.Notifications.Create(ctx, settings, nil)
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -273,7 +273,7 @@ func (r *NotificationsResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	n, _, err := r.client.Notifications.Get(ctx, int(data.ID.ValueInt64()))
+	n, _, err := r.client.Notifications.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform, or with its user or product
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -304,7 +304,7 @@ func (r *NotificationsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// PATCH: a PUT would reset the scope, and can't update the template.
-	updated, _, err := r.client.Notifications.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.Notifications.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo notification settings",
@@ -330,9 +330,9 @@ func (r *NotificationsResource) Delete(ctx context.Context, req resource.DeleteR
 	if data.ProductID.IsNull() && !data.Template.ValueBool() {
 		// The system-wide or a user's personal settings, which DefectDojo
 		// needs: reset them to its defaults.
-		_, _, err = r.client.Notifications.Patch(ctx, id, defaultNotificationsPatch())
+		_, _, err = r.client.Notifications.Patch(ctx, id, defaultNotificationsPatch(), nil)
 	} else {
-		_, err = r.client.Notifications.Delete(ctx, id)
+		_, err = r.client.Notifications.Delete(ctx, id, nil)
 	}
 	if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
@@ -361,10 +361,10 @@ func notificationsScope(user, product int, template bool) string {
 }
 
 // channels returns the channels of an event's set.
-func channels(ctx context.Context, set types.Set, diags *diag.Diagnostics) []string {
-	values := stringsFromSet(ctx, set, diags)
-	if values == nil {
-		values = []string{}
+func channels(ctx context.Context, set types.Set, diags *diag.Diagnostics) []defectdojo.NotificationChannel {
+	values := []defectdojo.NotificationChannel{}
+	for _, v := range stringsFromSet(ctx, set, diags) {
+		values = append(values, defectdojo.NotificationChannel(v))
 	}
 	return values
 }
@@ -395,7 +395,7 @@ func notificationSettings(ctx context.Context, data *NotificationsResourceModel,
 
 // notificationsPatch returns a patch of every event of data.
 func notificationsPatch(ctx context.Context, data *NotificationsResourceModel, diags *diag.Diagnostics) *defectdojo.NotificationSettingsPatch {
-	scanAddedEmpty := ""
+	var scanAddedEmpty defectdojo.NotificationChannel
 	if c := channels(ctx, data.ScanAddedEmpty, diags); len(c) > 0 {
 		scanAddedEmpty = c[0]
 	}
@@ -424,7 +424,7 @@ func notificationsPatch(ctx context.Context, data *NotificationsResourceModel, d
 // defaultNotificationsPatch returns a patch that sets every event to
 // DefectDojo's model defaults: alert, and no channel for scan_added_empty.
 func defaultNotificationsPatch() *defectdojo.NotificationSettingsPatch {
-	alert := []string{defectdojo.NotificationChannelAlert}
+	alert := []defectdojo.NotificationChannel{defectdojo.NotificationChannelAlert}
 	return &defectdojo.NotificationSettingsPatch{
 		ProductTypeAdded:         &alert,
 		ProductAdded:             &alert,
@@ -443,7 +443,7 @@ func defaultNotificationsPatch() *defectdojo.NotificationSettingsPatch {
 		SLABreach:                &alert,
 		SLABreachCombined:        &alert,
 		RiskAcceptanceExpiration: &alert,
-		ScanAddedEmpty:           new(""),
+		ScanAddedEmpty:           new(defectdojo.NotificationChannel("")),
 	}
 }
 
@@ -475,10 +475,10 @@ func updateNotificationsModel(data *NotificationsResourceModel, n *defectdojo.No
 }
 
 // channelSet returns a set of the channels.
-func channelSet(channels []string) types.Set {
+func channelSet(channels []defectdojo.NotificationChannel) types.Set {
 	elems := make([]attr.Value, len(channels))
 	for i, c := range channels {
-		elems[i] = types.StringValue(c)
+		elems[i] = types.StringValue(string(c))
 	}
 	return types.SetValueMust(types.StringType, elems)
 }

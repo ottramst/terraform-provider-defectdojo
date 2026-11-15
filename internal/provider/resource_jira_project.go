@@ -248,7 +248,7 @@ func (r *JiraProjectResource) ModifyPlan(ctx context.Context, req resource.Modif
 	if resp.Diagnostics.HasError() || !known(suppress) || !suppress.ValueBool() {
 		return
 	}
-	version, err := r.client.ServerVersion(ctx)
+	version, _, err := r.client.ServerVersion(ctx, nil)
 	if err != nil {
 		resp.Diagnostics.AddWarning("Could not read the DefectDojo version",
 			"suppress_sla_notification_comments needs DefectDojo "+suppressSLANotificationCommentsSince+" or later, which couldn't be checked: "+err.Error())
@@ -289,11 +289,11 @@ func (r *JiraProjectResource) Create(ctx context.Context, req resource.CreateReq
 	if existing.Count > 0 {
 		resp.Diagnostics.AddError("Jira project exists",
 			fmt.Sprintf("%s already has a Jira project (ID %d); import it instead of creating another, which DefectDojo would ignore.",
-				what, existing.JiraProjects[0].ID))
+				what, existing.Results[0].ID))
 		return
 	}
 
-	created, _, err := r.client.JiraProjects.Create(ctx, jiraProjectFromModel(&data))
+	created, _, err := r.client.JiraProjects.Create(ctx, jiraProjectFromModel(&data), nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating DefectDojo Jira project",
 			fmt.Sprintf("Could not create the Jira project of %s, unexpected error: %s", what, err))
@@ -314,7 +314,7 @@ func (r *JiraProjectResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	p, _, err := r.client.JiraProjects.Get(ctx, int(data.ID.ValueInt64()))
+	p, _, err := r.client.JiraProjects.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform, also with its product or engagement.
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -360,7 +360,7 @@ func (r *JiraProjectResource) Update(ctx context.Context, req resource.UpdateReq
 		SuppressSLANotificationComments:      new(data.SuppressSLANotificationComments.ValueBool()),
 		RiskAcceptanceExpirationNotification: new(data.RiskAcceptanceExpirationNotification.ValueBool()),
 	}
-	updated, _, err := r.client.JiraProjects.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.JiraProjects.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo Jira project",
@@ -381,7 +381,7 @@ func (r *JiraProjectResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 	id := int(data.ID.ValueInt64())
-	if _, err := r.client.JiraProjects.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.JiraProjects.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo Jira project",
 			fmt.Sprintf("Could not delete Jira project %d, unexpected error: %s", id, err),

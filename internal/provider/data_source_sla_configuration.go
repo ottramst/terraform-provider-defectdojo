@@ -103,10 +103,10 @@ func (d *SLAConfigurationDataSource) Read(ctx context.Context, req datasource.Re
 	)
 	if !data.ID.IsNull() {
 		what = fmt.Sprintf("ID %d", data.ID.ValueInt64())
-		sla, _, err = d.client.SLAConfigurations.Get(ctx, int(data.ID.ValueInt64()))
+		sla, _, err = d.client.SLAConfigurations.Get(ctx, int(data.ID.ValueInt64()), nil)
 	} else {
 		what = fmt.Sprintf("name %q", data.Name.ValueString())
-		sla, _, err = d.client.SLAConfigurations.GetByName(ctx, data.Name.ValueString())
+		sla, _, err = d.client.SLAConfigurations.GetByName(ctx, data.Name.ValueString(), nil)
 	}
 	if err != nil {
 		if errors.Is(err, defectdojo.ErrNotFound) {

@@ -40,14 +40,14 @@ const engagementDeleteTimeout = 5 * time.Minute
 
 // engagementStatuses are the values of an engagement's status.
 var engagementStatuses = []string{
-	defectdojo.EngagementStatusNotStarted,
-	defectdojo.EngagementStatusBlocked,
-	defectdojo.EngagementStatusCancelled,
-	defectdojo.EngagementStatusCompleted,
-	defectdojo.EngagementStatusInProgress,
-	defectdojo.EngagementStatusOnHold,
-	defectdojo.EngagementStatusScheduled,
-	defectdojo.EngagementStatusWaitingForResource,
+	string(defectdojo.EngagementStatusNotStarted),
+	string(defectdojo.EngagementStatusBlocked),
+	string(defectdojo.EngagementStatusCancelled),
+	string(defectdojo.EngagementStatusCompleted),
+	string(defectdojo.EngagementStatusInProgress),
+	string(defectdojo.EngagementStatusOnHold),
+	string(defectdojo.EngagementStatusScheduled),
+	string(defectdojo.EngagementStatusWaitingForResource),
 }
 
 // urlPattern loosely matches the URLs DefectDojo's URL fields accept.
@@ -181,7 +181,7 @@ func (r *EngagementResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf(defectdojo.EngagementTypeInteractive, defectdojo.EngagementTypeCICD),
+					stringvalidator.OneOf(string(defectdojo.EngagementTypeInteractive), string(defectdojo.EngagementTypeCICD)),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -307,8 +307,8 @@ func (r *EngagementResource) Create(ctx context.Context, req resource.CreateRequ
 		CICDBuildServer:           int(data.CICDBuildServerID.ValueInt64()),
 		CICDOrchestrationEngine:   int(data.CICDOrchestrationEngineID.ValueInt64()),
 		// Unknown (not configured): empty, DefectDojo's default.
-		Status:         data.Status.ValueString(),
-		EngagementType: data.EngagementType.ValueString(),
+		Status:         defectdojo.EngagementStatus(data.Status.ValueString()),
+		EngagementType: defectdojo.EngagementType(data.EngagementType.ValueString()),
 	}
 	// Not configured: nil, left out, so that the engagement inherits the
 	// product's tags.
@@ -319,7 +319,7 @@ func (r *EngagementResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
-	created, _, err := r.client.Engagements.Create(ctx, e)
+	created, _, err := r.client.Engagements.Create(ctx, e, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo engagement",
@@ -410,10 +410,10 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Status and type are sent only when the plan changes them, so that an
 	// unrelated change never reopens an engagement closed elsewhere.
 	if known(data.Status) && !data.Status.Equal(state.Status) {
-		patch.Status = new(data.Status.ValueString())
+		patch.Status = new(defectdojo.EngagementStatus(data.Status.ValueString()))
 	}
 	if known(data.EngagementType) && !data.EngagementType.Equal(state.EngagementType) {
-		patch.EngagementType = new(data.EngagementType.ValueString())
+		patch.EngagementType = new(defectdojo.EngagementType(data.EngagementType.ValueString()))
 	}
 	// Tags are sent when they are configured, and on a move: any tags make
 	// DefectDojo replace the old product's tags with the new product's.
@@ -432,7 +432,7 @@ func (r *EngagementResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if _, _, err := r.client.Engagements.Patch(ctx, id, patch); err != nil {
+	if _, _, err := r.client.Engagements.Patch(ctx, id, patch, nil); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo engagement",
 			fmt.Sprintf("Could not update engagement %d, unexpected error: %s", id, err),
@@ -469,7 +469,7 @@ func keepPlannedTags(data *EngagementResourceModel, planned types.Set) {
 // inheritedTags returns the tags the product passes on to its engagements:
 // its tags, if it has enable_product_tag_inheritance, else none.
 func (r *EngagementResource) inheritedTags(ctx context.Context, productID int, diags *diag.Diagnostics) *[]string {
-	p, _, err := r.client.Products.Get(ctx, productID)
+	p, _, err := r.client.Products.Get(ctx, productID, nil)
 	if err != nil {
 		diags.AddError("Error updating DefectDojo engagement",
 			fmt.Sprintf("Could not read product %d, for the tags it passes on, unexpected error: %s", productID, err))
@@ -490,7 +490,7 @@ func (r *EngagementResource) inheritedTags(ctx context.Context, productID int, d
 // tags are inherited.
 func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceModel, visible types.Set, diags *diag.Diagnostics) bool {
 	id := int(data.ID.ValueInt64())
-	e, _, err := r.client.Engagements.Get(ctx, id)
+	e, _, err := r.client.Engagements.Get(ctx, id, nil)
 	if errors.Is(err, defectdojo.ErrNotFound) {
 		return false
 	}
@@ -500,7 +500,7 @@ func (r *EngagementResource) read(ctx context.Context, data *EngagementResourceM
 	}
 	// A product that is gone (deleted in the background, with
 	// DD_ASYNC_OBJECT_DELETE) passes no tags on.
-	p, _, err := r.client.Products.Get(ctx, e.Product)
+	p, _, err := r.client.Products.Get(ctx, e.Product, nil)
 	if err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		diags.AddError("Error reading DefectDojo engagement",
 			fmt.Sprintf("Could not read product %d, for the tags it passes on to engagement %d, unexpected error: %s", e.Product, id, err))
@@ -546,7 +546,7 @@ func (r *EngagementResource) Delete(ctx context.Context, req resource.DeleteRequ
 	id := int(data.ID.ValueInt64())
 
 	if !data.ForceDestroy.ValueBool() {
-		n, _, err := r.client.Engagements.CountTests(ctx, id)
+		n, _, err := r.client.Engagements.CountTests(ctx, id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return // Deleted outside Terraform
 		}
@@ -568,7 +568,7 @@ func (r *EngagementResource) Delete(ctx context.Context, req resource.DeleteRequ
 		}
 	}
 
-	if _, err := r.client.Engagements.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.Engagements.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo engagement",
 			fmt.Sprintf("Could not delete engagement %d, unexpected error: %s", id, err),
@@ -579,7 +579,7 @@ func (r *EngagementResource) Delete(ctx context.Context, req resource.DeleteRequ
 	waitCtx, cancel := context.WithTimeout(ctx, engagementDeleteTimeout)
 	defer cancel()
 	err := waitForDeletion(waitCtx, func(ctx context.Context) error {
-		_, _, err := r.client.Engagements.Get(ctx, id)
+		_, _, err := r.client.Engagements.Get(ctx, id, nil)
 		return err
 	})
 	if err != nil {
@@ -604,8 +604,8 @@ func updateEngagementModel(data *EngagementResourceModel, e *defectdojo.Engageme
 	data.TargetStart = types.StringValue(e.TargetStart.String())
 	data.TargetEnd = types.StringValue(e.TargetEnd.String())
 	data.FirstContacted = stringOrNull(e.FirstContacted.String())
-	data.EngagementType = types.StringValue(e.EngagementType)
-	data.Status = types.StringValue(e.Status)
+	data.EngagementType = types.StringValue(string(e.EngagementType))
+	data.Status = types.StringValue(string(e.Status))
 	data.Active = types.BoolValue(e.Active)
 	data.Description = stringOrNull(e.Description)
 	data.Reason = stringOrNull(e.Reason)

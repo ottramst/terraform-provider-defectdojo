@@ -132,7 +132,7 @@ func (r *SystemSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 	fillMinimum := minimum.IsUnknown() && configMinimum.IsNull()
 	fillMaximum := maximum.IsUnknown() && configMaximum.IsNull()
 	if (fillMinimum || fillMaximum) && req.State.Raw.IsNull() && r.client != nil {
-		settings, _, err := r.client.SystemSettings.Get(ctx)
+		settings, _, err := r.client.SystemSettings.Get(ctx, nil)
 		if err != nil {
 			resp.Diagnostics.AddWarning("Could not read the DefectDojo system settings",
 				"The password lengths couldn't be compared with DefectDojo's: "+err.Error())
@@ -156,7 +156,7 @@ func (r *SystemSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 }
 
 func (r *SystemSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	settings, _, err := r.client.SystemSettings.Get(ctx)
+	settings, _, err := r.client.SystemSettings.Get(ctx, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading DefectDojo system settings", err.Error())
 		return
@@ -216,7 +216,7 @@ func (r *SystemSettingsResource) apply(ctx context.Context, id int, config tfsdk
 		diags.AddError("Error building the DefectDojo system settings", err.Error())
 		return
 	}
-	settings, _, err := r.client.SystemSettings.Patch(ctx, id, patch)
+	settings, _, err := r.client.SystemSettings.Patch(ctx, id, patch, nil)
 	if err != nil {
 		diags.AddError("Error updating DefectDojo system settings",
 			fmt.Sprintf("Could not update the system settings (ID %d): %s", id, err))
@@ -270,7 +270,7 @@ func (r *SystemSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	settings, _, err := r.client.SystemSettings.Get(ctx)
+	settings, _, err := r.client.SystemSettings.Get(ctx, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading DefectDojo system settings", err.Error())
 		return

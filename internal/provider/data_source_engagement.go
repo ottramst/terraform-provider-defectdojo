@@ -160,7 +160,7 @@ func (d *EngagementDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var e *defectdojo.Engagement
 	if !data.ID.IsNull() {
 		var err error
-		e, _, err = d.client.Engagements.Get(ctx, int(data.ID.ValueInt64()))
+		e, _, err = d.client.Engagements.Get(ctx, int(data.ID.ValueInt64()), nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			resp.Diagnostics.AddError("DefectDojo engagement not found",
 				fmt.Sprintf("There is no engagement with ID %d, or the provider user may not see it.", data.ID.ValueInt64()))
@@ -195,7 +195,7 @@ func (d *EngagementDataSource) Read(ctx context.Context, req datasource.ReadRequ
 				fmt.Sprintf("Product %d has %d engagements named %q. Look the engagement up by id instead.", productID, list.Count, name))
 			return
 		}
-		e = list.Engagements[0]
+		e = &list.Results[0]
 	}
 
 	var m EngagementResourceModel

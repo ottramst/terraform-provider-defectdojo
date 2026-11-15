@@ -81,7 +81,7 @@ func TestAccDevelopmentEnvironment(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).DevelopmentEnvironments.Patch(context.Background(), id, &defectdojo.DevelopmentEnvironmentPatch{
 						Name: new(name + "-changed"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccDevelopmentEnvironmentConfig(renamed),
@@ -97,7 +97,7 @@ func TestAccDevelopmentEnvironment(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), id)
+					_, err := testAccClient(t).DevelopmentEnvironments.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccDevelopmentEnvironmentConfig(renamed),
@@ -213,7 +213,7 @@ func testAccCheckDevelopmentEnvironmentDestroyed(t *testing.T, id *int) resource
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).DevelopmentEnvironments.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).DevelopmentEnvironments.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

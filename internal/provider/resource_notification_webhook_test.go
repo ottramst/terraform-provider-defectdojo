@@ -129,7 +129,7 @@ func TestAccNotificationWebhook(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).NotificationWebhooks.Patch(context.Background(), id, &defectdojo.NotificationWebhookPatch{
 						URL: new("https://hooks.invalid/changed"), HeaderValue: defectdojo.Value("Bearer changed"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccNotificationWebhookConfig(name+"-renamed", "http://hooks.invalid/two", `
@@ -159,7 +159,7 @@ func TestAccNotificationWebhook(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).NotificationWebhooks.Delete(context.Background(), id)
+					_, err := testAccClient(t).NotificationWebhooks.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccNotificationWebhookConfig(name+"-renamed", "http://hooks.invalid/two", ""),
@@ -181,11 +181,11 @@ func TestAccNotificationWebhook_importThenSetValue(t *testing.T) {
 	name := randName(t)
 	wh, _, err := testAccClient(t).NotificationWebhooks.Create(context.Background(), &defectdojo.NotificationWebhook{
 		Name: name, URL: "https://hooks.invalid/import", HeaderName: "Authorization", HeaderValue: "Bearer old",
-	})
+	}, nil)
 	testAccNoError(t, err)
 	id := wh.ID
 	t.Cleanup(func() {
-		if _, err := testAccClient(t).NotificationWebhooks.Delete(context.Background(), id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+		if _, err := testAccClient(t).NotificationWebhooks.Delete(context.Background(), id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 			t.Logf("cleanup: %v", err)
 		}
 	})
@@ -273,7 +273,7 @@ func testAccCaptureNotificationWebhookID(id *int) resource.TestCheckFunc {
 // DefectDojo, which is the only place its value is.
 func testAccCheckNotificationWebhookHeader(t *testing.T, id *int, name, value string) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		wh, _, err := testAccClient(t).NotificationWebhooks.Get(context.Background(), *id)
+		wh, _, err := testAccClient(t).NotificationWebhooks.Get(context.Background(), *id, nil)
 		if err != nil {
 			return err
 		}
@@ -290,7 +290,7 @@ func testAccCheckNotificationWebhookDestroyed(t *testing.T, id *int) resource.Te
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).NotificationWebhooks.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).NotificationWebhooks.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

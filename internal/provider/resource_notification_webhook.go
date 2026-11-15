@@ -172,7 +172,7 @@ func (r *NotificationWebhookResource) Create(ctx context.Context, req resource.C
 		URL:         data.URL.ValueString(),
 		HeaderName:  data.HeaderName.ValueString(),
 		HeaderValue: headerValue.ValueString(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo notification webhook",
@@ -195,7 +195,7 @@ func (r *NotificationWebhookResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	wh, _, err := r.client.NotificationWebhooks.Get(ctx, int(data.ID.ValueInt64()))
+	wh, _, err := r.client.NotificationWebhooks.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -235,7 +235,7 @@ func (r *NotificationWebhookResource) Update(ctx context.Context, req resource.U
 		patch.HeaderValue = nullableString(headerValue)
 	}
 
-	updated, _, err := r.client.NotificationWebhooks.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.NotificationWebhooks.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo notification webhook",
@@ -256,7 +256,7 @@ func (r *NotificationWebhookResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 	id := int(data.ID.ValueInt64())
-	if _, err := r.client.NotificationWebhooks.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.NotificationWebhooks.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo notification webhook",
 			fmt.Sprintf("Could not delete notification webhook %d, unexpected error: %s", id, err),
@@ -276,7 +276,7 @@ func updateNotificationWebhookModel(data *NotificationWebhookResourceModel, wh *
 	data.URL = types.StringValue(wh.URL)
 	data.HeaderName = stringOrNull(wh.HeaderName)
 	data.HeaderValueWO = types.StringNull()
-	data.Status = types.StringValue(wh.Status)
+	data.Status = types.StringValue(string(wh.Status))
 	data.Note = stringOrNull(wh.Note)
 	data.FirstError = timeOrNull(wh.FirstError)
 	data.LastError = timeOrNull(wh.LastError)

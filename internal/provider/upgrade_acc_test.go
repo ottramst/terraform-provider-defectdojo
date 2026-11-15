@@ -46,7 +46,7 @@ var upgradeAddresses = []string{
 // from v1.0.0, a minor or patch release must take over a state as it is.
 func TestAccUpgradeFromLatestRelease(t *testing.T) {
 	testAccSkipUnlessAcc(t)
-	version, err := testAccClient(t).ServerVersion(context.Background())
+	version, _, err := testAccClient(t).ServerVersion(context.Background(), nil)
 	testAccNoError(t, err)
 	if !slices.Contains(upgradeFromDefectDojo, version) {
 		t.Skipf("provider %s was not tested on DefectDojo %s", upgradeFrom, version)

@@ -168,7 +168,7 @@ func (r *SLAConfigurationResource) Create(ctx context.Context, req resource.Crea
 		Low:                      int(data.Low.ValueInt64()),
 		EnforceLow:               data.EnforceLow.ValueBool(),
 		RestartSLAOnReactivation: data.RestartSLAOnReactivation.ValueBool(),
-	})
+	}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo SLA configuration",
@@ -191,7 +191,7 @@ func (r *SLAConfigurationResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	sla, _, err := r.client.SLAConfigurations.Get(ctx, int(data.ID.ValueInt64()))
+	sla, _, err := r.client.SLAConfigurations.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -236,7 +236,7 @@ func (r *SLAConfigurationResource) Update(ctx context.Context, req resource.Upda
 		patch.Description = defectdojo.Null[string]()
 	}
 
-	updated, _, err := r.client.SLAConfigurations.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.SLAConfigurations.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo SLA configuration",
@@ -266,7 +266,7 @@ func (r *SLAConfigurationResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	_, err := r.client.SLAConfigurations.Delete(ctx, id)
+	_, err := r.client.SLAConfigurations.Delete(ctx, id, nil)
 	switch {
 	case err == nil, errors.Is(err, defectdojo.ErrNotFound):
 	case errors.Is(err, defectdojo.ErrConflict):

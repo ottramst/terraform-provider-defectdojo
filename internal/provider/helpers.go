@@ -181,6 +181,14 @@ func nullableString(value types.String) defectdojo.Nullable[string] {
 	return defectdojo.Value(value.ValueString())
 }
 
+// nullableEnum is nullableString for a field with a named string type.
+func nullableEnum[T ~string](value types.String) defectdojo.Nullable[T] {
+	if value.IsNull() {
+		return defectdojo.Null[T]()
+	}
+	return defectdojo.Value(T(value.ValueString()))
+}
+
 // nullableInt returns the value of an optional reference for a partial
 // update: null clears it.
 func nullableInt(value types.Int64) defectdojo.Nullable[int] {

@@ -111,7 +111,7 @@ resource "defectdojo_%s" "test" {
 				PreConfig: func() {
 					_, _, err := kind.service(testAccClient(t)).Patch(context.Background(), id, &defectdojo.ProductAttributePatch{
 						Name: new("Changed"), Icon: new("star"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: config(value, ""),
@@ -141,7 +141,7 @@ resource "defectdojo_%s" "test" {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := kind.service(testAccClient(t)).Delete(context.Background(), id)
+					_, err := kind.service(testAccClient(t)).Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: config(value+"-changed", ""),
@@ -218,7 +218,7 @@ resource "defectdojo_product" "test" {
 				PreConfig: func() {
 					p, _, err := testAccClient(t).Products.Create(context.Background(), &defectdojo.Product{
 						Name: randName(t), Description: "acceptance test", ProdType: productTypeID, Platform: value + "-v2",
-					})
+					}, nil)
 					testAccNoError(t, err)
 					outsideID = p.ID
 				},
@@ -229,7 +229,7 @@ resource "defectdojo_product" "test" {
 			// Once that product is gone, the destroy after the test succeeds.
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Products.Delete(context.Background(), outsideID)
+					_, err := testAccClient(t).Products.Delete(context.Background(), outsideID, nil)
 					testAccNoError(t, err)
 				},
 				Config: config(value + "-v2"),
@@ -257,7 +257,7 @@ func testAccCheckProductAttributeDestroyed(t *testing.T, kind productAttributeKi
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := kind.service(testAccClient(t)).Get(context.Background(), *id)
+		_, _, err := kind.service(testAccClient(t)).Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

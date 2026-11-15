@@ -97,7 +97,7 @@ func TestAccCICDInfrastructure(t *testing.T) {
 				PreConfig: func() {
 					_, _, err := testAccClient(t).CICDInfrastructure.Patch(context.Background(), id, &defectdojo.CICDInfrastructurePatch{
 						Name: new(name + "-changed"), URL: new("https://changed.example.com"),
-					})
+					}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccCICDInfrastructureConfig(renamed, "build_server", ""),
@@ -127,7 +127,7 @@ func TestAccCICDInfrastructure(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).CICDInfrastructure.Delete(context.Background(), id)
+					_, err := testAccClient(t).CICDInfrastructure.Delete(context.Background(), id, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccCICDInfrastructureConfig(renamed, "orchestration", ""),
@@ -269,9 +269,9 @@ data "defectdojo_engagement" "test" {
 			{
 				PreConfig: func() {
 					client := testAccClient(t)
-					ci, _, err := client.CICDInfrastructure.GetByName(context.Background(), name, defectdojo.CICDInfrastructureTypeSCMServer)
+					ci, _, err := client.CICDInfrastructure.GetByName(context.Background(), name, &defectdojo.GetCICDInfrastructureByNameOptions{InfrastructureType: defectdojo.CICDInfrastructureTypeSCMServer})
 					testAccNoError(t, err)
-					_, err = client.CICDInfrastructure.Delete(context.Background(), ci.ID)
+					_, err = client.CICDInfrastructure.Delete(context.Background(), ci.ID, nil)
 					testAccNoError(t, err)
 				},
 				Config: linked,
@@ -328,7 +328,7 @@ func testAccCheckCICDInfrastructureDestroyed(t *testing.T, id *int) resource.Tes
 		if *id == 0 {
 			return nil
 		}
-		_, _, err := testAccClient(t).CICDInfrastructure.Get(context.Background(), *id)
+		_, _, err := testAccClient(t).CICDInfrastructure.Get(context.Background(), *id, nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

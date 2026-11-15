@@ -22,7 +22,7 @@ func TestAccProductDataSource(t *testing.T) {
 	// match it, although DefectDojo's name_exact filter ignores case.
 	upper, _, err := testAccClient(t).Products.Create(context.Background(), &defectdojo.Product{
 		Name: strings.ToUpper(name), Description: "same name, other case", ProdType: testAccCreateProductType(t),
-	})
+	}, nil)
 	testAccNoError(t, err)
 
 	resource.Test(t, resource.TestCase{

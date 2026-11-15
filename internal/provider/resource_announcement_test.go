@@ -25,7 +25,7 @@ func TestAccAnnouncement(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			if a, _, err := testAccClient(t).Announcements.Current(context.Background()); !errors.Is(err, defectdojo.ErrNotFound) {
+			if a, _, err := testAccClient(t).Announcements.Current(context.Background(), nil); !errors.Is(err, defectdojo.ErrNotFound) {
 				t.Fatalf("the stack has an announcement before the test: %+v, %v", a, err)
 			}
 		},
@@ -103,7 +103,7 @@ func TestAccAnnouncement(t *testing.T) {
 			// Changed outside Terraform: Terraform replaces it
 			{
 				PreConfig: func() {
-					_, _, err := testAccClient(t).Announcements.Patch(context.Background(), 1, &defectdojo.AnnouncementPatch{Message: new("changed")})
+					_, _, err := testAccClient(t).Announcements.Patch(context.Background(), 1, &defectdojo.AnnouncementPatch{Message: new("changed")}, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccAnnouncementConfig("Maintenance moved to Sunday.", "  style       = \"warning\"\n  dismissable = true\n"),
@@ -119,7 +119,7 @@ func TestAccAnnouncement(t *testing.T) {
 			// Deleted outside Terraform: it is created again
 			{
 				PreConfig: func() {
-					_, err := testAccClient(t).Announcements.Delete(context.Background(), 1)
+					_, err := testAccClient(t).Announcements.Delete(context.Background(), 1, nil)
 					testAccNoError(t, err)
 				},
 				Config: testAccAnnouncementConfig("Maintenance moved to Sunday.", "  style       = \"warning\"\n  dismissable = true\n"),
@@ -159,7 +159,7 @@ resource "defectdojo_announcement" "test" {
 // testAccCheckNoAnnouncement checks that the stack has no announcement.
 func testAccCheckNoAnnouncement(t *testing.T) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		a, _, err := testAccClient(t).Announcements.Current(context.Background())
+		a, _, err := testAccClient(t).Announcements.Current(context.Background(), nil)
 		if errors.Is(err, defectdojo.ErrNotFound) {
 			return nil
 		}

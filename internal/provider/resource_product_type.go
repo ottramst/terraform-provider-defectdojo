@@ -154,7 +154,7 @@ func (r *ProductTypeResource) Create(ctx context.Context, req resource.CreateReq
 		}
 	}
 
-	created, _, err := r.client.ProductTypes.Create(ctx, pt)
+	created, _, err := r.client.ProductTypes.Create(ctx, pt, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating DefectDojo product type",
@@ -177,7 +177,7 @@ func (r *ProductTypeResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	pt, _, err := r.client.ProductTypes.Get(ctx, int(data.ID.ValueInt64()))
+	pt, _, err := r.client.ProductTypes.Get(ctx, int(data.ID.ValueInt64()), nil)
 	if err != nil {
 		// Deleted outside Terraform
 		if errors.Is(err, defectdojo.ErrNotFound) {
@@ -227,7 +227,7 @@ func (r *ProductTypeResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	updated, _, err := r.client.ProductTypes.Patch(ctx, int(data.ID.ValueInt64()), patch)
+	updated, _, err := r.client.ProductTypes.Patch(ctx, int(data.ID.ValueInt64()), patch, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating DefectDojo product type",
@@ -250,7 +250,7 @@ func (r *ProductTypeResource) Delete(ctx context.Context, req resource.DeleteReq
 	id := int(data.ID.ValueInt64())
 
 	if !data.ForceDestroy.ValueBool() {
-		n, _, err := r.client.ProductTypes.CountProducts(ctx, id)
+		n, _, err := r.client.ProductTypes.CountProducts(ctx, id, nil)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error deleting DefectDojo product type",
@@ -269,7 +269,7 @@ func (r *ProductTypeResource) Delete(ctx context.Context, req resource.DeleteReq
 		}
 	}
 
-	if _, err := r.client.ProductTypes.Delete(ctx, id); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
+	if _, err := r.client.ProductTypes.Delete(ctx, id, nil); err != nil && !errors.Is(err, defectdojo.ErrNotFound) {
 		resp.Diagnostics.AddError(
 			"Error deleting DefectDojo product type",
 			fmt.Sprintf("Could not delete product type %d, unexpected error: %s", id, err),
@@ -280,7 +280,7 @@ func (r *ProductTypeResource) Delete(ctx context.Context, req resource.DeleteReq
 	waitCtx, cancel := context.WithTimeout(ctx, productTypeDeleteTimeout)
 	defer cancel()
 	err := waitForDeletion(waitCtx, func(ctx context.Context) error {
-		_, _, err := r.client.ProductTypes.Get(ctx, id)
+		_, _, err := r.client.ProductTypes.Get(ctx, id, nil)
 		return err
 	})
 	if err != nil {
