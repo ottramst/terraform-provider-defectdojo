@@ -47,7 +47,9 @@ data "defectdojo_product" "by_id" {
 - `product_manager_id` (Number) The ID of the product manager, or null.
 - `product_type_id` (Number) The ID of the product type of the product.
 - `regulation_ids` (Set of Number) The IDs of the regulations that apply to the product.
+- `revenue` (String) The estimated revenue of the product, a decimal such as `"100.00"`, or null.
 - `sla_configuration_id` (Number) The ID of the SLA configuration of the product.
 - `tags` (Set of String) The tags of the product.
 - `team_manager_id` (Number) The ID of the team manager, or null.
 - `technical_contact_id` (Number) The ID of the technical contact, or null.
+- `user_records` (Number) The estimated number of user records in the product, or null.

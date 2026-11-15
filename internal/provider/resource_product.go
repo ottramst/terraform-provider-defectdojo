@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -62,6 +64,8 @@ type ProductResourceModel struct {
 	Platform                      types.String `tfsdk:"platform"`
 	Lifecycle                     types.String `tfsdk:"life_cycle"`
 	Origin                        types.String `tfsdk:"origin"`
+	UserRecords                   types.Int64  `tfsdk:"user_records"`
+	Revenue                       types.String `tfsdk:"revenue"`
 	ExternalAudience              types.Bool   `tfsdk:"external_audience"`
 	InternetAccessible            types.Bool   `tfsdk:"internet_accessible"`
 	EnableProductTagInheritance   types.Bool   `tfsdk:"enable_product_tag_inheritance"`
@@ -157,9 +161,20 @@ func (r *ProductResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:            true,
 				Validators:          []validator.String{stringvalidator.OneOf(businessCriticalities...)},
 			},
-			"platform":            lookup("platform", "`web`, `web service`, `desktop`, `mobile` or `iot`"),
-			"life_cycle":          lookup("lifecycle", "`construction`, `production` or `retirement`"),
-			"origin":              lookup("origin", "`internal`, `third party library`, `purchased`, `contractor`, `open source` or `outsourced`"),
+			"platform":   lookup("platform", "`web`, `web service`, `desktop`, `mobile` or `iot`"),
+			"life_cycle": lookup("lifecycle", "`construction`, `production` or `retirement`"),
+			"origin":     lookup("origin", "`internal`, `third party library`, `purchased`, `contractor`, `open source` or `outsourced`"),
+			"user_records": schema.Int64Attribute{
+				MarkdownDescription: "The estimated number of user records in the product, such as customer accounts it stores; `0` is a value. When it is not set, it is cleared.",
+				Optional:            true,
+				Validators:          []validator.Int64{int64validator.Between(0, math.MaxInt32)},
+			},
+			"revenue": schema.StringAttribute{
+				MarkdownDescription: "The estimated revenue of the product, a non-negative decimal with two decimal places and up to 13 digits before the point, such as `\"100.00\"`: " +
+					"DefectDojo would store `\"100\"` as `\"100.00\"`. When it is not set, it is cleared.",
+				Optional:   true,
+				Validators: []validator.String{revenueValidator()},
+			},
 			"external_audience":   flag("Whether the product is used by people outside the organization.", false),
 			"internet_accessible": flag("Whether the product is accessible from the internet.", false),
 			"enable_product_tag_inheritance": flag("Whether the product's engagements, tests and findings inherit its tags. "+
@@ -254,6 +269,8 @@ func (r *ProductResource) Create(ctx context.Context, req resource.CreateRequest
 		Platform:                      data.Platform.ValueString(),
 		Lifecycle:                     data.Lifecycle.ValueString(),
 		Origin:                        data.Origin.ValueString(),
+		UserRecords:                   intPtr(data.UserRecords),
+		Revenue:                       stringPtr(data.Revenue),
 		ExternalAudience:              data.ExternalAudience.ValueBool(),
 		InternetAccessible:            data.InternetAccessible.ValueBool(),
 		EnableProductTagInheritance:   data.EnableProductTagInheritance.ValueBool(),
@@ -347,6 +364,8 @@ func (r *ProductResource) Update(ctx context.Context, req resource.UpdateRequest
 		Platform:                      nullableString(data.Platform),
 		Lifecycle:                     nullableString(data.Lifecycle),
 		Origin:                        nullableString(data.Origin),
+		UserRecords:                   nullableInt(data.UserRecords),
+		Revenue:                       nullableString(data.Revenue),
 		ExternalAudience:              new(data.ExternalAudience.ValueBool()),
 		InternetAccessible:            new(data.InternetAccessible.ValueBool()),
 		EnableProductTagInheritance:   new(data.EnableProductTagInheritance.ValueBool()),
@@ -468,6 +487,8 @@ func updateProductModel(data *ProductResourceModel, p *defectdojo.Product, tagRe
 	data.Platform = stringOrNull(p.Platform)
 	data.Lifecycle = stringOrNull(p.Lifecycle)
 	data.Origin = stringOrNull(p.Origin)
+	data.UserRecords = int64PtrOrNull(p.UserRecords)
+	data.Revenue = stringPtrOrNull(p.Revenue)
 	data.ExternalAudience = types.BoolValue(p.ExternalAudience)
 	data.InternetAccessible = types.BoolValue(p.InternetAccessible)
 	data.EnableProductTagInheritance = types.BoolValue(p.EnableProductTagInheritance)
@@ -485,4 +506,16 @@ func updateProductModel(data *ProductResourceModel, p *defectdojo.Product, tagRe
 	if data.ForceDestroy.IsNull() || data.ForceDestroy.IsUnknown() {
 		data.ForceDestroy = types.BoolValue(false)
 	}
+}
+
+// revenueValidator accepts a product's revenue in the form DefectDojo
+// returns it: two decimal places, no leading zeros and at most 15 digits.
+// DefectDojo would rewrite other forms ("100" as "100.00", "0012.30" as
+// "12.30"), so the apply would fail with "inconsistent result", and it
+// rejects negative values, although its API schema allows a minus sign.
+func revenueValidator() validator.String {
+	return stringvalidator.RegexMatches(
+		regexp.MustCompile(`^(0|[1-9][0-9]{0,12})\.[0-9]{2}$`),
+		`must be a non-negative decimal with two decimal places and no leading zeros, such as "100.00"`,
+	)
 }

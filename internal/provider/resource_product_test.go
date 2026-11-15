@@ -49,6 +49,8 @@ func TestAccProduct(t *testing.T) {
 						"defectdojo_product_type.first", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("business_criticality"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("platform"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("user_records"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("revenue"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("external_audience"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("enable_full_risk_acceptance"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("sla_configuration_id"), knownvalue.Int64Exact(1)),
@@ -68,6 +70,8 @@ func TestAccProduct(t *testing.T) {
   platform                         = "web"
   life_cycle                       = "production"
   origin                           = "internal"
+  user_records                     = 0
+  revenue                          = "1234567890123.45"
   external_audience                = true
   internet_accessible              = true
   enable_product_tag_inheritance   = true
@@ -92,6 +96,8 @@ func TestAccProduct(t *testing.T) {
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("platform"), knownvalue.StringExact("web")),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("life_cycle"), knownvalue.StringExact("production")),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("origin"), knownvalue.StringExact("internal")),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("user_records"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("revenue"), knownvalue.StringExact("1234567890123.45")),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("internet_accessible"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("enable_full_risk_acceptance"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("disable_sla_breach_notifications"), knownvalue.Bool(true)),
@@ -135,6 +141,8 @@ func TestAccProduct(t *testing.T) {
 					// Unset optional attributes are cleared; unset sets are kept.
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("business_criticality"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("platform"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("user_records"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("revenue"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("team_manager_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("enable_full_risk_acceptance"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(productAddress, tfjsonpath.New("authorized_users"), knownvalue.SetSizeExact(1)),
