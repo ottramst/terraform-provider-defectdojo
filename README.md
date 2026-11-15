@@ -140,7 +140,7 @@ Some attributes were renamed or changed meaning, so the configuration needs upda
 
 ## Roadmap
 
-The path to v1.0, and what comes after, is tracked in [milestones](https://github.com/ottramst/terraform-provider-defectdojo/milestones) and on the [DefectDojo roadmap board](https://github.com/users/ottramst/projects/4). Each epic issue lists its resources as sub-issues, and each resource builds on a [go-defectdojo](https://github.com/ottramst/go-defectdojo) service. Contributions are welcome.
+The path to v1.0 was tracked in [milestones](https://github.com/ottramst/terraform-provider-defectdojo/milestones); planned work, such as the [backlog epics](https://github.com/ottramst/terraform-provider-defectdojo/issues?q=is%3Aissue+is%3Aopen+label%3Aepic), is on the [DefectDojo roadmap board](https://github.com/users/ottramst/projects/4). Each epic issue lists its resources as sub-issues, and each resource builds on a [go-defectdojo](https://github.com/ottramst/go-defectdojo) service. Contributions are welcome.
 
 ## Building The Provider
 

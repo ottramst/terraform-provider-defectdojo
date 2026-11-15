@@ -1,6 +1,6 @@
 ## v1.0.0
 
-v1.0.0 is the first stable release: from now on, the provider follows semantic versioning, and CI checks every change against the schemas and the state of the latest release. Upgrading from v0.5.0 needs no configuration changes; change the version constraint to `~> 1.0`. Built with go-defectdojo v1.0.0 and tested against DefectDojo 3.4.304 and 3.5.103 with Terraform 1.16 and 1.17.
+v1.0.0 is the first stable release: from now on, the provider follows semantic versioning, and CI checks every change against the schemas and the state of the latest release. Upgrading from v0.5.0 needs no configuration changes; change the version constraint to `~> 1.0`. Tested against DefectDojo 3.4.304 and 3.5.103 with Terraform 1.16 and 1.17.
 
 ENHANCEMENTS:
 
