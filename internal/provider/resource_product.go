@@ -516,6 +516,6 @@ func updateProductModel(data *ProductResourceModel, p *defectdojo.Product, tagRe
 func revenueValidator() validator.String {
 	return stringvalidator.RegexMatches(
 		regexp.MustCompile(`^(0|[1-9][0-9]{0,12})\.[0-9]{2}$`),
-		`must be a non-negative decimal with two decimal places and no leading zeros, such as "100.00"`,
+		`must be a non-negative decimal with two decimal places, no leading zeros and at most 13 digits before the point, such as "100.00"`,
 	)
 }

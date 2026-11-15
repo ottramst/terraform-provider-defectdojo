@@ -32,6 +32,8 @@ func TestAccProductDataSource(t *testing.T) {
 			{
 				Config: testAccProductConfig(name, "first", `
   platform           = "web"
+  user_records       = 0
+  revenue            = "100.00"
   product_manager_id = 1
   tags               = ["lookup"]
 `) + `
@@ -53,6 +55,8 @@ data "defectdojo_product" "by_name" {
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("description"), knownvalue.StringExact("acceptance test")),
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("platform"), knownvalue.StringExact("web")),
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("life_cycle"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("user_records"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("revenue"), knownvalue.StringExact("100.00")),
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("product_manager_id"), knownvalue.Int64Exact(1)),
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("sla_configuration_id"), knownvalue.Int64Exact(1)),
 					statecheck.ExpectKnownValue("data.defectdojo_product.by_name", tfjsonpath.New("tags"),
