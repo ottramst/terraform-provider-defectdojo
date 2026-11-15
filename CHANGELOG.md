@@ -21,7 +21,7 @@ ENHANCEMENTS:
 NOTES:
 
 * `defectdojo_engagement`: like `lead_id`, the new CI/CD links are cleared when they aren't configured. After upgrading, the next plan shows an update for every engagement whose CI/CD links were set outside Terraform, which clears them; add the links to the configuration before applying it to keep them ([#24](https://github.com/ottramst/terraform-provider-defectdojo/issues/24))
-* Completes the v0.4.0 milestone (lookup objects). Requires go-defectdojo v0.4.0. Tested against DefectDojo 3.4.304 and 3.5.103, with Terraform 1.16 and 1.17
+* Completes the v0.4.0 milestone (lookup objects), built on go-defectdojo v0.4.0. Tested against DefectDojo 3.4.304 and 3.5.103, with Terraform 1.16 and 1.17
 
 ## v0.3.0
 
