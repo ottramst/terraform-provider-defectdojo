@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -38,7 +39,7 @@ func TestAccRegulation(t *testing.T) {
 				Config: testAccRegulationConfig(name, "privacy", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("name"), knownvalue.StringExact(name)),
-					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("acronym"), knownvalue.StringExact(name)),
+					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("acronym"), knownvalue.StringExact(testAccRegulationAcronym(name))),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("category"), knownvalue.StringExact("privacy")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("jurisdiction"), knownvalue.StringExact("European Union")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("description"), knownvalue.Null()),
@@ -50,8 +51,9 @@ func TestAccRegulation(t *testing.T) {
 			// Update every attribute in place
 			{
 				Config: testAccRegulationConfig(renamed, "security", `
-  description = "Rules for the handling of card data."
-  reference   = "https://example.com/regulation"
+  jurisdiction = "Estonia"
+  description  = "Rules for the handling of card data."
+  reference    = "https://example.com/regulation"
 `),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -61,6 +63,7 @@ func TestAccRegulation(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("name"), knownvalue.StringExact(renamed)),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("category"), knownvalue.StringExact("security")),
+					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("jurisdiction"), knownvalue.StringExact("Estonia")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("description"), knownvalue.StringExact("Rules for the handling of card data.")),
 					statecheck.ExpectKnownValue(regulationAddress, tfjsonpath.New("reference"), knownvalue.StringExact("https://example.com/regulation")),
 				},
@@ -176,15 +179,26 @@ resource "defectdojo_product" "test" {
 	})
 }
 
+// testAccRegulationConfig returns a regulation whose acronym is the random
+// part of name, so that it stays within 20 characters when name grows. extra
+// may set jurisdiction, which defaults to "European Union".
 func testAccRegulationConfig(name, category, extra string) string {
+	jurisdiction := ""
+	if !strings.Contains(extra, "jurisdiction") {
+		jurisdiction = `  jurisdiction = "European Union"` + "\n"
+	}
 	return fmt.Sprintf(`
 resource "defectdojo_regulation" "test" {
   name         = %[1]q
-  acronym      = %[1]q
-  category     = %[2]q
-  jurisdiction = "European Union"
-%[3]s}
-`, name, category, extra)
+  acronym      = %[2]q
+  category     = %[3]q
+%[4]s%[5]s}
+`, name, testAccRegulationAcronym(name), category, jurisdiction, extra)
+}
+
+// testAccRegulationAcronym returns the acronym testAccRegulationConfig uses.
+func testAccRegulationAcronym(name string) string {
+	return strings.ToUpper(strings.TrimPrefix(strings.SplitN(name, "-renamed", 2)[0], "acc-"))
 }
 
 // testAccCaptureRegulationID stores the ID of the regulation in id.

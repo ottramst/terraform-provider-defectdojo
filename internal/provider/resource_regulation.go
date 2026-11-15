@@ -62,7 +62,8 @@ func (r *RegulationResource) Metadata(_ context.Context, req resource.MetadataRe
 func (r *RegulationResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a DefectDojo regulation, such as PCI DSS or HIPAA, which products list in `regulation_ids`. " +
-			"DefectDojo comes with 26 regulations; look them up with the `defectdojo_regulation` data source.\n\n" +
+			"DefectDojo comes with 26 regulations; look them up with the `defectdojo_regulation` data source. " +
+			"Managing regulations needs a superuser or the regulation configuration permissions.\n\n" +
 			"~> **Destroying a regulation removes it from every product** that lists it. " +
 			"The `regulation_ids` of a `defectdojo_product` that listed it then show a change.",
 		Attributes: map[string]schema.Attribute{

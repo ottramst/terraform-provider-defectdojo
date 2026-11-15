@@ -3,13 +3,13 @@
 page_title: "defectdojo_regulation Resource - defectdojo"
 subcategory: ""
 description: |-
-  Manages a DefectDojo regulation, such as PCI DSS or HIPAA, which products list in regulation_ids. DefectDojo comes with 26 regulations; look them up with the defectdojo_regulation data source.
+  Manages a DefectDojo regulation, such as PCI DSS or HIPAA, which products list in regulation_ids. DefectDojo comes with 26 regulations; look them up with the defectdojo_regulation data source. Managing regulations needs a superuser or the regulation configuration permissions.
   ~> Destroying a regulation removes it from every product that lists it. The regulation_ids of a defectdojo_product that listed it then show a change.
 ---
 
 # defectdojo_regulation (Resource)
 
-Manages a DefectDojo regulation, such as PCI DSS or HIPAA, which products list in `regulation_ids`. DefectDojo comes with 26 regulations; look them up with the `defectdojo_regulation` data source.
+Manages a DefectDojo regulation, such as PCI DSS or HIPAA, which products list in `regulation_ids`. DefectDojo comes with 26 regulations; look them up with the `defectdojo_regulation` data source. Managing regulations needs a superuser or the regulation configuration permissions.
 
 ~> **Destroying a regulation removes it from every product** that lists it. The `regulation_ids` of a `defectdojo_product` that listed it then show a change.
 
