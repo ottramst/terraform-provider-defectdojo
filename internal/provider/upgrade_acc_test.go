@@ -39,6 +39,7 @@ var upgradeAddresses = []string{
 	"defectdojo_notifications.test",
 	"defectdojo_jira_instance.test",
 	"defectdojo_jira_project.test",
+	"defectdojo_system_settings.test",
 }
 
 // The objects the latest release created plan no changes with this build:
@@ -90,8 +91,8 @@ func TestAccUpgradeFromLatestRelease(t *testing.T) {
 
 // testAccUpgradeConfig returns a configuration with the resources whose
 // state is the most involved: authorized users, tags, regulations,
-// configuration permissions, write-only attributes, notification events and
-// a Jira project.
+// configuration permissions, write-only attributes, notification events, a
+// Jira project and the system settings.
 func testAccUpgradeConfig(name string) string {
 	return fmt.Sprintf(`
 resource "defectdojo_product_type" "test" {
@@ -175,5 +176,8 @@ resource "defectdojo_jira_project" "test" {
   project_key      = "UPG"
   custom_fields    = jsonencode({ customfield_10010 = "x" })
 }
+
+# Without settings, nothing is written, and destroying it changes nothing.
+resource "defectdojo_system_settings" "test" {}
 `, name, testAccPassword)
 }

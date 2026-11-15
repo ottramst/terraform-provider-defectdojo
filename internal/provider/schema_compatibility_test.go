@@ -64,15 +64,14 @@ type schemaAttribute struct {
 	// to false"), which the protocol schema doesn't have.
 	Default string `json:"default,omitempty"`
 
-	// RequiresReplace is true when a change of the attribute replaces the
-	// resource. Replacement must only be forced by attribute plan modifiers,
-	// never by resp.RequiresReplace in ModifyPlan, which this can't see.
+	// RequiresReplace is true when a change of the attribute can replace the
+	// resource: it has one of the framework's RequiresReplace,
+	// RequiresReplaceIf or RequiresReplaceIfConfigured plan modifiers.
+	// Replacement must only be forced by them, never by resp.RequiresReplace
+	// in ModifyPlan or by a modifier of the provider's own, which this can't
+	// see.
 	RequiresReplace bool `json:"requires_replace,omitempty"`
 }
-
-// requiresReplaceDescription is the description of the framework's
-// RequiresReplace plan modifiers, which recognizes them.
-const requiresReplaceDescription = "If the value of this attribute changes, Terraform will destroy and recreate the resource."
 
 // dumpSchemas returns the schemas of the provider, as Terraform sees them
 // (GetProviderSchema and GetResourceIdentitySchemas), with the defaults and
@@ -150,6 +149,9 @@ func dumpSchemas(t *testing.T) schemaDump {
 		}
 		for name, attr := range resp.Schema.Attributes {
 			a := d.Attributes[name]
+			if a.Nesting != "" {
+				t.Fatalf("resource %s has the nested attribute %s, whose defaults and plan modifiers dumpSchemas doesn't read", rmeta.TypeName, name)
+			}
 			a.Default, a.RequiresReplace = frameworkModifiers(ctx, t, rmeta.TypeName+"."+name, attr)
 			d.Attributes[name] = a
 		}
@@ -203,9 +205,12 @@ func typeJSON(t *testing.T, typ interface{ MarshalJSON() ([]byte, error) }) json
 }
 
 // frameworkModifiers returns the description of the default of a framework
-// resource attribute, and whether a plan modifier forces replacement. The
+// resource attribute, and whether a plan modifier can force replacement. The
 // framework's attribute types have typed methods (StringDefaultValue,
-// StringPlanModifiers, ...), so they are found by name.
+// StringPlanModifiers, ...), so they are found by name. The framework's
+// RequiresReplace modifiers of every type are one unexported type per
+// package, requiresReplaceIfModifier, which recognizes them whatever their
+// description.
 func frameworkModifiers(ctx context.Context, t *testing.T, path string, attr any) (string, bool) {
 	t.Helper()
 	type described interface {
@@ -230,7 +235,7 @@ func frameworkModifiers(ctx context.Context, t *testing.T, path string, attr any
 		case strings.HasSuffix(name, "PlanModifiers"):
 			mods := v.Method(i).Call(nil)[0]
 			for j := range mods.Len() {
-				if d, ok := mods.Index(j).Interface().(described); ok && d.Description(ctx) == requiresReplaceDescription {
+				if reflect.TypeOf(mods.Index(j).Interface()).Name() == "requiresReplaceIfModifier" {
 					requiresReplace = true
 				}
 			}
@@ -347,8 +352,8 @@ func compareAttributes(add func(string, ...any), where string, base, cur map[str
 			add("%s: type changed from %s%s to %s%s", at, o.Type, o.Nesting, n.Type, n.Nesting)
 		case n.Required && !o.Required:
 			add("%s: became required", at)
-		case o.Optional && !n.Optional && !n.Required:
-			add("%s: is no longer optional", at)
+		case (o.Optional || o.Required) && !n.Optional && !n.Required:
+			add("%s: can no longer be set", at)
 		case o.Computed && !n.Computed:
 			add("%s: is no longer computed", at)
 		case o.Optional && !o.Computed && n.Computed:
@@ -360,6 +365,10 @@ func compareAttributes(add func(string, ...any), where string, base, cur map[str
 		}
 		if n.WriteOnly && !o.WriteOnly {
 			add("%s: became write-only", at)
+		}
+		// Only write-only attributes take ephemeral values.
+		if o.WriteOnly && !n.WriteOnly {
+			add("%s: is no longer write-only", at)
 		}
 		if o.Default != n.Default {
 			add("%s: default changed from %q to %q", at, o.Default, n.Default)
@@ -451,6 +460,13 @@ func TestSchemaIncompatibilities(t *testing.T) {
 		{"optional to required", func(d *schemaDump) {
 			attr(*d, "description", func(a *schemaAttribute) { a.Optional, a.Required = false, true })
 		}, "became required"},
+		{"required to computed", func(d *schemaDump) {
+			attr(*d, "name", func(a *schemaAttribute) { a.Required, a.Computed = false, true })
+		}, "can no longer be set"},
+		{"optional to computed", func(d *schemaDump) {
+			attr(*d, "description", func(a *schemaAttribute) { a.Optional, a.Computed = false, true })
+		}, "can no longer be set"},
+		{"write-only removed", func(d *schemaDump) { attr(*d, "secret_wo", func(a *schemaAttribute) { a.WriteOnly = false }) }, "no longer write-only"},
 		{"no longer computed", func(d *schemaDump) {
 			attr(*d, "force_destroy", func(a *schemaAttribute) { a.Computed = false })
 		}, "is no longer computed"},
