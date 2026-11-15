@@ -19,7 +19,10 @@ import (
 
 // doximityProviders runs doximity/defectdojo v0.0.13 under the local name
 // defectdojo, configured from the environment like this provider; it reads
-// the URL from DEFECTDOJO_BASEURL.
+// the URL from DEFECTDOJO_BASEURL. doximity/defectdojo is unmaintained: when a
+// supported DefectDojo version breaks it, the tests that run it can go, with
+// TestUpgradeDoximityState and TestMoveFromDoximity left to cover the
+// migration.
 func doximityProviders(t *testing.T) map[string]resource.ExternalProvider {
 	t.Helper()
 	t.Setenv("DEFECTDOJO_BASEURL", os.Getenv("DEFECTDOJO_URL"))
