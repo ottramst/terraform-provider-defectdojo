@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -141,7 +139,7 @@ func (r *ProductAttributeResource) Schema(_ context.Context, _ resource.SchemaRe
 				Optional:            true,
 				Computed:            true,
 				Default:             int64default.StaticInt64(0),
-				Validators:          []validator.Int64{int64validator.Between(math.MinInt32, math.MaxInt32)},
+				Validators:          []validator.Int64{int32Range()},
 			},
 		},
 	}

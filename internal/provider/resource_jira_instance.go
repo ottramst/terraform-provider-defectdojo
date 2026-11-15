@@ -304,8 +304,15 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	// The password is sent when its version changes, since Terraform can't
 	// compare write-only values, and when the URL changes, which DefectDojo
-	// allows only with the password. Without one, nothing is sent:
-	// ModifyPlan refused the cases that need it.
+	// allows only with the password. Without one, nothing is sent: ModifyPlan
+	// refused the cases that need it, except a new version that was unknown
+	// at plan time, refused here.
+	if password.IsNull() && !data.PasswordWOVersion.IsNull() && !data.PasswordWOVersion.Equal(state.PasswordWOVersion) {
+		resp.Diagnostics.AddAttributeError(path.Root("password_wo"), "Missing Jira password",
+			"A new password_wo_version sends password_wo to DefectDojo, but password_wo isn't set. "+
+				"Set password_wo, or keep password_wo_version as it was.")
+		return
+	}
 	if !password.IsNull() && password.ValueString() != "" &&
 		(!data.PasswordWOVersion.Equal(state.PasswordWOVersion) || jiraURLChanged(state.URL.ValueString(), data.URL.ValueString())) {
 		patch.Password = new(password.ValueString())

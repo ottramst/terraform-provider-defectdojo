@@ -26,7 +26,7 @@ func NewJiraInstanceListResource() list.ListResource {
 		typeName: "_jira_instance",
 		schema: schema.Schema{
 			MarkdownDescription: "Lists the DefectDojo Jira instances, ordered by ID, with their configuration name, or their URL when it is empty, as display name. " +
-				"The generated configuration has no `password_wo`, which DefectDojo never returns: add it, with a `password_wo_version`, to change the password or the URL." + listNotes,
+				"The generated configuration has no `password_wo`, which DefectDojo never returns: add it to change the URL, and with a new `password_wo_version` to change the password." + listNotes,
 			Attributes: map[string]schema.Attribute{
 				"configuration_name_contains": listContainsAttribute("Jira instances", "configuration name"),
 			},

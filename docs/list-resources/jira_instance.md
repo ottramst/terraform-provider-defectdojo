@@ -3,13 +3,13 @@
 page_title: "defectdojo_jira_instance List Resource - defectdojo"
 subcategory: ""
 description: |-
-  Lists the DefectDojo Jira instances, ordered by ID, with their configuration name, or their URL when it is empty, as display name. The generated configuration has no password_wo, which DefectDojo never returns: add it, with a password_wo_version, to change the password or the URL.
+  Lists the DefectDojo Jira instances, ordered by ID, with their configuration name, or their URL when it is empty, as display name. The generated configuration has no password_wo, which DefectDojo never returns: add it to change the URL, and with a new password_wo_version to change the password.
   Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the list block sets limit. terraform query -generate-config-out writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as authorized_users and tags): remove the ones another system manages before applying the generated configuration.
 ---
 
 # defectdojo_jira_instance (List Resource)
 
-Lists the DefectDojo Jira instances, ordered by ID, with their configuration name, or their URL when it is empty, as display name. The generated configuration has no `password_wo`, which DefectDojo never returns: add it, with a `password_wo_version`, to change the password or the URL.
+Lists the DefectDojo Jira instances, ordered by ID, with their configuration name, or their URL when it is empty, as display name. The generated configuration has no `password_wo`, which DefectDojo never returns: add it to change the URL, and with a new `password_wo_version` to change the password.
 
 Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the `list` block sets `limit`. `terraform query -generate-config-out` writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as `authorized_users` and `tags`): remove the ones another system manages before applying the generated configuration.
 

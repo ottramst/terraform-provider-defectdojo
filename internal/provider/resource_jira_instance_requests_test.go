@@ -161,8 +161,9 @@ resource "defectdojo_jira_instance" "test" {
 }
 
 // A password that is unknown at plan time, such as an attribute of a resource
-// created in the same apply, passes the plan and is sent.
-func TestAccJiraInstance_unknownPassword(t *testing.T) {
+// created in the same apply, passes the plan and is sent. A new version that
+// is unknown at plan time, without a password, fails at apply.
+func TestAccJiraInstance_unknownValues(t *testing.T) {
 	fake := &fakeDefectDojo{
 		collection: "jira_instances",
 		defaults:   map[string]any{"default_issue_type": "Bug", "global_jira_sla_notification": true, "finding_jira_sync": false},
@@ -170,13 +171,9 @@ func TestAccJiraInstance_unknownPassword(t *testing.T) {
 	server := httptest.NewServer(fake.handler(t))
 	t.Cleanup(server.Close)
 
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_11_0),
-		},
-		Steps: []resource.TestStep{{
-			Config: fmt.Sprintf(`
+	// config adds extra to the instance, and the resources to the file.
+	config := func(extra, resources string) string {
+		return fmt.Sprintf(`
 provider "defectdojo" {
   url       = %q
   api_token = "test"
@@ -185,12 +182,11 @@ provider "defectdojo" {
 resource "terraform_data" "password" {
   input = "from-another-resource"
 }
-
+%s
 resource "defectdojo_jira_instance" "test" {
   configuration_name        = "fake"
   url                       = "https://jira.invalid"
   username                  = "bot"
-  password_wo               = terraform_data.password.output
   epic_name_id              = 1
   open_status_key           = 2
   close_status_key          = 3
@@ -199,9 +195,31 @@ resource "defectdojo_jira_instance" "test" {
   medium_mapping_severity   = "Medium"
   high_mapping_severity     = "High"
   critical_mapping_severity = "Highest"
+%s}
+`, server.URL, resources, extra)
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config("  password_wo = terraform_data.password.output\n", ""),
+				Check:  fake.checkPostSends(true, "password"),
+			},
+			{
+				Config: config("  password_wo_version = terraform_data.version.output\n", `
+resource "terraform_data" "version" {
+  input = 1
 }
-`, server.URL),
-			Check: fake.checkPostSends(true, "password"),
-		}},
+`),
+				ExpectError: regexp.MustCompile(`(?s)Missing Jira password.*new\s+password_wo_version`),
+			},
+			{
+				Config: config("", ""),
+			},
+		},
 	})
 }
