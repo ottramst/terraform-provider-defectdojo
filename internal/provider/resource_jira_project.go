@@ -29,6 +29,7 @@ var _ resource.ResourceWithImportState = &JiraProjectResource{}
 var _ resource.ResourceWithIdentity = &JiraProjectResource{}
 var _ resource.ResourceWithConfigValidators = &JiraProjectResource{}
 var _ resource.ResourceWithModifyPlan = &JiraProjectResource{}
+var _ resource.ResourceWithMoveState = &JiraProjectResource{}
 
 // suppressSLANotificationCommentsSince is the first DefectDojo version with
 // suppress_sla_notification_comments; older versions drop it.
@@ -382,6 +383,12 @@ func (r *JiraProjectResource) Delete(ctx context.Context, req resource.DeleteReq
 			fmt.Sprintf("Could not delete Jira project %d, unexpected error: %s", id, err),
 		)
 	}
+}
+
+// MoveState moves a defectdojo_jira_product_configuration of the
+// doximity/defectdojo provider here, with a moved block.
+func (r *JiraProjectResource) MoveState(_ context.Context) []resource.StateMover {
+	return []resource.StateMover{moveFromDoximity("defectdojo_jira_product_configuration")}
 }
 
 func (r *JiraProjectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

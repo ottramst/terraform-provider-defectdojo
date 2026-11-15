@@ -44,7 +44,7 @@ It talks to DefectDojo through [go-defectdojo](https://github.com/ottramst/go-de
 - **Adoption**: Import existing objects by ID or with an `import` block and resource identity (Terraform 1.12+), or find them with the list resources of `terraform query` (Terraform 1.14+), which generates `import` blocks and their configuration
 - **Authentication**: An API v2 token, or a username and password when API tokens are disabled
 
-Migration from `doximity/defectdojo` and more are planned; see the [roadmap](#roadmap).
+More is planned; see the [roadmap](#roadmap).
 
 ## DefectDojo version compatibility
 
@@ -107,7 +107,12 @@ For details, see the:
 
 ### Migrating from doximity/defectdojo
 
-The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Moving its `defectdojo_product_type`, `defectdojo_product` and `defectdojo_jira_product_configuration` resources to this provider is planned, with `moved` blocks where possible. Until then, remove product types and products from state and import them here by their numeric IDs; import Jira product configurations as `defectdojo_jira_project` the same way.
+The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defectdojo) provider is no longer maintained and targets DefectDojo 2.x. Its state moves here without recreating anything:
+
+- `defectdojo_product_type` and `defectdojo_product` have the same names here: change the provider source in `required_providers` to `ottramst/defectdojo`, and this provider takes over their state.
+- `defectdojo_jira_product_configuration` is `defectdojo_jira_project` here: move it with a `moved` block (Terraform 1.8+).
+
+Some attributes were renamed or changed meaning; the configuration needs updating before the first plan.
 
 ## Roadmap
 
