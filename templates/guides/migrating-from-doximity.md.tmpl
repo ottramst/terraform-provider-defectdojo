@@ -71,15 +71,21 @@ The changes, resource by resource:
     that they can be managed elsewhere, and `[]` removes them all. Tags may be any text without spaces, commas or quotes, not
     only lowercase letters.
   - `authorized_users`, `sla_configuration_id`, `enable_product_tag_inheritance`, `disable_sla_breach_notifications` and
-    `force_destroy` are new.
+    `force_destroy` are new. `enable_product_tag_inheritance` and `disable_sla_breach_notifications` take DefectDojo's default
+    (`false`) when they are left out: if they were turned on in DefectDojo's UI, add them to the configuration.
 - **`defectdojo_jira_product_configuration` → `defectdojo_jira_project`:**
   - `jira_instance_id`, `product_id` and `engagement_id` are numbers.
   - `jira_instance_id` is required, and exactly one of `product_id` and `engagement_id` must be set.
   - `project_key = ""` meant "no key"; leave it out instead.
-  - `component`, the custom and transition fields, `jira_labels`, `default_assignee`, `enabled` and the other settings DefectDojo
-    has are new. Like the defaults of the other settings, they match DefectDojo's defaults, so leaving them out changes nothing.
-- **Data sources:** `defectdojo_product_type` looks up by `id` or `name`, `defectdojo_product` by `id` or `name`; both return
-  numeric IDs.
+  - `component`, the custom and transition fields, `jira_labels`, `default_assignee`, `enabled`, `epic_issue_type_name` and
+    the other settings DefectDojo has are new. Left out, they take DefectDojo's defaults (empty, or `enabled = true` and
+    `epic_issue_type_name = "Epic"`). doximity/defectdojo couldn't manage them, so if they were set in DefectDojo's UI, the first
+    plan clears them: **add them to the configuration** before applying.
+- **Data sources:**
+  - `defectdojo_product_type` looks up by `id` or `name`; `defectdojo_product` too, where doximity/defectdojo's looked up by `id`
+    only. Both return numeric IDs.
+  - The product data source's `enable_skip_risk_acceptance` is `enable_simple_risk_acceptance`, and `prod_numeric_grade` is
+    gone, as for the resource.
 
 ## 3. Switch
 
@@ -87,11 +93,14 @@ The changes, resource by resource:
 2. Run `terraform init -upgrade`. Terraform installs this provider; it still installs `doximity/defectdojo` too, because the state
    names it.
 3. Run `terraform plan`. It should show the Jira configurations moving and nothing else; a change means the configuration and
-   DefectDojo differ, as the list in step 2 explains.
-4. Run `terraform apply` (or `terraform apply -refresh-only` when the plan shows no changes). The state now names this provider for
-   every resource, with their resource identities, and `doximity/defectdojo` is no longer needed.
+   DefectDojo differ, as the list in step 2 explains. **Read it before applying**: a destroy or a replacement is a mistake
+   (see [Troubleshooting](#troubleshooting)).
+4. Run `terraform apply`, even when the plan shows no changes. The state now names this provider for every resource, with
+   their resource identities, and `doximity/defectdojo` is no longer needed.
 
-To rename a resource at the same time, switch first, then rename it with an ordinary `moved` block in a second change.
+**Keep the addresses of product types and products during the switch.** A `moved` block can't rename them from
+doximity/defectdojo: only the Jira configuration can move from that provider. Switch first, then rename them with an
+ordinary `moved` block in a second change.
 
 ## What's new
 
@@ -117,10 +126,18 @@ To rename a resource at the same time, switch first, then rename it with an ordi
 ## Troubleshooting
 
 - **Terraform asks for doximity/defectdojo's configuration** ("No base_url value provided and no DEFECTDOJO_BASEURL
-  environment variable"): a resource in the state without configuration is destroyed with the provider that created it. Configure `doximity/defectdojo` until it's gone, move it
-  with a `moved` block, or remove it from the state with `terraform state rm`.
+  environment variable"): a resource in the state has no configuration, and Terraform wants doximity/defectdojo to destroy it.
+  **Don't configure doximity/defectdojo to make the error go away**: destroying a product type deletes its products, their
+  engagements and their findings, and doximity/defectdojo has no `force_destroy` guard. Instead:
+  - a Jira configuration: add its `moved` block;
+  - a product type or product whose address changed: restore its address, switch, then rename it (see step 3);
+  - an object that Terraform should no longer manage: `terraform state rm` keeps it in DefectDojo.
+
+  Configure doximity/defectdojo (with `DEFECTDOJO_BASEURL` and `DEFECTDOJO_APIKEY`, since the `provider "defectdojo"` block now
+  configures this provider) only if the object should really be deleted.
 - **The Jira configuration plans to be replaced or created:** its `moved` block is missing, or names another address.
-- **`terraform plan -refresh=false`** after the move shows changes: the move only carries the ID, and the refresh fills in the
-  rest. Plan with the refresh.
-- **`terraform state replace-provider`** isn't needed: the first apply records the new provider. It does the same for the
-  product types and products, but not for the Jira configurations, which need their `moved` blocks.
+- **`terraform plan -refresh=false`** after the move plans to replace the Jira project, which would delete it and its links
+  between findings and Jira issues: the move only carries the ID, and the refresh fills in the rest. Don't apply that plan;
+  plan with the refresh.
+- **`terraform state replace-provider`** isn't needed: the first apply records the new provider for the product types and
+  products. It can't move the Jira configurations, which need their `moved` blocks.
