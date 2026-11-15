@@ -103,7 +103,7 @@ For details, see the:
 - [Data source documentation](docs/data-sources/) for available data sources
 - [List resource documentation](docs/list-resources/) for `terraform query`
 - [Example configurations](examples/)
-- [Guides](docs/guides/), such as connecting [Dependency-Track](docs/guides/dependency-track.md)
+- [Guides](docs/guides/), such as connecting [Dependency-Track](docs/guides/dependency-track.md) and [migrating from doximity/defectdojo](docs/guides/migrating-from-doximity.md)
 
 ### Migrating from doximity/defectdojo
 
@@ -112,7 +112,7 @@ The [doximity/defectdojo](https://registry.terraform.io/providers/doximity/defec
 - `defectdojo_product_type` and `defectdojo_product` have the same names here: change the provider source in `required_providers` to `ottramst/defectdojo`, and this provider takes over their state.
 - `defectdojo_jira_product_configuration` is `defectdojo_jira_project` here: move it with a `moved` block (Terraform 1.8+).
 
-Some attributes were renamed or changed meaning; the configuration needs updating before the first plan.
+Some attributes were renamed or changed meaning, so the configuration needs updating before the first plan. The [migration guide](docs/guides/migrating-from-doximity.md) walks through it.
 
 ## Roadmap
 
