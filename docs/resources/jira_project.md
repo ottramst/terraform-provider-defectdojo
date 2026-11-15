@@ -52,7 +52,7 @@ resource "defectdojo_jira_project" "example" {
 - `default_assignee` (String) The Jira user that new issues are assigned to; by default Jira's. At most 200 characters.
 - `enable_engagement_epic_mapping` (Boolean) Whether DefectDojo creates a Jira epic for each engagement. Defaults to `false`.
 - `enabled` (Boolean) Whether findings are pushed to Jira; disabling stops it, also for findings pushed before. Defaults to `true`.
-- `engagement_id` (Number) The ID of the engagement. Exactly one of `product_id` and `engagement_id` must be set.
+- `engagement_id` (Number) The ID of the engagement. Exactly one of `product_id` and `engagement_id` must be set; changing either forces a new resource.
 - `epic_issue_type_name` (String) The name of Jira's epic issue type, for `enable_engagement_epic_mapping`. Defaults to `Epic`.
 - `issue_template_dir` (String) The folder of the Django templates that render issue descriptions, such as `issue-trackers/jira_full`; by default the Jira instance's. At most 255 characters.
 - `jira_labels` (String) The labels of new issues, separated by spaces. At most 200 characters.

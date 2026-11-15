@@ -5,11 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -297,4 +299,10 @@ func compareVersions(a, b string) int {
 		}
 	}
 	return 0
+}
+
+// int32Range rejects numbers outside DefectDojo's 32-bit integer columns,
+// which it answers with a 400.
+func int32Range() validator.Int64 {
+	return int64validator.Between(math.MinInt32, math.MaxInt32)
 }

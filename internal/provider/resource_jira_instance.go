@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,6 +27,7 @@ var _ resource.Resource = &JiraInstanceResource{}
 var _ resource.ResourceWithConfigure = &JiraInstanceResource{}
 var _ resource.ResourceWithImportState = &JiraInstanceResource{}
 var _ resource.ResourceWithIdentity = &JiraInstanceResource{}
+var _ resource.ResourceWithModifyPlan = &JiraInstanceResource{}
 
 func NewJiraInstanceResource() resource.Resource {
 	return &JiraInstanceResource{}
@@ -128,10 +130,12 @@ func (r *JiraInstanceResource) Schema(_ context.Context, _ resource.SchemaReques
 				MarkdownDescription: "The password or API token of the Jira account, at most 2000 characters, without leading or trailing whitespace, " +
 					"which DefectDojo removes. It is write-only: never stored in the plan or state, and DefectDojo never returns it. " +
 					"The provider sends it when the instance is created, when `password_wo_version` changes, and when `url` changes, " +
-					"which DefectDojo allows only with the password (a URL that differs only in a trailing slash isn't a change). " +
+					"which DefectDojo allows only with the password (a URL that differs only in a trailing slash isn't a change): " +
+					"it is required then, and otherwise optional, so that an imported instance can be managed without it. " +
 					"Terraform can't detect a change of a write-only value: change `password_wo_version` to send a new one. " +
+					"Removing it together with `password_wo_version` keeps the password DefectDojo has. " +
 					"Requires Terraform 1.11 or later.",
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 				WriteOnly: true,
 				Validators: []validator.String{
@@ -140,8 +144,9 @@ func (r *JiraInstanceResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"password_wo_version": schema.Int64Attribute{
-				MarkdownDescription: "The version of `password_wo`. Changing it sends the password.",
-				Optional:            true,
+				MarkdownDescription: "The version of `password_wo`. Changing it, or removing it while `password_wo` is set, sends the password; " +
+					"setting a new version needs `password_wo`.",
+				Optional: true,
 			},
 			"default_issue_type": schema.StringAttribute{
 				MarkdownDescription: "The type of new Jira issues. DefectDojo offers `Task`, `Story`, `Epic`, `Spike`, `Bug` and `Security`, " +
@@ -159,14 +164,17 @@ func (r *JiraInstanceResource) Schema(_ context.Context, _ resource.SchemaReques
 			"epic_name_id": schema.Int64Attribute{
 				MarkdownDescription: "The number of Jira's Epic Name custom field (`customfield_<number>`), from `https://<jira>/rest/api/2/field`.",
 				Required:            true,
+				Validators:          []validator.Int64{int32Range()},
 			},
 			"open_status_key": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the Jira transition that reopens issues, from `https://<jira>/rest/api/latest/issue/<key>/transitions`.",
 				Required:            true,
+				Validators:          []validator.Int64{int32Range()},
 			},
 			"close_status_key": schema.Int64Attribute{
 				MarkdownDescription: "The ID of the Jira transition that closes issues.",
 				Required:            true,
+				Validators:          []validator.Int64{int32Range()},
 			},
 			"info_mapping_severity":     severity("Info"),
 			"low_mapping_severity":      severity("Low"),
@@ -211,6 +219,11 @@ func (r *JiraInstanceResource) Create(ctx context.Context, req resource.CreateRe
 	var password types.String
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("password_wo"), &password)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if password.IsNull() {
+		resp.Diagnostics.Append(missingJiraPassword("create a Jira instance"))
 		return
 	}
 
@@ -291,8 +304,19 @@ func (r *JiraInstanceResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	// The password is sent when its version changes, since Terraform can't
 	// compare write-only values, and when the URL changes, which DefectDojo
-	// allows only with the password.
-	if !data.PasswordWOVersion.Equal(state.PasswordWOVersion) || jiraURLChanged(state.URL.ValueString(), data.URL.ValueString()) {
+	// allows only with the password. Without one, nothing is sent: ModifyPlan
+	// refused the cases that need it, also a version that was unknown at plan
+	// time, when Terraform plans again during the apply. The check below is a
+	// defensive one, so that a version whose password was never sent can't be
+	// stored.
+	if password.IsNull() && !data.PasswordWOVersion.IsNull() && !data.PasswordWOVersion.Equal(state.PasswordWOVersion) {
+		resp.Diagnostics.AddAttributeError(path.Root("password_wo"), "Missing Jira password",
+			"A new password_wo_version sends password_wo to DefectDojo, but password_wo isn't set. "+
+				"Set password_wo, or keep password_wo_version as it was.")
+		return
+	}
+	if !password.IsNull() && password.ValueString() != "" &&
+		(!data.PasswordWOVersion.Equal(state.PasswordWOVersion) || jiraURLChanged(state.URL.ValueString(), data.URL.ValueString())) {
 		patch.Password = new(password.ValueString())
 	}
 
@@ -316,6 +340,48 @@ func jiraProjectsUsing(n int) string {
 		return "1 Jira project uses it"
 	}
 	return fmt.Sprintf("%d Jira projects use it", n)
+}
+
+// ModifyPlan requires password_wo when DefectDojo needs the password: to
+// create the instance, to change its URL, and when a new password_wo_version
+// asks to send it. A password unknown at plan time, such as an attribute of a
+// resource created in the same apply, passes; Terraform plans again during the
+// apply, when unknown values are known, so a version that turns out new without
+// a password is refused then.
+func (r *JiraInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	var password types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("password_wo"), &password)...)
+	if resp.Diagnostics.HasError() || !password.IsNull() {
+		return
+	}
+	if req.State.Raw.IsNull() {
+		resp.Diagnostics.Append(missingJiraPassword("create a Jira instance"))
+		return
+	}
+	var plan, state JiraInstanceResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	switch {
+	case plan.URL.IsUnknown() || jiraURLChanged(state.URL.ValueString(), plan.URL.ValueString()):
+		resp.Diagnostics.Append(missingJiraPassword("change the URL of a Jira instance"))
+	case !plan.PasswordWOVersion.IsNull() && !plan.PasswordWOVersion.IsUnknown() && !plan.PasswordWOVersion.Equal(state.PasswordWOVersion):
+		resp.Diagnostics.AddAttributeError(path.Root("password_wo"), "Missing Jira password",
+			"A new password_wo_version sends password_wo to DefectDojo, but password_wo isn't set. "+
+				"Set password_wo, or keep password_wo_version as it was.")
+	}
+}
+
+// missingJiraPassword is the error when DefectDojo needs the Jira password to
+// do something, such as "create a Jira instance", and password_wo isn't set.
+func missingJiraPassword(action string) diag.Diagnostic {
+	return diag.NewAttributeErrorDiagnostic(path.Root("password_wo"), "Missing Jira password",
+		"DefectDojo needs the password or API token of the Jira account to "+action+": set password_wo.")
 }
 
 // jiraURLChanged reports whether DefectDojo considers the URL changed, which

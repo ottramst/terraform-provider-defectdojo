@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -121,23 +120,22 @@ func TestAccJiraInstance(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password_wo_version"},
 			},
-			// Import by identity. The configuration needs the password, but
-			// no version, which an imported instance doesn't have.
+			// Import by identity, with the password but no version, which an
+			// imported instance doesn't have.
 			{
 				Config:          testAccJiraInstanceConfig(name+"-renamed", "https://other-"+name+".example.invalid", ""),
 				ResourceName:    jiraInstanceAddress,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
-			// The configuration -generate-config-out writes for an import lacks the
-			// required password_wo, which DefectDojo never returns.
+			// The configuration -generate-config-out writes for an import has no
+			// password_wo, which DefectDojo never returns, and plans no changes.
 			{
 				Config:          testAccJiraInstanceConfig(name+"-renamed", "https://other-"+name+".example.invalid", ""),
 				ResourceName:    jiraInstanceAddress,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
 				GenerateConfig:  true,
-				ExpectError:     regexp.MustCompile(`password_wo`),
 			},
 			// Changed outside Terraform: the change is reverted.
 			{

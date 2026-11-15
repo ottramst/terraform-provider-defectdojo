@@ -82,7 +82,7 @@ resource "defectdojo_engagement" "pentest" {
 - `engagement_type` (String) The type of the engagement: `Interactive` or `CI/CD`. DefectDojo uses `Interactive` when it is not set.
 - `first_contacted` (String) The date of the first contact, as `YYYY-MM-DD`.
 - `force_destroy` (Boolean) Whether to destroy the engagement even when it has tests, which DefectDojo then deletes too, with their findings. Defaults to `false`.
-- `lead_id` (Number) The ID of the user who leads the engagement, an active user.
+- `lead_id` (Number) The ID of the user who leads the engagement, an active user. When it is not set, it is cleared.
 - `pen_test` (Boolean) Whether the engagement includes penetration tests. Defaults to `true`.
 - `reason` (String) The reason for the engagement, at most 2000 characters, without leading or trailing whitespace, which DefectDojo removes.
 - `source_code_management_uri` (String) The link to the source code the engagement tests, a URL of at most 600 characters.
