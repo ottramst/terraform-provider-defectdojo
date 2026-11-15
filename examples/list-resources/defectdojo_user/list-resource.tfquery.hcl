@@ -1,6 +1,7 @@
 # Find the users, and generate import blocks and configuration with:
 #   terraform query -generate-config-out=generated.tf
-# Requires a superuser. Terraform returns at most 100 results unless limit is set.
+# Needs a superuser, or the configuration permissions for users. Terraform
+# returns at most 100 results unless limit is set.
 list "defectdojo_user" "all" {
   provider = defectdojo
   limit    = 1000

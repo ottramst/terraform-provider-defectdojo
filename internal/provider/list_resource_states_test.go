@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -249,5 +251,30 @@ func TestContainsFold(t *testing.T) {
 		if got := containsFold(tt.value, tt.filter); got != tt.want {
 			t.Errorf("containsFold(%q, %s) = %v, want %v", tt.value, tt.filter, got, tt.want)
 		}
+	}
+}
+
+// A result with an error ends the stream: the error would repeat for the
+// objects that follow.
+func TestListResultsErrorEndsStream(t *testing.T) {
+	all := func(yield func(*int, error) bool) {
+		for i := 1; i <= 3; i++ {
+			if !yield(&i, nil) {
+				return
+			}
+		}
+	}
+	var got []string
+	for r := range listResults(all, func(i *int) int { return *i }, nil, func(i *int) list.ListResult {
+		var diags diag.Diagnostics
+		if *i == 2 {
+			diags.AddError("failed", "")
+		}
+		return list.ListResult{DisplayName: fmt.Sprint(*i), Diagnostics: diags}
+	}, listError("objects")) {
+		got = append(got, r.DisplayName)
+	}
+	if fmt.Sprint(got) != "[1 2]" {
+		t.Errorf("results = %q, want [1 2]", got)
 	}
 }

@@ -22,7 +22,8 @@ func NewUserListResource() list.ListResource {
 	return &listResource[UserListModel, defectdojo.User]{
 		typeName: "_user",
 		schema: schema.Schema{
-			MarkdownDescription: "Lists the DefectDojo users, ordered by ID. Requires a superuser. " +
+			MarkdownDescription: "Lists the DefectDojo users, ordered by ID. Needs a superuser, or the configuration permissions for users; " +
+				"reading `configuration_permissions` needs a superuser, and without one it is null. " +
 				"The generated configuration has no `password_wo`: DefectDojo's API can't change a password, so it only matters when a user is created." + listNotes,
 			Attributes: map[string]schema.Attribute{
 				"username_contains": listContainsAttribute("users", "username"),

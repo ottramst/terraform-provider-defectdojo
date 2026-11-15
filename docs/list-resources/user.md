@@ -3,13 +3,13 @@
 page_title: "defectdojo_user List Resource - defectdojo"
 subcategory: ""
 description: |-
-  Lists the DefectDojo users, ordered by ID. Requires a superuser. The generated configuration has no password_wo: DefectDojo's API can't change a password, so it only matters when a user is created.
+  Lists the DefectDojo users, ordered by ID. Needs a superuser, or the configuration permissions for users; reading configuration_permissions needs a superuser, and without one it is null. The generated configuration has no password_wo: DefectDojo's API can't change a password, so it only matters when a user is created.
   Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the list block sets limit. terraform query -generate-config-out writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as authorized_users and tags): remove the ones another system manages before applying the generated configuration.
 ---
 
 # defectdojo_user (List Resource)
 
-Lists the DefectDojo users, ordered by ID. Requires a superuser. The generated configuration has no `password_wo`: DefectDojo's API can't change a password, so it only matters when a user is created.
+Lists the DefectDojo users, ordered by ID. Needs a superuser, or the configuration permissions for users; reading `configuration_permissions` needs a superuser, and without one it is null. The generated configuration has no `password_wo`: DefectDojo's API can't change a password, so it only matters when a user is created.
 
 Requires Terraform 1.14 or later. Terraform returns at most 100 results unless the `list` block sets `limit`. `terraform query -generate-config-out` writes every attribute that has a value, including those the provider otherwise leaves to others when they are not configured (such as `authorized_users` and `tags`): remove the ones another system manages before applying the generated configuration.
 
@@ -18,7 +18,8 @@ Requires Terraform 1.14 or later. Terraform returns at most 100 results unless t
 ```terraform
 # Find the users, and generate import blocks and configuration with:
 #   terraform query -generate-config-out=generated.tf
-# Requires a superuser. Terraform returns at most 100 results unless limit is set.
+# Needs a superuser, or the configuration permissions for users. Terraform
+# returns at most 100 results unless limit is set.
 list "defectdojo_user" "all" {
   provider = defectdojo
   limit    = 1000

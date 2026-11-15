@@ -152,8 +152,8 @@ func errorResult(diags diag.Diagnostics) list.ListResult {
 // ListAll, that keep accepts (nil accepts all). Paging by offset can return
 // an object twice when objects are added or deleted meanwhile, so objects
 // already streamed are skipped: two results for one object would generate two
-// import blocks. An error ends the stream with a result that holds the
-// diagnostics of failure. Terraform stops the stream once it has the number
+// import blocks. An error of all ends the stream with a result that holds
+// the diagnostics of failure, and so does a result with an error. Terraform stops the stream once it has the number
 // of results it requested (the limit of the list block).
 func listResults[T any](all iter.Seq2[*T, error], id func(*T) int, keep func(*T) bool, result func(*T) list.ListResult, failure func(error) diag.Diagnostics) iter.Seq[list.ListResult] {
 	return func(push func(list.ListResult) bool) {
@@ -167,7 +167,10 @@ func listResults[T any](all iter.Seq2[*T, error], id func(*T) int, keep func(*T)
 				continue
 			}
 			seen[id(object)] = true
-			if !push(result(object)) {
+			r := result(object)
+			// An error, such as a product that can't be read, would
+			// repeat for the objects that follow: it ends the stream.
+			if !push(r) || r.Diagnostics.HasError() {
 				return
 			}
 		}
