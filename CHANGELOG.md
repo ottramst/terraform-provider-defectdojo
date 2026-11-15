@@ -2,11 +2,11 @@
 
 ENHANCEMENTS:
 
-* `defectdojo_product`: the `user_records` and `revenue` attributes, the estimated number of user records and the estimated revenue, which `doximity/defectdojo` also manages; the `defectdojo_product` data source has them too. `revenue` is written with two decimal places, as DefectDojo returns it (`"100.00"`) (ISSUE_B)
+* `defectdojo_product`: the `user_records` and `revenue` attributes, the estimated number of user records and the estimated revenue, which `doximity/defectdojo` also manages; the `defectdojo_product` data source has them too. `revenue` is written with two decimal places, as DefectDojo returns it (`"100.00"`) ([#64](https://github.com/ottramst/terraform-provider-defectdojo/issues/64))
 
 NOTES:
 
-* `defectdojo_product`: like the other optional attributes, `user_records` and `revenue` are cleared when they aren't configured. After upgrading, the next plan shows an update for every product whose user records or revenue were set outside Terraform, which clears them; add them to the configuration before applying it to keep them (ISSUE_B)
+* `defectdojo_product`: like the other optional attributes, `user_records` and `revenue` are cleared when they aren't configured. After upgrading, the next plan shows an update for every product whose user records or revenue were set outside Terraform, which clears them; add them to the configuration before applying it to keep them ([#64](https://github.com/ottramst/terraform-provider-defectdojo/issues/64))
 
 ## v0.4.0
 
