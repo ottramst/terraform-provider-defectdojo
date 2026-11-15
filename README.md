@@ -89,11 +89,11 @@ DefectDojo ships a minor release every month and patches every week, and support
 
 A nightly canary job runs the acceptance tests against DefectDojo's development build, and a weekly job opens an issue when a new minor release is out.
 
-Terraform follows the same policy. HashiCorp supports the two newest Terraform minor releases, currently **1.17** and **1.16**, and CI tests those. The provider uses plugin protocol 6, so it still works with older Terraform 1.x releases, but EOL Terraform versions are supported on a best-effort basis only.
+Terraform follows the same policy. HashiCorp supports the two newest Terraform minor releases, currently **1.17** and **1.16**, and CI tests those. The provider requires Terraform 1.11 or later (see [Requirements](#requirements)); EOL releases from 1.11 on get best-effort support only.
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) 1.11 or later, which the write-only attributes (`password_wo`, `header_value_wo`, the system settings' secrets) need. Import by resource identity needs 1.12, `terraform query` 1.14, and the `moved` block of the doximity migration 1.8. CI tests the non-EOL releases, currently 1.16 and 1.17; older releases are untested (see [support policy](#support-policy))
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) 1.11 or later, which the write-only attributes (`password_wo`, `header_value_wo`, the system settings' secrets) need. Import by resource identity needs 1.12, and `terraform query` 1.14. CI tests the non-EOL releases, currently 1.16 and 1.17; older releases are untested (see [support policy](#support-policy))
 - [Go](https://golang.org/doc/install) >= 1.27 (only required to build the provider from source)
 - [DefectDojo](https://github.com/DefectDojo/django-DefectDojo) 3.4.x or 3.5.x, tested in CI; other 3.x releases get best-effort support (see [support policy](#support-policy)). Most configuration objects can only be managed by a superuser
 

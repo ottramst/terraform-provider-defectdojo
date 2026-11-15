@@ -88,14 +88,16 @@ CI tests the latest patch of the two newest DefectDojo minor releases (see the
 2. Update `.github/defectdojo-versions.json`: drop the oldest minor and add the new release. Set the
    `DD_VERSION` default in `docker-compose.yml` to the new release too; CI checks that they match.
 3. Run the acceptance tests against both versions.
-4. Update the tested versions in `README.md`, `templates/index.md.tmpl` (then `make generate`), and
+4. Update the tested versions in `README.md`, `templates/index.md.tmpl`,
+   `templates/guides/migrating-from-doximity.md.tmpl` (then `make generate`), and
    `CLAUDE.md`, and add a `NOTES` entry to the CHANGELOG. This is a minor release: DefectDojo versions moving
    forward don't break configurations (see [Stability](README.md#stability)). `TestAccUpgradeFromLatestRelease`
    skips DefectDojo versions the latest release wasn't tested on.
 
 The same applies to Terraform: the `terraform-version` matrix in `.github/workflows/test.yml` covers the two
 newest Terraform minor releases (the ones HashiCorp supports). When a new minor ships, add it, drop the oldest,
-and update the versions in `README.md` and `CLAUDE.md`.
+and update the versions in `README.md`, `templates/index.md.tmpl`, `templates/guides/migrating-from-doximity.md.tmpl`
+(then `make generate`) and `CLAUDE.md`.
 
 ## Compatibility
 
