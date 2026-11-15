@@ -81,6 +81,15 @@ func TestAccProductType(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
+			// The configuration -generate-config-out writes for an import plans no
+			// changes. terraform query writes it from the list resource's state,
+			// which TestListResourceStates checks is the same.
+			{
+				ResourceName:    productTypeAddress,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				GenerateConfig:  true,
+			},
 			// Unsetting authorized_users leaves them as they are; unsetting
 			// the description clears it.
 			{
