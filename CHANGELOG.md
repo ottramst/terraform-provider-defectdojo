@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 NOTES:
 
+* Built with go-defectdojo v1.0.0, the client's first stable release; nothing changes for configurations or state ([#74](https://github.com/ottramst/terraform-provider-defectdojo/issues/74))
 * The README describes what v1 promises: semantic versioning of the schema, what counts as breaking, what happens when DefectDojo removes a feature, and the supported DefectDojo and Terraform versions. The provider's page on the Registry has a "Requirements and compatibility" section; Terraform 1.11 or later is required ([#33](https://github.com/ottramst/terraform-provider-defectdojo/issues/33))
 
 ## v0.5.0
