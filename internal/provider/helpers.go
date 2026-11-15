@@ -135,6 +135,41 @@ func int64OrNull(value int) types.Int64 {
 	return types.Int64Value(int64(value))
 }
 
+// int64PtrOrNull returns a null number for nil. Unlike int64OrNull, 0 is a
+// value: it is for numbers DefectDojo stores as null when unset.
+func int64PtrOrNull(value *int) types.Int64 {
+	if value == nil {
+		return types.Int64Null()
+	}
+	return types.Int64Value(int64(*value))
+}
+
+// stringPtrOrNull returns a null string for nil.
+func stringPtrOrNull(value *string) types.String {
+	if value == nil {
+		return types.StringNull()
+	}
+	return types.StringValue(*value)
+}
+
+// intPtr returns the value of an optional number for a create: nil when it
+// is null or unknown.
+func intPtr(value types.Int64) *int {
+	if !known(value) {
+		return nil
+	}
+	return new(int(value.ValueInt64()))
+}
+
+// stringPtr returns the value of an optional text attribute for a create:
+// nil when it is null or unknown.
+func stringPtr(value types.String) *string {
+	if !known(value) {
+		return nil
+	}
+	return new(value.ValueString())
+}
+
 // nullableString returns the value of an optional text attribute for a
 // partial update: null clears it.
 func nullableString(value types.String) defectdojo.Nullable[string] {

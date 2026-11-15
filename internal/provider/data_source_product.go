@@ -38,6 +38,8 @@ type ProductDataSourceModel struct {
 	Platform                      types.String `tfsdk:"platform"`
 	Lifecycle                     types.String `tfsdk:"life_cycle"`
 	Origin                        types.String `tfsdk:"origin"`
+	UserRecords                   types.Int64  `tfsdk:"user_records"`
+	Revenue                       types.String `tfsdk:"revenue"`
 	ExternalAudience              types.Bool   `tfsdk:"external_audience"`
 	InternetAccessible            types.Bool   `tfsdk:"internet_accessible"`
 	EnableProductTagInheritance   types.Bool   `tfsdk:"enable_product_tag_inheritance"`
@@ -86,6 +88,8 @@ func (d *ProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			"platform":                         computed("The platform of the product, or null."),
 			"life_cycle":                       computed("The lifecycle of the product, or null."),
 			"origin":                           computed("The origin of the product, or null."),
+			"user_records":                     schema.Int64Attribute{MarkdownDescription: "The estimated number of user records in the product, or null.", Computed: true},
+			"revenue":                          computed("The estimated revenue of the product, a decimal such as `\"100.00\"`, or null."),
 			"external_audience":                flag("Whether the product is used by people outside the organization."),
 			"internet_accessible":              flag("Whether the product is accessible from the internet."),
 			"enable_product_tag_inheritance":   flag("Whether the product's engagements, tests and findings inherit its tags."),
@@ -169,6 +173,8 @@ func (d *ProductDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		Platform:                      m.Platform,
 		Lifecycle:                     m.Lifecycle,
 		Origin:                        m.Origin,
+		UserRecords:                   m.UserRecords,
+		Revenue:                       m.Revenue,
 		ExternalAudience:              m.ExternalAudience,
 		InternetAccessible:            m.InternetAccessible,
 		EnableProductTagInheritance:   m.EnableProductTagInheritance,

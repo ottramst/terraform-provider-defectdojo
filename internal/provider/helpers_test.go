@@ -181,3 +181,37 @@ func TestTagValidators(t *testing.T) {
 		})
 	}
 }
+
+// The values DefectDojo returns unchanged are valid; it would rewrite or
+// reject the others (checked against DefectDojo 3.5.103).
+func TestRevenueValidator(t *testing.T) {
+	tests := []struct {
+		value string
+		valid bool
+	}{
+		{"100.00", true},
+		{"0.00", true},
+		{"100.50", true},
+		{"1234567890123.45", true},
+		{"-1.00", false},             // a 400: at least 0.00
+		{"-0.00", false},             // accepted, but no minus sign is needed
+		{"100", false},               // 100.00
+		{"100.5", false},             // 100.50
+		{"0012.30", false},           // 12.30
+		{"1e3", false},               // 1000.00
+		{"-0", false},                // -0.00
+		{"12345678901234.00", false}, // more than 15 digits: a 400
+		{"", false},
+	}
+	v := revenueValidator()
+	for _, tt := range tests {
+		t.Run(tt.value, func(t *testing.T) {
+			req := validator.StringRequest{ConfigValue: types.StringValue(tt.value)}
+			var resp validator.StringResponse
+			v.ValidateString(context.Background(), req, &resp)
+			if valid := !resp.Diagnostics.HasError(); valid != tt.valid {
+				t.Errorf("valid = %v, want %v", valid, tt.valid)
+			}
+		})
+	}
+}
