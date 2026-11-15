@@ -66,6 +66,7 @@ The compose stack (shared with go-defectdojo) is PostgreSQL (tmpfs), Valkey, a o
 - **Cascading deletes:** deleting a product type, product or engagement deletes everything below it, down to findings. Such resources have `force_destroy` (default `false`): `Delete()` counts the children first and refuses with an error naming them. After the DELETE, `waitForDeletion` polls until the object is gone, for servers with `DD_ASYNC_OBJECT_DELETE`.
 - **Resource identity:** every resource implements `resource.ResourceWithIdentity` with the identity `id` (`idIdentitySchema`, `setIDIdentity`), set in `Create`, `Read` and `Update`. `ImportState` uses `importByID`, which accepts a numeric import ID or the identity. Changing an identity schema needs an identity upgrader and an upgrade test.
 - Data sources look up by `id` or exact `name` (`datasourcevalidator.ExactlyOneOf`), using the client's `GetByName`, which re-checks the name on the client side. A data source's model can be filled from the resource's `update…Model` (`data_source_product.go`).
+- Plural data sources (`data_source_test_types.go` is the template) take optional exact filters, re-checked on the client side, and return a computed list of objects sorted by name plus a `names` list; a filter that matches nothing gives empty lists, not an error.
 
 ## Test Patterns
 

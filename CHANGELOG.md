@@ -9,6 +9,7 @@ FEATURES:
 * **New Data Source:** `defectdojo_note_type`, looked up by ID or name ([#21](https://github.com/ottramst/terraform-provider-defectdojo/issues/21))
 * **New Resource:** `defectdojo_regulation`, with resource identity. Destroying a regulation removes it from the products that list it ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
 * **New Data Source:** `defectdojo_regulation`, looked up by ID, name or acronym, such as the regulations DefectDojo comes with ([#20](https://github.com/ottramst/terraform-provider-defectdojo/issues/20))
+* **New Data Source:** `defectdojo_test_types`: the test types, such as the scanners DefectDojo can import, optionally filtered by name ([#26](https://github.com/ottramst/terraform-provider-defectdojo/issues/26))
 
 ## v0.3.0
 
